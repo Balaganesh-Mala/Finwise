@@ -1,0 +1,26 @@
+const mongoose = require('mongoose');
+
+const settingSchema = new mongoose.Schema({
+  siteTitle: {
+    type: String,
+    default: 'JobReady Skills Center'
+  },
+  logoUrl: {
+    type: String,
+    default: ''
+  },
+  contact: {
+    phone: { type: String, default: '' },
+    whatsapp: { type: String, default: '' },
+    email: { type: String, default: 'support@jobreadyskills.com' },
+    address: { type: String, default: '' }
+  },
+  socials: {
+    facebook: { type: String, default: '' },
+    instagram: { type: String, default: '' },
+    linkedin: { type: String, default: '' },
+    youtube: { type: String, default: '' }
+  }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Setting', settingSchema);
