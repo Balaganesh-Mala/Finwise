@@ -1,10 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 import { Star, Quote, Code, Palette, Database, TrendingUp } from 'lucide-react';
 
 const ReviewsSection = () => {
+    // Manual responsive logic
+    const [slidesToShow, setSlidesToShow] = useState(3);
+
+    useEffect(() => {
+        const handleResize = () => {
+        const width = window.innerWidth;
+        if (width < 768) {
+            setSlidesToShow(1);
+        } else if (width < 1024) {
+            setSlidesToShow(2);
+        } else {
+            setSlidesToShow(3);
+        }
+        };
+
+        handleResize(); // Initial
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // 1st Row Data (Tech/Dev focus)
     const reviewsRow1 = [
         {
@@ -89,9 +109,9 @@ const ReviewsSection = () => {
     const baseSettings = {
         dots: false,
         infinite: true,
-        slidesToShow: 1,
+        slidesToShow: slidesToShow, // Dynamic
         slidesToScroll: 1,
-        mobileFirst: true,
+        mobileFirst: false, // We control logic manually
         autoplay: true,
         speed: 8000,           // Slow speed for linear movement
         autoplaySpeed: 0,      // Continuous
@@ -99,16 +119,7 @@ const ReviewsSection = () => {
         pauseOnHover: true,
         arrows: false,
         className: "center",
-        responsive: [
-            {
-                breakpoint: 768,
-                settings: { slidesToShow: 2 }
-            },
-            {
-                breakpoint: 1024,
-                settings: { slidesToShow: 3 }
-            }
-        ]
+        // No responsive array
     };
 
     // Row 1: Left to Right (visually items move left)
@@ -179,10 +190,10 @@ const ReviewsSection = () => {
                 </p>
             </div>
 
-            <div className="space-y-8 container ">
+            <div className="space-y-8 container mx-auto">
                 {/* Row 1 - Left Loop */}
                 <div className="cursor-grab active:cursor-grabbing">
-                    <Slider {...settingsRow1}>
+                    <Slider key={`row1-${slidesToShow}`} {...settingsRow1}>
                         {reviewsRow1.map(review => (
                             <ReviewCard key={review.id} data={review} />
                         ))}
@@ -191,7 +202,7 @@ const ReviewsSection = () => {
 
                 {/* Row 2 - Right Loop */}
                 <div className="cursor-grab active:cursor-grabbing" dir="rtl">
-                    <Slider {...settingsRow2}>
+                    <Slider key={`row2-${slidesToShow}`} {...settingsRow2}>
                          {reviewsRow2.map(review => (
                             <div key={review.id} dir="ltr"> {/* Reset direction for text readability inside card */}
                                 <ReviewCard data={review} />

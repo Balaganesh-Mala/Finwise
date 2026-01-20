@@ -7,7 +7,7 @@ const CourseCard = ({ course }) => {
   return (
     <motion.div 
       whileHover={{ y: -5 }}
-      className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-1xl transition-all duration-300 border border-gray-100 mx-3 h-full flex flex-col relative m-10"
+      className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-1xl transition-all duration-300 border border-gray-100 h-full flex flex-col relative"
     >
       {/* Top Gradient Line */}
       <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />

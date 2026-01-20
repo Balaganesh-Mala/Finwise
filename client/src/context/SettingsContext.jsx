@@ -30,7 +30,7 @@ export const SettingsProvider = ({ children }) => {
         const fetchSettings = async () => {
             try {
                 // Todo: Use env var for API URL
-                const res = await axios.get('http://localhost:5000/api/settings');
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/settings`);
                 // Only update if we get valid data
                 if (res.data) {
                     setSettings(res.data);

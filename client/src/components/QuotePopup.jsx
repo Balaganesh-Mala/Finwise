@@ -42,7 +42,7 @@ const QuotePopup = () => {
         setError('');
         
         try {
-             await axios.post('http://localhost:5000/api/inquiries', formData);
+             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries`, formData);
              setSubmitted(true);
              setTimeout(() => {
                 closePopup();

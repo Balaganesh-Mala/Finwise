@@ -1,10 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Slider from 'react-slick';
 import CourseCard from './CourseCard';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 const CoursesSection = () => {
+  // Manual responsive logic to bypass potential Slick issues
+  const [slidesToShow, setSlidesToShow] = useState(3);
+  const [showArrows, setShowArrows] = useState(true);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setSlidesToShow(1);
+        setShowArrows(false);
+      } else if (width < 1024) {
+        setSlidesToShow(2);
+        setShowArrows(true);
+      } else {
+        setSlidesToShow(3);
+        setShowArrows(true);
+      }
+    };
+
+    // Initial check
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: slidesToShow, // Dynamic value from state
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 4000,
+    arrows: showArrows, // Dynamic value from state
+    // Removed 'responsive' array to rely entirely on manual state
+  };
+
   // Todo: Fetch from API
   const courses = [
     {
@@ -17,7 +55,7 @@ const CoursesSection = () => {
       imageUrl: 'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
     },
     {
-       _id: '2',
+      _id: '2',
       title: 'Data Science & Machine Learning',
       description: 'Analyze data and build predictive models using Python and ML libraries.',
       duration: '8 Months',
@@ -26,7 +64,7 @@ const CoursesSection = () => {
       imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
     },
     {
-       _id: '3',
+      _id: '3',
       title: 'Digital Marketing Mastery',
       description: 'Learn SEO, SEM, Social Media Marketing and grow any business online.',
       duration: '3 Months',
@@ -35,7 +73,7 @@ const CoursesSection = () => {
       imageUrl: 'https://images.unsplash.com/photo-1533750516457-a7f992034fec?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
     },
     {
-       _id: '4',
+      _id: '4',
       title: 'Graphic Design Professional',
       description: 'Create stunning visuals using Photoshop, Illustrator and InDesign.',
       duration: '4 Months',
@@ -45,33 +83,8 @@ const CoursesSection = () => {
     }
   ];
 
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    mobileFirst: true,
-    autoplay: true,
-    autoplaySpeed: 4000,
-    responsive: [
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-        }
-      },
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-        }
-      }
-    ]
-  };
-
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-gray-50 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-indigo-600 font-semibold tracking-wider uppercase mb-2">Our Courses</h2>
@@ -81,9 +94,12 @@ const CoursesSection = () => {
           </p>
         </div>
 
-        <Slider {...settings} className="px-4 md:px-10">
+        {/* Adding explicit key to force re-render when slides count changes */}
+        <Slider key={slidesToShow} {...settings} className="w-full md:px-10">
           {courses.map((course) => (
-            <CourseCard key={course._id} course={course} />
+            <div key={course._id} className="px-3 py-4 h-full">
+              <CourseCard course={course} />
+            </div>
           ))}
         </Slider>
       </div>

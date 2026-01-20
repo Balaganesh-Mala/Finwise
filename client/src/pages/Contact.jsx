@@ -34,7 +34,7 @@ const Contact = () => {
     setError('');
 
     try {
-        await axios.post('http://localhost:5000/api/inquiries', {
+        await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries`, {
             ...formData,
             courseInterested: formData.subject, // Map subject to courseInterested or keep distinct if model allows
             source: 'contact_form'
