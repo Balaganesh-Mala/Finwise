@@ -37,9 +37,9 @@ const Career = () => {
         setIsDetailsModalOpen(false);
         if (action === 'apply') {
             // Wait for details modal to close slightly before opening application
-            setTimeout(() => setIsApplicationModalOpen(true), 100); 
+            setTimeout(() => setIsApplicationModalOpen(true), 100);
         } else {
-             setTimeout(() => setSelectedJob(null), 300);
+            setTimeout(() => setSelectedJob(null), 300);
         }
     };
 
@@ -61,7 +61,7 @@ const Career = () => {
             <div className="bg-gray-900 text-white py-24 relative overflow-hidden">
                 <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 bg-primary-600 rounded-full blur-[128px] opacity-40"></div>
                 <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 bg-orange-600 rounded-full blur-[100px] opacity-30"></div>
-                
+
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -71,7 +71,7 @@ const Career = () => {
                         <span className="inline-block py-1 px-3 rounded-full bg-primary-500/10 border border-primary-500/30 text-primary-400 text-sm font-semibold mb-6 tracking-wide uppercase">
                             Career Opportunities
                         </span>
-                        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+                        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight text-white">
                             Build Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-orange-400">Future</span> With Us
                         </h1>
                         <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -79,7 +79,7 @@ const Career = () => {
                         </p>
                     </motion.div>
 
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2, duration: 0.6 }}
@@ -106,7 +106,7 @@ const Career = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {loading ? (
                         [...Array(3)].map((_, i) => (
-                             <div key={i} className="bg-white rounded-2xl p-8 border border-gray-100 animate-pulse h-96"></div>
+                            <div key={i} className="bg-white rounded-2xl p-8 border border-gray-100 animate-pulse h-96"></div>
                         ))
                     ) : jobs.length === 0 ? (
                         <div className="col-span-full text-center py-20 bg-white rounded-2xl shadow-xl shadow-gray-200/50">
@@ -166,7 +166,7 @@ const Career = () => {
                             </div>
 
                             <div className="p-4 px-8 pb-8">
-                                <button 
+                                <button
                                     onClick={() => openDetailsModal(job)}
                                     className="w-full bg-gray-900 text-white hover:bg-primary-600 font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group-hover:translate-y-[-2px] shadow-lg shadow-gray-900/10 group-hover:shadow-primary-600/20"
                                 >
@@ -181,14 +181,14 @@ const Career = () => {
                 <div className="mt-24 mb-10 bg-gray-900 rounded-3xl p-10 md:p-20 text-white shadow-2xl relative overflow-hidden text-center border border-gray-800">
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-600 rounded-full blur-[150px] opacity-20 -mr-20 -mt-20"></div>
                     <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600 rounded-full blur-[150px] opacity-10 -ml-20 -mb-20"></div>
-                    
+
                     <div className="relative z-10">
-                        <h2 className="text-3xl md:text-5xl font-bold mb-6">Hire Our Top Graduates</h2>
+                        <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">Hire Our Top Graduates</h2>
                         <p className="text-gray-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
                             Looking for skilled talent? Connect with candidates who are industry-ready, project-experienced, and trained in the latest technologies.
                         </p>
-                        <a 
-                            href="/contact" 
+                        <a
+                            href="/contact"
                             className="bg-primary-600 text-white px-10 py-4 rounded-full font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-600/30 transform hover:-translate-y-1 inline-flex items-center gap-2"
                         >
                             Partner With Us <ArrowRight size={20} />
@@ -196,14 +196,14 @@ const Career = () => {
                     </div>
                 </div>
             </div>
-            
+
             {/* Modals */}
-            <JobDetailsModal 
-                job={selectedJob} 
-                isOpen={isDetailsModalOpen} 
-                onClose={closeDetailsModal} 
+            <JobDetailsModal
+                job={selectedJob}
+                isOpen={isDetailsModalOpen}
+                onClose={closeDetailsModal}
             />
-            
+
             <JobApplicationModal
                 job={selectedJob}
                 isOpen={isApplicationModalOpen}
