@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import AboutSection from '../components/AboutSection';
 import { Users } from 'lucide-react';
@@ -10,11 +11,43 @@ const About = () => {
             title="About Us" 
             description="Learn about our mission to empower the next generation of tech leaders through industry-focused training."
         />
-        <div className="bg-indigo-900 text-white py-20 text-center">
-            <h1 className="text-4xl font-bold mb-4">About JobReady Skills Center</h1>
-            <p className="text-xl max-w-2xl mx-auto text-indigo-100">
-                Empowering the next generation of tech leaders through industry-focused training.
-            </p>
+        
+        {/* Modern Hero Banner */}
+        <div className="relative h-[500px] flex items-center justify-center overflow-hidden bg-indigo-900">
+            {/* Background Image */}
+            <div className="absolute inset-0">
+                <img 
+                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
+                    alt="Team collaboration" 
+                    className="w-full h-full object-cover opacity-40"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/95 via-indigo-900/80 to-purple-900/80 mix-blend-multiply" />
+            </div>
+
+            {/* Content using Framer Motion */}
+            <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "outBack" }}
+                >
+                    <span className="inline-block py-1 px-3 rounded-full bg-indigo-500/30 border border-indigo-400/30 text-indigo-100 text-sm font-semibold tracking-wider mb-6 backdrop-blur-sm">
+                        OUR MISSION
+                    </span>
+                    <h1 className="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight text-white leading-tight">
+                        Empowering the <br className="hidden md:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200">
+                            Future of Tech
+                        </span>
+                    </h1>
+                    <p className="text-xl md:text-2xl text-indigo-100 max-w-3xl mx-auto leading-relaxed font-light mb-10">
+                        Bridging the gap between academic theory and industry reality through immersive, project-based training.
+                    </p>
+                </motion.div>
+            </div>
+            
+            {/* Decorative bottom fade to blend with next section */}
+            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-gray-50 to-transparent"></div>
         </div>
         
         <AboutSection />
