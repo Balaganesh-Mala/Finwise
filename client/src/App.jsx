@@ -7,6 +7,7 @@ import FloatingContact from './components/FloatingContact';
 import WhatsAppButton from './components/WhatsAppButton';
 import Careers from './pages/Careers';
 import Blogs from './pages/Blogs';
+import BlogDetails from './pages/BlogDetails';
 import Contact from './pages/Contact';
 import Courses from './pages/Courses';
 import CourseDetails from './pages/CourseDetails';
@@ -83,6 +84,22 @@ function App() {
              <Navbar />
              <QuotePopup />
              <main className="flex-grow pt-20"><Blogs /></main>
+             <Footer />
+           </div>
+        } />
+        <Route path="/blogs/:id" element={
+             <div className="flex flex-col min-h-screen">
+             <Navbar />
+             <QuotePopup />
+             <main className="flex-grow pt-20"><BlogDetails /></main>
+             <Footer />
+           </div>
+        } />
+        <Route path="/blogs/:id" element={
+             <div className="flex flex-col min-h-screen">
+             <Navbar />
+             <QuotePopup />
+             <main className="flex-grow pt-20"><BlogDetails /></main>
              <Footer />
            </div>
         } />

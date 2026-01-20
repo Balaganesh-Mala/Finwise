@@ -14,8 +14,7 @@ const Inquiries = () => {
 
     const fetchInquiries = async () => {
         try {
-             // In a real app, you'd use a robust env var or configured axios instance
-            const res = await axios.get('http://localhost:5000/api/inquiries');
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries`);
             setInquiries(res.data);
             setLoading(false);
         } catch (err) {
@@ -27,7 +26,7 @@ const Inquiries = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this inquiry?')) {
             try {
-                await axios.delete(`http://localhost:5000/api/inquiries/${id}`);
+                await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries/${id}`);
                 setInquiries(inquiries.filter(item => item._id !== id));
                 toast.success('Inquiry deleted successfully');
             } catch (err) {
@@ -39,7 +38,7 @@ const Inquiries = () => {
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {
-            const res = await axios.patch(`http://localhost:5000/api/inquiries/${id}`, { status: newStatus });
+            const res = await axios.patch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries/${id}`, { status: newStatus });
             setInquiries(inquiries.map(item => item._id === id ? res.data : item));
         } catch (err) {
             console.error('Error updating status:', err);

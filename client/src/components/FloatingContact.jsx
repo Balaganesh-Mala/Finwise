@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, X, Phone, Mail, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 import { useSettings } from '../context/SettingsContext';
 
@@ -12,11 +13,34 @@ const FloatingContact = () => {
     const [currentImage, setCurrentImage] = useState(0);
     const [showHint, setShowHint] = useState(false);
     
-    const images = [
+    // Default fallback images
+    const defaultImages = [
         "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
         "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80", 
         "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
     ];
+
+    const [images, setImages] = useState(defaultImages);
+
+    useEffect(() => {
+        const fetchBanners = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/banners`);
+                const allBanners = res.data;
+                // Filter Orders 11-13 (Support Team Images)
+                const floatingBanners = allBanners
+                    .filter(b => b.isActive && b.order >= 11 && b.order <= 13)
+                    .map(b => b.fileUrl);
+                
+                if (floatingBanners.length > 0) {
+                    setImages(floatingBanners);
+                }
+            } catch (err) {
+                console.error("Error fetching floating contact images:", err);
+            }
+        };
+        fetchBanners();
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
@@ -25,7 +49,7 @@ const FloatingContact = () => {
             }, 3000);
             return () => clearInterval(timer);
         }
-    }, [isOpen]);
+    }, [isOpen, images.length]);
 
     // Sound and Hint Effect
     useEffect(() => {
@@ -38,8 +62,8 @@ const FloatingContact = () => {
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    console.log("Audio autoplay blocked by browser policy:", error);
-                    // Fallback: We can't force sound without interaction
+                    // Auto-play prevented, which is expected in many browsers without interaction
+                    // Silently fail or log if debugging
                 });
             }
             setShowHint(true);

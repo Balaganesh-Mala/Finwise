@@ -2,22 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Play, Star, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const HeroBanner = () => {
-    const banners = [
-        "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80",
-        "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80",
-        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
+    // Default hardcoded banners as fallback
+    const defaultBanners = [
+        { fileUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80", resourceType: 'image', _id: 'd1' },
+        { fileUrl: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80", resourceType: 'image', _id: 'd2' },
+        { fileUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80", resourceType: 'image', _id: 'd3' }
     ];
 
+    const [banners, setBanners] = useState(defaultBanners);
     const [current, setCurrent] = useState(0);
 
     useEffect(() => {
+        const fetchBanners = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/banners`);
+                const allBanners = res.data;
+                // Filter: Active AND Order 1-5 (Hero Section)
+                const heroBanners = allBanners.filter(b => b.isActive && b.order >= 1 && b.order <= 5);
+                
+                if (heroBanners.length > 0) {
+                    setBanners(heroBanners);
+                }
+            } catch (err) {
+                console.error("Error fetching hero banners:", err);
+            }
+        };
+
+        fetchBanners();
+    }, []);
+
+    useEffect(() => {
+        if (banners.length <= 1) return; // Don't cycle if only 1 banner
         const timer = setInterval(() => {
             setCurrent(prev => (prev + 1) % banners.length);
-        }, 4000);
+        }, 5000); // 5 seconds per slide
         return () => clearInterval(timer);
     }, [banners.length]);
+
+    const currentBanner = banners[current];
 
     return (
         <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden pt-20 mx-auto px-4 md:px-12 lg:px-24">
@@ -92,19 +117,34 @@ const HeroBanner = () => {
                         {/* Main Image Slider Shape */}
                         <div className="absolute top-10 right-10 w-4/5 h-4/5 bg-gray-900 rounded-[3rem] overflow-hidden shadow-2xl rotate-3 transition-transform hover:rotate-0 duration-500">
                             <AnimatePresence mode="wait">
-                                <motion.img 
-                                    key={current}
-                                    src={banners[current]}
-                                    alt="Hero"
-                                    initial={{ opacity: 0, scale: 1.1 }}
-                                    animate={{ opacity: 1, scale: 1 }}
+                                <motion.div 
+                                    key={currentBanner._id || current}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.8 }}
-                                    className="w-full h-full object-cover"
-                                />
+                                    className="w-full h-full"
+                                >
+                                    {currentBanner.resourceType === 'video' ? (
+                                        <video 
+                                            src={currentBanner.fileUrl} 
+                                            className="w-full h-full object-cover" 
+                                            autoPlay 
+                                            muted 
+                                            loop 
+                                            playsInline
+                                        />
+                                    ) : (
+                                        <img 
+                                            src={currentBanner.fileUrl} 
+                                            alt="Hero"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    )}
+                                </motion.div>
                             </AnimatePresence>
                             {/* Overlay Gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent pointer-events-none"></div>
                         </div>
 
                         {/* Floating Badge 1 */}

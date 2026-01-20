@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Coral/Orange Palette based on #FF7F50 */
+    --primary-50: #fff5f1;
+    --primary-100: #ffe6db;
+    --primary-200: #ffccbc;
+    --primary-300: #ffab91;
+    --primary-400: #ff8a65;
+    --primary-500: #ff7043;
+    --primary-600: #FF7F50; /* Base Color */
+    --primary-700: #e64a19;
+    --primary-800: #d84315;
+    --primary-900: #bf360c;
+    --primary-color: var(--primary-600); /* Fallback/Main */
+  }
+}
+
 body {
     background-color: #f9fafb; /* gray-50 */
 }

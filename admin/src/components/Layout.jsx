@@ -61,9 +61,10 @@ const Layout = () => {
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Students', path: '/students', icon: Users },
     { name: 'Banners', path: '/banners', icon: Image },
-    { name: 'Courses', path: '/courses', icon: BookOpen },
+    { name: 'Courses', path: '/courses', icon: BookOpen }, // Re-verified
     { name: 'Inquiries', path: '/inquiries', icon: MessageSquare, badge: inquiryCount > 0 ? inquiryCount : null },
     { name: 'Jobs', path: '/jobs', icon: Briefcase },
+    { name: 'Applications', path: '/applications', icon: FileText },
     { name: 'Blogs', path: '/blogs', icon: FileText },
     { name: 'Reviews', path: '/reviews', icon: Users },
     { name: 'Settings', path: '/settings', icon: Settings },

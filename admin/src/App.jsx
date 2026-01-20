@@ -11,7 +11,10 @@ import Students from './pages/Students';
 import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import Inquiries from './pages/Inquiries';
+import Jobs from './pages/Jobs';
+import Applications from './pages/Applications';
 import Courses from './pages/Courses';
+import Blogs from './pages/Blogs';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -35,7 +38,10 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="students" element={<Students />} />
             <Route path="banners" element={<Banners />} />
-            <Route path="courses" element={<Courses />} />
+            <Route path="courses" element={<Courses />} /> {/* New Route */}
+            <Route path="jobs" element={<Jobs />} />
+            <Route path="applications" element={<Applications />} />
+            <Route path="blogs" element={<Blogs />} />
             <Route path="inquiries" element={<Inquiries />} />
             <Route path="settings" element={<Settings />} />
             {/* Add more routes here as we migrate */}

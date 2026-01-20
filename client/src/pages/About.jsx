@@ -1,10 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import AboutSection from '../components/AboutSection';
 import { Users } from 'lucide-react';
+import axios from 'axios';
 
 const About = () => {
+  const [teamMembers, setTeamMembers] = useState([]);
+
+  useEffect(() => {
+    const fetchTeam = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/banners`);
+            const allBanners = res.data;
+            // Filter Orders 8-11 for Team Members
+            const team = allBanners.filter(b => b.isActive && b.order >= 8 && b.order <= 11);
+            setTeamMembers(team);
+        } catch (err) {
+            console.error("Error fetching team:", err);
+        }
+    };
+    fetchTeam();
+  }, []);
+
   return (
     <div className='bg-white'>
         <SEO 
@@ -59,17 +77,27 @@ const About = () => {
                     <p className="text-gray-600 mt-4">Led by industry experts with decades of experience.</p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                    {[1, 2, 3].map((item) => (
-                        <div key={item} className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:-translate-y-2 transition-transform">
-                            <div className="w-32 h-32 mx-auto bg-gray-200 rounded-full mb-6 overflow-hidden">
-                                <img src={`https://i.pravatar.cc/300?img=${item + 10}`} alt="Team Member" className="w-full h-full object-cover" />
+                {teamMembers.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 text-center">
+                        {teamMembers.map((member) => (
+                            <div key={member._id} className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:-translate-y-2 transition-transform h-full">
+                                <div className="w-32 h-32 mx-auto bg-gray-200 rounded-full mb-6 overflow-hidden">
+                                    <img src={member.fileUrl} alt={member.title} className="w-full h-full object-cover" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900">{member.title}</h3>
+                                <p className="text-indigo-600 font-medium text-sm mt-1">
+                                    {member.order === 8 ? 'CEO & Founder' : 
+                                     member.order === 9 ? 'CTO' : 
+                                     member.order === 10 ? 'Head of Education' : 'Senior Mentor'}
+                                </p>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900">John Smith</h3>
-                            <p className="text-indigo-600 font-medium">Founder & CEO</p>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center text-gray-500 italic p-8">
+                        Our team list is currently updating. Please check back later!
+                    </div>
+                )}
             </div>
         </div>
     </div>

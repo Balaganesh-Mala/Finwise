@@ -19,7 +19,7 @@ const Settings = () => {
 
     const fetchSettings = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/settings');
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/settings`);
             // Merge response with base structure to avoid undefined errors
             setFormData(prev => ({
                 ...prev,
@@ -50,8 +50,8 @@ const Settings = () => {
         e.preventDefault();
         setSaving(true);
         try {
-            await axios.put('http://localhost:5000/api/settings', formData);
-            alert('Settings updated successfully!');
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/settings`, formData);
+            toast.success('Settings updated successfully!');
         } catch (error) {
             console.error('Error updating settings:', error);
             const msg = error.response?.data?.message || error.message || 'Failed to update settings.';

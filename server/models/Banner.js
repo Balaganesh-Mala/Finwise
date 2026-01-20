@@ -3,34 +3,26 @@ const mongoose = require('mongoose');
 const BannerSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: [true, 'Please add a title']
+        required: [true, 'Please add a banner title']
     },
-    subtitle: {
-        type: String
+    fileUrl: {
+        type: String,
+        required: [true, 'Please upload a file']
     },
-    description: {
-        type: String
+    publicId: {
+        type: String,
+        required: true
     },
-    type: {
+    resourceType: {
         type: String,
         enum: ['image', 'video'],
-        default: 'image'
-    },
-    imageUrl: {
-        type: String
-    },
-    videoUrl: {
-        type: String
-    },
-    ctaText: {
-        type: String
-    },
-    ctaLink: {
-        type: String
+        required: true
     },
     order: {
         type: Number,
-        default: 0
+        required: [true, 'Please set a display order (1-50)'],
+        min: 1,
+        max: 50
     },
     isActive: {
         type: Boolean,

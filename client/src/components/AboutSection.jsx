@@ -1,9 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Users, Zap, ArrowRight, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const AboutSection = () => {
+    // Default Images
+    const defaultImage1 = "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80";
+    const defaultImage2 = "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80";
+
+    const [images, setImages] = useState({ img1: defaultImage1, img2: defaultImage2 });
+
+    useEffect(() => {
+        const fetchBanners = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/banners`);
+                const allBanners = res.data;
+                const banner6 = allBanners.find(b => b.order === 6 && b.isActive);
+                const banner7 = allBanners.find(b => b.order === 7 && b.isActive);
+                
+                setImages({
+                    img1: banner6 ? banner6.fileUrl : defaultImage1,
+                    img2: banner7 ? banner7.fileUrl : defaultImage2
+                });
+            } catch (err) {
+                console.error("Error fetching about images:", err);
+            }
+        };
+        fetchBanners();
+    }, []);
+
     return (
         <section className="py-24 bg-gray-50 relative overflow-hidden p-30 mx-auto px-4 md:px-12 lg:px-24">
              {/* Abstract Shapes */}
@@ -75,7 +101,7 @@ const AboutSection = () => {
                     {/* Visual Side */}
                     <div className="order-1 lg:order-2 relative py-10 lg:py-0">
                         <div className="relative h-[600px] w-full max-w-lg mx-auto lg:max-w-none">
-                            {/* Main Tall Image */}
+                            {/* Main Tall Image (Order 6) */}
                             <motion.div 
                                 initial={{ opacity: 0, y: 40 }}
                                 whileInView={{ opacity: 1, y: 0 }}
@@ -84,14 +110,14 @@ const AboutSection = () => {
                                 className="absolute right-0 top-0 w-4/5 h-4/5 rounded-[2.5rem] overflow-hidden shadow-2xl z-10 border-8 border-white"
                             >
                                 <img 
-                                    src="https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                                    alt="Students Collaborating" 
+                                    src={images.img1}
+                                    alt="About Main" 
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute inset-0 bg-indigo-900/10 mix-blend-multiply"></div>
                             </motion.div>
 
-                            {/* Secondary Overlapping Image */}
+                            {/* Secondary Overlapping Image (Order 7) */}
                             <motion.div 
                                 initial={{ opacity: 0, x: -40 }}
                                 whileInView={{ opacity: 1, x: 0 }}
@@ -100,8 +126,8 @@ const AboutSection = () => {
                                 className="absolute left-0 bottom-0 w-3/5 h-1/2 rounded-[2rem] overflow-hidden shadow-2xl z-20 border-4 border-gray-50"
                             >
                                 <img 
-                                    src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                                    alt="Mentorship" 
+                                    src={images.img2}
+                                    alt="About Secondary" 
                                     className="w-full h-full object-cover"
                                 />
                             </motion.div>

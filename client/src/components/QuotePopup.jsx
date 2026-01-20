@@ -11,7 +11,19 @@ const QuotePopup = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const [courses, setCourses] = useState([]);
+
     useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/courses`);
+                setCourses(res.data);
+            } catch (err) {
+                console.error('Error fetching courses:', err);
+            }
+        };
+        fetchCourses();
+
         const hasSeen = sessionStorage.getItem('hasSeenQuotePopup');
         if (!hasSeen) {
             const timer = setTimeout(() => {
@@ -93,15 +105,15 @@ const QuotePopup = () => {
                     </button>
 
                     {/* Left Side - Image (Desktop Only) */}
-                    <div className="hidden md:block w-1/2 relative bg-indigo-600">
+                    <div className="hidden md:block w-1/2 relative bg-indigo-300">
                         <img 
                             src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
                             alt="Student Success" 
-                            className="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-overlay"
+                            className="absolute inset-0 w-full h-full object-cover opacity-100 mix-blend-overlay"
                         />
-                         <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/80 to-transparent flex flex-col justify-end p-8 text-white">
-                            <h3 className="text-2xl font-bold mb-2">Kickstart Your Career</h3>
-                            <p className="text-indigo-100 text-sm">Join 5000+ students who have transformed their lives with our industry-led courses.</p>
+                         <div className="absolute inset-0 bg-gradient-to-t from-indigo-200/10 to-transparent flex flex-col justify-end p-8 text-white">
+                            <h3 className="text-2xl font-bold mb-2 text-white">Kickstart Your Career</h3>
+                            <p className="text-white text-sm">Join 5000+ students who have transformed their lives with our industry-led courses.</p>
                          </div>
                     </div>
 
@@ -159,9 +171,19 @@ const QuotePopup = () => {
                                                 className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-gray-500"
                                             >
                                                 <option value="">Select Interested Course</option>
-                                                <option value="MERN">MERN Stack Development</option>
-                                                <option value="DataScience">Data Science</option>
-                                                <option value="DigitalMarketing">Digital Marketing</option>
+                                                {courses.length > 0 ? (
+                                                    courses.map(course => (
+                                                        <option key={course._id} value={course.title}>
+                                                            {course.title}
+                                                        </option>
+                                                    ))
+                                                ) : (
+                                                    // Fallback options if API fails or no courses
+                                                    <>
+                                                        <option value="Full Stack Development">Full Stack Development</option>
+                                                        <option value="Data Science">Data Science</option>
+                                                    </>
+                                                )}
                                                 <option value="Other">Other</option>
                                             </select>
                                         </div>

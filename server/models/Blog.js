@@ -4,38 +4,39 @@ const slugify = require('slugify');
 const BlogSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: [true, 'Please add a title'],
-        unique: true
+        required: [true, 'Please add a blog title'],
+        unique: true,
+        trim: true
     },
     slug: {
         type: String,
         unique: true
     },
-    content: {
+    excerpt: {
         type: String,
-        required: [true, 'Please add content']
+        required: [true, 'Please add a short excerpt'],
+        maxlength: [500, 'Excerpt cannot be more than 500 characters']
     },
-    coverImage: {
+    content: {
+        type: String, // Rich Text / HTML
+        required: [true, 'Please add blog content']
+    },
+    imageUrl: {
         type: String,
-        default: 'no-photo.jpg'
+        required: [true, 'Please upload a cover image']
+    },
+    imagePublicId: {
+        type: String,
+        required: true
+    },
+    author: {
+        type: String,
+        default: 'JobReady Team'
     },
     category: {
         type: String,
-        required: [true, 'Please add a category']
-    },
-    tags: {
-        type: [String]
-    },
-    metaTitle: {
-        type: String
-    },
-    metaDescription: {
-        type: String
-    },
-    author: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
-        required: true
+        required: [true, 'Please select a category'],
+        enum: ['Career Advice', 'Technology', 'Design', 'Development', 'Success Stories', 'Other']
     },
     createdAt: {
         type: Date,
@@ -43,7 +44,7 @@ const BlogSchema = new mongoose.Schema({
     }
 });
 
-// Create blog slug from the title
+// Create slug from title
 BlogSchema.pre('save', function(next) {
     this.slug = slugify(this.title, { lower: true });
     next();

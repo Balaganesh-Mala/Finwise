@@ -5,16 +5,28 @@ const CourseSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a course title']
     },
+    overview: {
+        type: String,
+        required: [true, 'Please add a course overview']
+    },
     description: {
         type: String,
-        required: [true, 'Please add a description']
+        required: [true, 'Please add a short description']
     },
     duration: {
-        type: String, // e.g., '3 Months'
+        type: String,
         required: [true, 'Please add course duration']
     },
+    highlights: {
+        type: [String], // Array of strings
+        default: []
+    },
+    syllabus: [{
+        title: String,
+        modules: [String]
+    }],
     fee: {
-        type: String, // e.g., '$500' or '50000 INR'
+        type: String, 
         required: [true, 'Please add course fee']
     },
     skillLevel: {
@@ -26,14 +38,16 @@ const CourseSchema = new mongoose.Schema({
         type: String,
         default: 'no-photo.jpg'
     },
-    syllabusUrl: {
-        type: String // PDF file URL
-    },
-    viewDetailsLink: {
+    imagePublicId: {
         type: String
     },
-    enrollLink: {
-        type: String
+    syllabusPdf: {
+        url: String,
+        publicId: String
+    },
+    brochurePdf: {
+        url: String,
+        publicId: String
     },
     createdAt: {
         type: Date,
