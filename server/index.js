@@ -15,7 +15,16 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+    origin: [
+        'http://localhost:5173', 
+        'http://localhost:5000', 
+        'https://jobready-client.onrender.com',
+        process.env.CLIENT_URL // Good practice to have env var too
+    ],
+    credentials: true
+}));
 app.use(express.json());
 
 // Rate limiting

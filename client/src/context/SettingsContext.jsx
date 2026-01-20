@@ -10,7 +10,7 @@ export const SettingsProvider = ({ children }) => {
         siteTitle: 'JobReady',
         logoUrl: '',
         contact: {
-            phone: '+1 (555) 123-4567',
+            phone: '+91 9874563210',
             whatsapp: '1234567890',
             email: 'info@jobreadyskills.com',
             address: '123 Skills Ave, Tech City'
