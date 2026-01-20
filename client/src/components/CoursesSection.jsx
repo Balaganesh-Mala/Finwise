@@ -49,21 +49,22 @@ const CoursesSection = () => {
     dots: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 3,
+    slidesToShow: 1,
     slidesToScroll: 1,
+    mobileFirst: true,
     autoplay: true,
     autoplaySpeed: 4000,
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 768,
         settings: {
           slidesToShow: 2,
         }
       },
       {
-        breakpoint: 640,
+        breakpoint: 1024,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 3,
         }
       }
     ]
@@ -80,7 +81,7 @@ const CoursesSection = () => {
           </p>
         </div>
 
-        <Slider {...settings} className="p-10">
+        <Slider {...settings} className="px-4 md:px-10">
           {courses.map((course) => (
             <CourseCard key={course._id} course={course} />
           ))}

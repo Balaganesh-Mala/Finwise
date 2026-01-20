@@ -93,24 +93,25 @@ const CertificateSection = () => {
                     </div>
 
                     {/* Footer / Signatures */}
-                    <div className="relative z-10 w-full flex justify-between items-end mt-8">
-                        <div className="text-center">
-                            <div className="w-32 border-b border-gray-400 mb-2"></div>
+                    {/* Footer / Signatures */}
+                    <div className="relative z-10 w-full flex flex-col gap-8 md:flex-row md:justify-between md:items-end mt-8">
+                        <div className="text-center order-2 md:order-1">
+                            <div className="w-24 md:w-32 border-b border-gray-400 mb-2 mx-auto"></div>
                             <p className="text-xs text-gray-500 font-semibold uppercase">Instructor</p>
                         </div>
                         
-                        <div className="text-center">
-                            <div className="w-24 h-24 absolute left-1/2 -translate-x-1/2 -top-12 opacity-10 pointer-events-none">
+                        <div className="text-center order-1 md:order-2 mb-4 md:mb-0">
+                            <div className="w-20 h-20 md:w-24 md:h-24 absolute left-1/2 -translate-x-1/2 -top-10 md:-top-12 opacity-10 pointer-events-none">
                                 <img src="/logo-placeholder.png" alt="" />
                             </div>
                             <p className="text-xs text-gray-400 font-mono">ID: JR-2024-8839</p>
                             <p className="text-xs text-gray-400">Date: Oct 24, 2024</p>
                         </div>
 
-                        <div className="text-center">
+                        <div className="text-center order-3">
                              {/* Fake Signature */}
-                            <div className="font-cursive text-xl text-gray-800 mb-1" style={{ fontFamily: 'cursive' }}>Sarah Smith</div>
-                            <div className="w-32 border-b border-gray-400 mb-2"></div>
+                            <div className="font-cursive text-lg md:text-xl text-gray-800 mb-1" style={{ fontFamily: 'cursive' }}>Sarah Smith</div>
+                            <div className="w-24 md:w-32 border-b border-gray-400 mb-2 mx-auto"></div>
                             <p className="text-xs text-gray-500 font-semibold uppercase">Director</p>
                         </div>
                     </div>
