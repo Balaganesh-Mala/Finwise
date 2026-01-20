@@ -45,7 +45,7 @@ const FaqSection = () => {
     <section className="py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
-          
+
           {/* Left Column: Sticky Header info */}
           <div className="lg:col-span-5">
             <div className="sticky top-32">
@@ -57,20 +57,20 @@ const FaqSection = () => {
               <p className="text-lg text-gray-500 mb-8 leading-relaxed">
                 Everything you need to know about the product and billing. Can’t find the answer you’re looking for? Please chat to our friendly team.
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4">
-                <a 
-                    href={`https://wa.me/1234567890?text=${whatsappMessage}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+                <a
+                  href={`https://wa.me/1234567890?text=${whatsappMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
                 >
                   <MessageCircle className="mr-2" size={20} />
                   Chat with us
                 </a>
-                <button 
-                    onClick={() => navigate('/courses')}
-                    className="inline-flex items-center justify-center px-6 py-3 border border-gray-200 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all"
+                <button
+                  onClick={() => navigate('/courses')}
+                  className="inline-flex items-center justify-center px-6 py-3 border border-gray-200 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all"
                 >
                   Explore Courses
                 </button>
@@ -94,7 +94,7 @@ const FaqSection = () => {
                       {activeIndex === index ? <Minus size={16} /> : <Plus size={16} />}
                     </span>
                   </button>
-                  
+
                   <AnimatePresence>
                     {activeIndex === index && (
                       <motion.div

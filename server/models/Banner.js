@@ -9,6 +9,15 @@ const BannerSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please upload a file']
     },
+    description: {
+        type: String
+    },
+    buttonText: {
+        type: String
+    },
+    buttonLink: {
+        type: String
+    },
     publicId: {
         type: String,
         required: true

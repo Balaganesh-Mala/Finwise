@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Slider from "react-slick";
-import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Star, Quote, Code, Palette, Database, TrendingUp } from 'lucide-react';
 
@@ -10,14 +10,14 @@ const ReviewsSection = () => {
 
     useEffect(() => {
         const handleResize = () => {
-        const width = window.innerWidth;
-        if (width < 768) {
-            setSlidesToShow(1);
-        } else if (width < 1024) {
-            setSlidesToShow(2);
-        } else {
-            setSlidesToShow(3);
-        }
+            const width = window.innerWidth;
+            if (width < 768) {
+                setSlidesToShow(1);
+            } else if (width < 1024) {
+                setSlidesToShow(2);
+            } else {
+                setSlidesToShow(3);
+            }
         };
 
         handleResize(); // Initial
@@ -76,7 +76,7 @@ const ReviewsSection = () => {
             icon: Palette,
             color: "bg-pink-100 text-pink-600"
         },
-         {
+        {
             id: 6,
             name: "Michael Chen",
             role: "Product Manager @ Amazon",
@@ -139,24 +139,24 @@ const ReviewsSection = () => {
         return (
             <div className="px-4 py-4">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300 h-full min-h-[220px] flex flex-col justify-between mx-2">
-                    
+
                     <div>
                         <div className="flex justify-between items-start mb-4">
-                             <div className={`p-3 rounded-xl ${data.color}`}>
+                            <div className={`p-3 rounded-xl ${data.color}`}>
                                 <Icon size={20} />
-                             </div>
-                             <div className="flex gap-0.5">
+                            </div>
+                            <div className="flex gap-0.5">
                                 {[...Array(5)].map((_, i) => (
-                                    <Star 
-                                        key={i} 
-                                        size={14} 
-                                        fill={i < data.rating ? "#FBBF24" : "none"} 
-                                        className={i < data.rating ? "text-yellow-400" : "text-gray-200"} 
+                                    <Star
+                                        key={i}
+                                        size={14}
+                                        fill={i < data.rating ? "#FBBF24" : "none"}
+                                        className={i < data.rating ? "text-yellow-400" : "text-gray-200"}
                                     />
                                 ))}
-                             </div>
+                            </div>
                         </div>
-                        
+
                         <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
                             "{data.review}"
                         </p>
@@ -177,7 +177,7 @@ const ReviewsSection = () => {
     };
 
     return (
-        <section className="py-24 bg-gray-50 overflow-hidden">
+        <section className="py-8 bg-gray-50 overflow-hidden">
             <div className="container mx-auto px-6 mb-16 text-center">
                 <span className="inline-block py-1 px-3 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold tracking-widest uppercase mb-4">
                     Wall of Love
@@ -203,7 +203,7 @@ const ReviewsSection = () => {
                 {/* Row 2 - Right Loop */}
                 <div className="cursor-grab active:cursor-grabbing" dir="rtl">
                     <Slider key={`row2-${slidesToShow}`} {...settingsRow2}>
-                         {reviewsRow2.map(review => (
+                        {reviewsRow2.map(review => (
                             <div key={review.id} dir="ltr"> {/* Reset direction for text readability inside card */}
                                 <ReviewCard data={review} />
                             </div>

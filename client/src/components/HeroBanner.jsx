@@ -22,7 +22,7 @@ const HeroBanner = () => {
                 const allBanners = res.data;
                 // Filter: Active AND Order 1-5 (Hero Section)
                 const heroBanners = allBanners.filter(b => b.isActive && b.order >= 1 && b.order <= 5);
-                
+
                 if (heroBanners.length > 0) {
                     setBanners(heroBanners);
                 }
@@ -46,13 +46,21 @@ const HeroBanner = () => {
 
     return (
         <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden pt-20 mx-auto px-4 md:px-12 lg:px-24">
-            
+
+            {/* Light Grid Background */}
+            <div className="absolute inset-0 pointer-events-none" style={{
+                backgroundImage: `linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px)`,
+                backgroundSize: '50px 50px',
+                maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)',
+                WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)'
+            }}></div>
+
             {/* Background Blobs */}
             <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[800px] h-[800px] bg-indigo-200/30 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-purple-200/30 rounded-full blur-3xl" />
 
             <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
-                
+
                 {/* Text Content (Left) */}
                 <div className="max-w-2xl">
                     <motion.div
@@ -60,13 +68,16 @@ const HeroBanner = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold mb-6">
-                            <span className="flex h-2 w-2 rounded-full bg-indigo-600"></span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm font-semibold mb-6">
+                            <span className="relative flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
+                            </span>
                             New Batch Starting Soon
                         </div>
 
                         <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-[1.1] mb-6">
-                            Unlock Your <br/>
+                            Unlock Your <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
                                 Global Potential
                             </span>
@@ -77,13 +88,13 @@ const HeroBanner = () => {
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-10">
-                            <Link 
+                            <Link
                                 to="/courses"
                                 className="px-8 py-4 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all flex items-center gap-2 shadow-xl shadow-gray-200"
                             >
                                 Browse Courses <ArrowRight size={20} />
                             </Link>
-                            <Link 
+                            <Link
                                 to="/about"
                                 className="px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center gap-2"
                             >
@@ -117,7 +128,7 @@ const HeroBanner = () => {
                         {/* Main Image Slider Shape */}
                         <div className="absolute top-10 right-10 w-4/5 h-4/5 bg-gray-900 rounded-[3rem] overflow-hidden shadow-2xl rotate-3 transition-transform hover:rotate-0 duration-500">
                             <AnimatePresence mode="wait">
-                                <motion.div 
+                                <motion.div
                                     key={currentBanner._id || current}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
@@ -126,17 +137,17 @@ const HeroBanner = () => {
                                     className="w-full h-full"
                                 >
                                     {currentBanner.resourceType === 'video' ? (
-                                        <video 
-                                            src={currentBanner.fileUrl} 
-                                            className="w-full h-full object-cover" 
-                                            autoPlay 
-                                            muted 
-                                            loop 
+                                        <video
+                                            src={currentBanner.fileUrl}
+                                            className="w-full h-full object-cover"
+                                            autoPlay
+                                            muted
+                                            loop
                                             playsInline
                                         />
                                     ) : (
-                                        <img 
-                                            src={currentBanner.fileUrl} 
+                                        <img
+                                            src={currentBanner.fileUrl}
                                             alt="Hero"
                                             className="w-full h-full object-cover"
                                         />
@@ -148,7 +159,7 @@ const HeroBanner = () => {
                         </div>
 
                         {/* Floating Badge 1 */}
-                        <motion.div 
+                        <motion.div
                             initial={{ x: 50, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ delay: 0.5 }}
@@ -164,15 +175,15 @@ const HeroBanner = () => {
                         </motion.div>
 
                         {/* Floating Badge 2 */}
-                        <motion.div 
+                        <motion.div
                             initial={{ y: 50, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.7 }}
                             className="absolute bottom-20 left-10 bg-white p-4 pr-8 rounded-2xl shadow-xl border border-gray-100 flex -space-x-4 items-center z-20"
                         >
-                            {[1,2,3,4].map(i => (
+                            {[1, 2, 3, 4].map(i => (
                                 <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
-                                     <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" />
+                                    <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" />
                                 </div>
                             ))}
                             <div className="ml-6 pl-2">
