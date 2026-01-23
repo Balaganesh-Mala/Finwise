@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import QuotePopup from './components/QuotePopup';
 import FloatingContact from './components/FloatingContact';
 import WhatsAppButton from './components/WhatsAppButton';
+import FloatingLocation from './components/FloatingLocation';
 import ScrollToTop from './components/ScrollToTop';
 import Careers from './pages/Careers';
 import Blogs from './pages/Blogs';
@@ -43,6 +44,7 @@ function App() {
                 <QuotePopup />
                 <FloatingContact />
                 <WhatsAppButton />
+                <FloatingLocation />
                 <main className="flex-grow pt-20">
                   <Home />
                 </main>

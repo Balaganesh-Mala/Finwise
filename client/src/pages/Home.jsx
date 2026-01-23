@@ -8,6 +8,9 @@ import CoursesSection from '../components/CoursesSection';
 import CertificateSection from '../components/CertificateSection';
 import ReviewsSection from '../components/ReviewsSection';
 import FaqSection from '../components/FaqSection';
+import StudentSuccessDashboard from '../components/StudentSuccessDashboard';
+import LocationSection from '../components/LocationSection';
+
 
 const Home = () => {
   return (
@@ -34,6 +37,9 @@ const Home = () => {
       {/* Certificate Section */}
       <CertificateSection />
 
+      {/* Student Success Dashboard */}
+      <StudentSuccessDashboard />
+
       {/* Company Logos Section */}
       <CompanyLogos />
 
@@ -42,7 +48,11 @@ const Home = () => {
 
       {/* FAQ Section */}
       <FaqSection />
+
+      {/* Location Section */}
+      <LocationSection />
     </div>
+
   );
 };
 
