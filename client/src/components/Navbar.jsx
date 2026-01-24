@@ -40,8 +40,6 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-
-          {/* Logo */}
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             {settings?.logoUrl ? (
@@ -61,7 +59,7 @@ const Navbar = () => {
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-xl text-gray-900 leading-none">{siteTitle}</span>
-              <span className="text-xs text-gray-500 font-medium tracking-wider">SKILL ACADEMY</span>
+              <span className="text-xs text-gray-500 font-medium tracking-wider">SKILL UP ACADEMY</span>
             </div>
           </Link>
 
@@ -74,8 +72,8 @@ const Navbar = () => {
                   key={link.name}
                   to={link.path}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive
-                      ? 'text-indigo-600 bg-indigo-50'
-                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                    ? 'text-indigo-600 bg-indigo-50'
+                    : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
                     }`}
                 >
                   {link.name}

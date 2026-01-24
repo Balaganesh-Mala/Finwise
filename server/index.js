@@ -19,6 +19,8 @@ app.use(cors({
     origin: [
         'http://localhost:5173', 
         'http://localhost:5174', // Admin Panel
+        'http://localhost:5175', // Potential Student Port
+        'http://localhost:5176',
         'http://localhost:5000', 
         'https://jobready-client.onrender.com',
         process.env.CLIENT_URL,
@@ -45,6 +47,8 @@ app.use('/api/jobs', require('./routes/jobRoutes'));
 app.use('/api/applications', require('./routes/applicationRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/blogs', require('./routes/blogRoutes'));
+app.use('/api/run', require('./routes/runRoutes'));
+app.use('/api/code', require('./routes/codeRoutes'));
 
 app.get('/', (req, res) => {
     res.send('JobReady Skills Center API is running');

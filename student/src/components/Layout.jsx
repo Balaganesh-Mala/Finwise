@@ -1,29 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { 
-    LayoutDashboard, 
-    BookOpen, 
-    User, 
-    LogOut, 
-    Menu, 
-    X, 
-    GraduationCap, 
-    Bell, 
+import {
+    LayoutDashboard,
+    BookOpen,
+    User,
+    LogOut,
+    Menu,
+    X,
+    GraduationCap,
+    Bell,
     Search,
     ChevronDown,
-    Settings
+    Settings,
+    Code2,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import axios from 'axios';
 
 const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState(null);
+    const [settings, setSettings] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
         // Fetch user for the profile dropdown/avatar
         supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+
+        // Fetch company settings
+        const fetchSettings = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+                const { data } = await axios.get(`${API_URL}/settings`);
+                setSettings(data);
+            } catch (error) {
+                console.error("Failed to fetch settings:", error);
+            }
+        };
+        fetchSettings();
     }, []);
 
     const handleLogout = async () => {
@@ -34,39 +51,65 @@ const Layout = () => {
     const navItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
         { icon: BookOpen, label: 'My Courses', path: '/courses' },
+        { icon: Code2, label: 'Playground', path: '/playground' },
         { icon: User, label: 'Profile', path: '/profile' },
         { icon: Settings, label: 'Settings', path: '/settings' },
     ];
+
+    const [collapsed, setCollapsed] = useState(false);
+
+    // ... (existing hooks)
 
     return (
         <div className="h-screen w-full bg-gray-50 flex overflow-hidden">
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 lg:hidden transition-opacity"
                     onClick={() => setSidebarOpen(false)}
                 ></div>
             )}
 
             {/* Sidebar */}
-            <aside 
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 shadow-xl lg:shadow-none transform transition-transform duration-300 ease-in-out ${
-                    sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                }`}
+            <aside
+                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-gray-200 shadow-xl lg:shadow-none transform transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    } ${collapsed ? 'w-20' : 'w-72'}`}
             >
                 {/* Logo Area */}
-                <div className="h-20 flex items-center justify-between px-8 border-b border-gray-100">
+                <div className={`h-20 flex items-center ${collapsed ? 'justify-center' : 'justify-between px-8'} border-b border-gray-100 relative`}>
                     <div className="flex items-center gap-3">
-                        <div className="bg-indigo-600 p-2 rounded-lg">
-                            <GraduationCap className="text-white" size={24} />
-                        </div>
-                        <div>
-                            <span className="block text-lg font-bold text-gray-900 leading-tight">JobReady</span>
-                            <span className="block text-xs text-indigo-600 font-semibold tracking-wide">STUDENT PORTAL</span>
-                        </div>
+                        {settings?.logoUrl ? (
+                            <img
+                                src={settings.logoUrl}
+                                alt="Logo"
+                                className="w-10 h-10 rounded-lg object-cover shrink-0"
+                            />
+                        ) : (
+                            <div className="bg-indigo-600 p-2 rounded-lg shrink-0">
+                                <GraduationCap className="text-white" size={24} />
+                            </div>
+                        )}
+
+                        {!collapsed && (
+                            <div className="transition-opacity duration-300">
+                                <span className="block text-lg font-bold text-gray-900 leading-tight">
+                                    {settings?.siteTitle || 'Wonew Skill Up Academy'}
+                                </span>
+                                <span className="block text-xs text-indigo-600 font-semibold tracking-wide">STUDENT PORTAL</span>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Desktop Toggle Button */}
+                    <button
+                        onClick={() => setCollapsed(!collapsed)}
+                        className={`hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-500 hover:text-indigo-600 shadow-sm hover:shadow transition-colors z-50`}
+                    >
+                        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                    </button>
+
                     {/* Close button for mobile */}
-                    <button 
+                    <button
                         onClick={() => setSidebarOpen(false)}
                         className="lg:hidden text-gray-400 hover:text-gray-600"
                     >
@@ -75,47 +118,48 @@ const Layout = () => {
                 </div>
 
                 {/* Navigation Links */}
-                <nav className="p-6 space-y-2">
+                <nav className="p-4 space-y-2">
                     {navItems.map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}
                             onClick={() => setSidebarOpen(false)}
                             className={({ isActive }) =>
-                                `flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
-                                    isActive 
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+                                `flex items-center ${collapsed ? 'justify-center px-2' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all duration-200 group relative ${isActive
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                 }`
                             }
+                            title={collapsed ? item.label : ''}
                         >
-                            <item.icon size={22} className={location.pathname === item.path ? 'text-white' : 'text-gray-400 group-hover:text-indigo-600'} />
-                            <span className="font-medium">{item.label}</span>
+                            <item.icon size={22} className={`shrink-0 ${location.pathname === item.path ? 'text-white' : 'text-gray-400 group-hover:text-indigo-600'}`} />
+                            {!collapsed && <span className="font-medium whitespace-nowrap">{item.label}</span>}
                         </NavLink>
                     ))}
                 </nav>
 
                 {/* Bottom Section */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gray-50/50">
-                    <button 
+                <div className={`absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-gray-50/50`}>
+                    <button
                         onClick={handleLogout}
-                        className="flex items-center justify-center w-full gap-3 px-4 py-3 text-red-600 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-all font-medium shadow-sm hover:shadow"
+                        className={`flex items-center ${collapsed ? 'justify-center' : 'justify-center gap-3 w-full'} px-4 py-3 text-red-600 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-all font-medium shadow-sm hover:shadow`}
+                        title={collapsed ? "Sign Out" : ""}
                     >
                         <LogOut size={20} />
-                        Sign Out
+                        {!collapsed && <span>Sign Out</span>}
                     </button>
                 </div>
             </aside>
 
             {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col min-w-0 h-full relative">
-                
+
                 {/* Navbar (Top Header) */}
                 <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30">
-                    
+
                     {/* Left Side: Mobile Menu Toggle & Title/Breadcrumb */}
                     <div className="flex items-center gap-4">
-                        <button 
+                        <button
                             className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                             onClick={() => setSidebarOpen(true)}
                         >
@@ -128,13 +172,13 @@ const Layout = () => {
 
                     {/* Right Side: Search & Profile */}
                     <div className="flex items-center gap-6">
-                        
+
                         {/* Search Bar (Desktop) */}
                         <div className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2.5 w-64 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
                             <Search size={18} className="text-gray-400" />
-                            <input 
-                                type="text" 
-                                placeholder="Search courses..." 
+                            <input
+                                type="text"
+                                placeholder="Search courses..."
                                 className="bg-transparent border-none outline-none text-sm ml-2 w-full text-gray-700 placeholder-gray-400"
                             />
                         </div>
@@ -151,9 +195,9 @@ const Layout = () => {
                         <div className="flex items-center gap-3 pl-2 cursor-pointer hover:bg-gray-50 py-1.5 px-2 rounded-lg transition-colors">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 p-[2px]">
                                 <div className="w-full h-full bg-white rounded-full p-[2px]">
-                                    <img 
-                                        src={user?.user_metadata?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} 
-                                        alt="User" 
+                                    <img
+                                        src={user?.user_metadata?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"}
+                                        alt="User"
                                         className="w-full h-full rounded-full object-cover"
                                     />
                                 </div>
@@ -168,8 +212,8 @@ const Layout = () => {
                 </header>
 
                 {/* Page Content (Scrollable Area) */}
-                <main className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth">
-                    <div className="max-w-7xl mx-auto">
+                <main className={`flex-1 scroll-smooth ${location.pathname.includes('/playground') ? 'p-0 overflow-hidden' : 'p-6 lg:p-10 overflow-y-auto'}`}>
+                    <div className={location.pathname.includes('/playground') ? 'w-full h-full' : 'max-w-7xl mx-auto'}>
                         <Outlet />
                     </div>
                 </main>

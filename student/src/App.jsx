@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import MyCourses from './pages/MyCourses';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Playground from './pages/Playground';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -12,14 +13,15 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        
+
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-             <Route index element={<Dashboard />} />
-             <Route path="courses" element={<MyCourses />} />
-             <Route path="profile" element={<Profile />} />
-             <Route path="settings" element={<Settings />} />
+          <Route index element={<Dashboard />} />
+          <Route path="courses" element={<MyCourses />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="playground" element={<Playground />} />
         </Route>
-        
+
       </Routes>
     </Router>
   );
