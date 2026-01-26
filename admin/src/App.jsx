@@ -15,6 +15,8 @@ import Jobs from './pages/Jobs';
 import Applications from './pages/Applications';
 import Courses from './pages/Courses';
 import Blogs from './pages/Blogs';
+import QRScanner from './pages/QRScanner';
+import AttendanceHistory from './pages/AttendanceHistory';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -31,21 +33,23 @@ function App() {
 
         {/* Protected Routes */}
         <Route path="/" element={
-            <ProtectedRoute>
-                <Layout />
-            </ProtectedRoute>
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
         }>
-            <Route index element={<Dashboard />} />
-            <Route path="students" element={<Students />} />
-            <Route path="banners" element={<Banners />} />
-            <Route path="courses" element={<Courses />} /> {/* New Route */}
-            <Route path="jobs" element={<Jobs />} />
-            <Route path="applications" element={<Applications />} />
-            <Route path="blogs" element={<Blogs />} />
-            <Route path="inquiries" element={<Inquiries />} />
-            <Route path="settings" element={<Settings />} />
-            {/* Add more routes here as we migrate */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+          <Route index element={<Dashboard />} />
+          <Route path="students" element={<Students />} />
+          <Route path="banners" element={<Banners />} />
+          <Route path="courses" element={<Courses />} /> {/* New Route */}
+          <Route path="jobs" element={<Jobs />} />
+          <Route path="applications" element={<Applications />} />
+          <Route path="blogs" element={<Blogs />} />
+          <Route path="inquiries" element={<Inquiries />} />
+          <Route path="attendance/qr-scanner" element={<QRScanner />} />
+          <Route path="attendance/history" element={<AttendanceHistory />} />
+          <Route path="settings" element={<Settings />} />
+          {/* Add more routes here as we migrate */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </Router>

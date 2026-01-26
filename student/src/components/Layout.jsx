@@ -15,7 +15,10 @@ import {
     Code2,
     ChevronLeft,
     ChevronRight,
+    QrCode,
+    Calendar // Import Calendar
 } from 'lucide-react';
+
 import { supabase } from '../lib/supabaseClient';
 import axios from 'axios';
 
@@ -51,6 +54,8 @@ const Layout = () => {
     const navItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
         { icon: BookOpen, label: 'My Courses', path: '/courses' },
+        { icon: QrCode, label: 'My QR', path: '/my-qr' },
+        { icon: Calendar, label: 'My Attendance', path: '/my-attendance' },
         { icon: Code2, label: 'Playground', path: '/playground' },
         { icon: User, label: 'Profile', path: '/profile' },
         { icon: Settings, label: 'Settings', path: '/settings' },

@@ -6,6 +6,8 @@ import MyCourses from './pages/MyCourses';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Playground from './pages/Playground';
+import MyQR from './pages/MyQR';
+import AttendanceHistory from './pages/AttendanceHistory';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
           <Route path="courses" element={<MyCourses />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="my-qr" element={<MyQR />} />
+          <Route path="my-attendance" element={<AttendanceHistory />} />
           <Route path="playground" element={<Playground />} />
         </Route>
 
