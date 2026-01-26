@@ -23,6 +23,7 @@ app.use(cors({
         'http://localhost:5176',
         'http://localhost:5000', 
         'https://jobready-client.onrender.com',
+        'https://jobready-q89p.onrender.com', // Student Portal Deployed
         process.env.CLIENT_URL,
         process.env.ADMIN_URL
     ],
