@@ -71,17 +71,17 @@ const Dashboard = () => {
 
             {/* Analytics Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                
+
                 {/* Activity Chart */}
                 <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <h2 className="text-lg font-bold text-gray-800 mb-6">Weekly Learning Activity</h2>
                     <div style={{ width: '100%', height: 300 }}>
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                             <BarChart data={activityData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} dy={10} />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} />
-                                <Tooltip 
+                                <Tooltip
                                     cursor={{ fill: '#F9FAFB' }}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                                 />
@@ -95,7 +95,7 @@ const Dashboard = () => {
                 <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <h2 className="text-lg font-bold text-gray-800 mb-6">Course Progress</h2>
                     <div style={{ width: '100%', height: 300, position: 'relative' }}>
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                             <PieChart>
                                 <Pie
                                     data={progressData}
@@ -119,7 +119,7 @@ const Dashboard = () => {
                             <span className="text-xs text-gray-400 font-medium">Avg. Completion</span>
                         </div>
                     </div>
-                    
+
                     {/* Legend */}
                     <div className="flex justify-center gap-4 mt-4">
                         {progressData.map((item, index) => (
@@ -138,7 +138,7 @@ const Dashboard = () => {
                     <h2 className="text-lg font-bold text-gray-800">Recent Activity</h2>
                     <button className="text-indigo-600 text-sm font-medium hover:underline">View All</button>
                 </div>
-                
+
                 <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
                         <div key={i} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100">
