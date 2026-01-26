@@ -133,8 +133,8 @@ console.log('Hello from Web Mode');`
     const fetchHistory = async () => {
         if (!user) return;
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-            const res = await axios.get(`${API_URL}/code/${user.id}`);
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await axios.get(`${API_URL}/api/code/${user.id}`);
             setHistory(res.data.data);
             setShowHistory(true);
         } catch (err) {
@@ -179,8 +179,8 @@ console.log('Hello from Web Mode');`
         setError(null);
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-            const res = await axios.post(`${API_URL}/run`, {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await axios.post(`${API_URL}/api/run`, {
                 language,
                 code
             });
@@ -203,8 +203,8 @@ console.log('Hello from Web Mode');`
         if (!user) return alert('Please login to save your work.');
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-            await axios.post(`${API_URL}/code/save`, {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            await axios.post(`${API_URL}/api/code/save`, {
                 studentId: user.id,
                 language,
                 code: language === 'html' ? JSON.stringify(webCode) : code,

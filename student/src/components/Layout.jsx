@@ -36,8 +36,8 @@ const Layout = () => {
         // Fetch company settings
         const fetchSettings = async () => {
             try {
-                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-                const { data } = await axios.get(`${API_URL}/settings`);
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const { data } = await axios.get(`${API_URL}/api/settings`);
                 setSettings(data);
             } catch (error) {
                 console.error("Failed to fetch settings:", error);

@@ -39,11 +39,11 @@ const MyQR = () => {
         try {
             setLoading(true);
             setStatus('Fetching QR Code from Server...');
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             console.log(`Fetching QR for: ${userId} at ${apiUrl}`);
 
             // The backend is smart enough to check by ID or Supabase ID
-            let res = await axios.get(`${apiUrl}/qr/${userId}`);
+            let res = await axios.get(`${apiUrl}/api/qr/${userId}`);
 
             console.log("QR Fetch Response:", res.data);
             setQrData(res.data);
@@ -65,8 +65,9 @@ const MyQR = () => {
     const generateQR = async (userId) => {
         try {
             setStatus('Generating QR Code...');
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-            const genRes = await axios.post(`${apiUrl}/qr/generate/${userId}`);
+            setStatus('Generating QR Code...');
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const genRes = await axios.post(`${apiUrl}/api/qr/generate/${userId}`);
 
             if (genRes.data.success) {
                 console.log("QR Generated:", genRes.data);

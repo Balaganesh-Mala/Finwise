@@ -28,14 +28,14 @@ const AttendanceHistory = () => {
             setLoading(true);
             const activeFilters = overrideFilters || filters;
 
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             const queryParams = new URLSearchParams({
                 startDate: activeFilters.startDate,
                 endDate: activeFilters.endDate,
                 studentId: user.id // Send Supabase UUID
             }).toString();
 
-            const res = await axios.get(`${API_URL}/attendance/history?${queryParams}`);
+            const res = await axios.get(`${API_URL}/api/attendance/history?${queryParams}`);
             setRecords(res.data);
         } catch (error) {
             console.error(error);
