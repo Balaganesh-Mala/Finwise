@@ -54,19 +54,19 @@ const Login = () => {
       {/* Left Side - Visual & Branding */}
       <div className="hidden lg:flex w-1/2 bg-indigo-900 relative overflow-hidden items-center justify-center">
         <div className="absolute inset-0 z-0">
-             <img 
-                src="https://images.unsplash.com/photo-1497294815431-9365093b7331?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
-                alt="Office" 
-                className="w-full h-full object-cover opacity-20"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/90 to-purple-900/90 mix-blend-multiply" />
+          <img
+            src="https://images.unsplash.com/photo-1497294815431-9365093b7331?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
+            alt="Office"
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/90 to-purple-900/90 mix-blend-multiply" />
         </div>
-        
+
         <div className="relative z-10 text-center px-10">
-            <h1 className="text-4xl font-bold text-white mb-6">Welcome Back!</h1>
-            <p className="text-indigo-200 text-lg leading-relaxed max-w-md mx-auto">
-                Manage your courses, students, and inquiries efficiently from one central dashboard.
-            </p>
+          <h1 className="text-4xl font-bold text-white mb-6">Welcome Back!</h1>
+          <p className="text-indigo-200 text-lg leading-relaxed max-w-md mx-auto">
+            Manage your courses, students, and inquiries efficiently from one central dashboard.
+          </p>
         </div>
 
         {/* Decorative Circles */}
@@ -77,42 +77,42 @@ const Login = () => {
       {/* Right Side - Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 px-6 lg:px-20 xl:px-24 bg-white">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="flex justify-center mb-8">
-                {settings.logoUrl ? (
-                    <img 
-                        src={settings.logoUrl} 
-                        alt={settings.siteTitle} 
-                        className="h-20 w-auto object-contain"
-                    />
-                ) : (
-                    <div className="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl transform rotate-3">
-                        {settings.siteTitle.charAt(0)}
-                    </div>
-                )}
-            </div>
-            
-            <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
-                Sign In
-            </h2>
-            <p className="text-center text-gray-500 text-sm mb-10">
-                Access the <strong>{settings.siteTitle}</strong> admin panel
-            </p>
+          <div className="flex justify-center mb-8">
+            {settings.logoUrl ? (
+              <img
+                src={settings.logoUrl}
+                alt={settings.siteTitle}
+                className="h-20 w-auto object-contain"
+              />
+            ) : (
+              <div className="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl transform rotate-3">
+                {settings.siteTitle.charAt(0)}
+              </div>
+            )}
+          </div>
+
+          <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
+            Sign In
+          </h2>
+          <p className="text-center text-gray-500 text-sm mb-10">
+            Access the <strong>{settings.siteTitle}</strong> admin panel
+          </p>
         </div>
 
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <form className="space-y-6" onSubmit={handleLogin}>
-            
+
             {error && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md animate-pulse">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <AlertCircle className="h-5 w-5 text-red-500" />
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm font-medium text-red-700">{error}</p>
-                        </div>
-                    </div>
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md animate-pulse">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-red-700">{error}</p>
+                  </div>
                 </div>
+              </div>
             )}
 
             <div>
@@ -160,23 +160,23 @@ const Login = () => {
             </div>
 
             <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                    <input
-                        id="remember-me"
-                        name="remember-me"
-                        type="checkbox"
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                        Remember me
-                    </label>
-                </div>
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                  Remember me
+                </label>
+              </div>
 
-                <div className="text-sm">
-                    <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-                        Forgot your password?
-                    </Link>
-                </div>
+              <div className="text-sm">
+                <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  Forgot your password?
+                </Link>
+              </div>
             </div>
 
             <div>
@@ -189,7 +189,7 @@ const Login = () => {
               </button>
             </div>
           </form>
-          
+
           <div className="mt-8 text-center text-xs text-gray-400">
             &copy; {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.
           </div>

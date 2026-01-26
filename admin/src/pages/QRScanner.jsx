@@ -44,6 +44,12 @@ const QRScanner = () => {
     };
 
     const startScanner = async () => {
+        // Check for Secure Context (HTTPS or Localhost)
+        if (window.isSecureContext === false) {
+            alert("Camera access requires a Secure Context (HTTPS). If you are testing on mobile via IP, browser security blocks the camera. Please use localhost, HTTPS, or a tunneling service (like ngrok).");
+            return;
+        }
+
         try {
             const html5QrCode = new Html5Qrcode("reader");
             scannerRef.current = html5QrCode;
@@ -66,7 +72,13 @@ const QRScanner = () => {
             setLoading(false);
         } catch (err) {
             console.error("Failed to start scanner", err);
-            alert("Failed to start camera. Please ensure permissions are granted.");
+            if (err.name === 'NotAllowedError') {
+                alert("Camera permission denied. Please allow camera access in your browser settings.");
+            } else if (err.name === 'NotFoundError') {
+                alert("No camera found on this device.");
+            } else {
+                alert(`Failed to start camera: ${err.message || 'Unknown error'}. Ensure you are on HTTPS if using mobile.`);
+            }
         }
     };
 
