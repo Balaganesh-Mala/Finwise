@@ -15,9 +15,19 @@ const QRScanner = () => {
     useEffect(() => {
         fetchTodayAttendance();
 
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                stopScanner();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
         // Cleanup on unmount
         return () => {
-            if (isScanning) {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            // Directly check ref to avoid closure staleness issues with isScanning state
+            if (scannerRef.current) {
                 stopScanner();
             }
         };
@@ -42,7 +52,8 @@ const QRScanner = () => {
                 { facingMode: "environment" },
                 {
                     fps: 10,
-                    qrbox: { width: 250, height: 250 }
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
                 },
                 (decodedText, decodedResult) => {
                     handleScan(decodedText);
@@ -145,7 +156,7 @@ const QRScanner = () => {
                         </div>
 
                         {/* Scanner Box */}
-                        <div className="bg-black relative rounded overflow-hidden aspect-[4/3] flex items-center justify-center mb-4">
+                        <div className="bg-black relative rounded overflow-hidden aspect-square flex items-center justify-center mb-4">
                             <div id="reader" className="w-full h-full"></div>
                             {!isScanning && (
                                 <div className="absolute inset-0 flex items-center justify-center text-white">
