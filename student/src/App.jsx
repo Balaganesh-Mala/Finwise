@@ -13,11 +13,14 @@ import MockInterview from './pages/MockInterview';
 import InterviewHistory from './pages/InterviewHistory';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import ResetPassword from './pages/ResetPassword';
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />

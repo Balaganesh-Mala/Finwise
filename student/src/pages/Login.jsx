@@ -15,6 +15,35 @@ const Login = () => {
         password: ''
     });
 
+    // Forgot Password States
+    const [showForgotModal, setShowForgotModal] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotLoading, setForgotLoading] = useState(false);
+    const [forgotStatus, setForgotStatus] = useState({ success: false, message: '' });
+
+    const handleForgotPassword = async (e) => {
+        e.preventDefault();
+        setForgotLoading(true);
+        setForgotStatus({ success: false, message: '' });
+
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await axios.post(`${API_URL}/api/students/request-reset`, { email: forgotEmail });
+
+            if (res.data.success) {
+                setForgotStatus({ success: true, message: 'Reset link sent! Check your inbox.' });
+                setForgotEmail(''); // Clear input on success
+            }
+        } catch (err) {
+            setForgotStatus({
+                success: false,
+                message: err.response?.data?.message || 'Failed to send reset link. Try again.'
+            });
+        } finally {
+            setForgotLoading(false);
+        }
+    };
+
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleLogin = async (e) => {
@@ -146,13 +175,68 @@ const Login = () => {
                     </div>
 
                     <div className="mt-8 text-center border-t border-gray-200 pt-6">
-                        <p className="text-xs text-gray-500">
-                            Forgot your password? Contact your administrator.
-                        </p>
+                        <button
+                            type="button"
+                            onClick={() => setShowForgotModal(true)}
+                            className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold transition-colors"
+                        >
+                            Forgot your password?
+                        </button>
                     </div>
 
                 </form>
             </motion.div>
+
+            {/* Forgot Password Modal */}
+            {showForgotModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative"
+                    >
+                        <button
+                            onClick={() => setShowForgotModal(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                        >
+                            ✕
+                        </button>
+
+                        <div className="text-center mb-6">
+                            <h3 className="text-xl font-bold text-gray-900">Reset Password</h3>
+                            <p className="text-sm text-gray-500 mt-2">Enter your email to receive a reset link.</p>
+                        </div>
+
+                        {forgotStatus.message && (
+                            <div className={`p-3 mb-4 rounded-lg text-sm flex items-center gap-2 ${forgotStatus.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                <span>{forgotStatus.success ? '✓' : '⚠'}</span>
+                                {forgotStatus.message}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleForgotPassword} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={forgotEmail}
+                                    onChange={(e) => setForgotEmail(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    placeholder="Enter your registered email"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={forgotLoading}
+                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-colors flex justify-center"
+                            >
+                                {forgotLoading ? 'Sending...' : 'Send Reset Link'}
+                            </button>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };

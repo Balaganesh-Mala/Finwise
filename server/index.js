@@ -60,7 +60,6 @@ app.use('/api/qr', require('./routes/qrRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/typing', require('./routes/typingRoutes'));
 app.use('/api/interview', require('./routes/interviewRoutes'));
-app.use('/api/auth', require('./routes/authRoutes'));
 
 // Test Email Route
 app.get('/api/test/email', async (req, res) => {
