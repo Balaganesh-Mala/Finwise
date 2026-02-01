@@ -16,7 +16,8 @@ import {
     ChevronLeft,
     ChevronRight,
     QrCode,
-    Calendar // Import Calendar
+    Calendar, // Import Calendar
+    Keyboard
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabaseClient';
@@ -57,6 +58,7 @@ const Layout = () => {
         { icon: QrCode, label: 'My QR', path: '/my-qr' },
         { icon: Calendar, label: 'My Attendance', path: '/my-attendance' },
         { icon: Code2, label: 'Playground', path: '/playground' },
+        { icon: Keyboard, label: 'Typing Practice', path: '/typing-practice' },
         { icon: User, label: 'Profile', path: '/profile' },
         { icon: Settings, label: 'Settings', path: '/settings' },
     ];

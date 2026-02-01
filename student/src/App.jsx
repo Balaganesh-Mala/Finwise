@@ -8,6 +8,7 @@ import Settings from './pages/Settings';
 import Playground from './pages/Playground';
 import MyQR from './pages/MyQR';
 import AttendanceHistory from './pages/AttendanceHistory';
+import TypingPractice from './pages/TypingPractice';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <Route path="my-qr" element={<MyQR />} />
           <Route path="my-attendance" element={<AttendanceHistory />} />
           <Route path="playground" element={<Playground />} />
+          <Route path="typing-practice" element={<TypingPractice />} />
         </Route>
 
       </Routes>

@@ -52,6 +52,7 @@ app.use('/api/run', require('./routes/runRoutes'));
 app.use('/api/code', require('./routes/codeRoutes'));
 app.use('/api/qr', require('./routes/qrRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
+app.use('/api/typing', require('./routes/typingRoutes'));
 
 app.get('/', (req, res) => {
     res.send('JobReady Skills Center API is running');
