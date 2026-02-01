@@ -53,20 +53,34 @@ router.post('/create', async (req, res) => {
         });
 
         await student.save();
+        console.log(`Student created: ${student.email}`);
 
         // Fetch Global Settings for Branding
-        const settings = await Setting.findOne() || {};
+        let settings = {};
+        try {
+            settings = await Setting.findOne() || {};
+            console.log('Settings fetched for email branding');
+        } catch (settingErr) {
+            console.error('Error fetching settings (using defaults):', settingErr);
+        }
 
         // Send Email with Dynamic Branding
-        await sendEmail(
-            email,
-            `Welcome to ${settings.siteTitle || 'Wonew Skill Up Academy'} - Student Portal Login`,
-            studentRegistrationTemplate(name, email, plainPassword, settings)
-        );
+        try {
+            console.log(`Attempting to send registration email to ${email}...`);
+            await sendEmail(
+                email,
+                `Welcome to ${settings.siteTitle || 'Wonew Skill Up Academy'} - Student Portal Login`,
+                studentRegistrationTemplate(name, email, plainPassword, settings)
+            );
+            console.log('Registration email sent successfully.');
+        } catch (emailErr) {
+            console.error('FAILED to send registration email:', emailErr);
+            // We don't block the response, but we log the error
+        }
 
         res.status(201).json({ 
             success: true, 
-            message: 'Student created and email sent', 
+            message: 'Student created (Email attempt finished)', 
             student: { ...student._doc, passwordHash: undefined } 
         });
 
