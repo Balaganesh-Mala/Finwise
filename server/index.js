@@ -21,7 +21,10 @@ app.use(cors({
         'http://localhost:5174', // Admin Panel
         'http://localhost:5175', // Potential Student Port
         'http://localhost:5176',
-        'http://localhost:5000', 
+        'http://localhost:5000',
+        'http://wonew.in',
+        'http://student.wonew.in',
+        'http://admin.wonew.in',
         'https://jobready-client.onrender.com',
         'https://jobready-q89p.onrender.com', // Student Portal Deployed
         process.env.CLIENT_URL,
