@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Send, Play, RotateCcw, AlertCircle, CheckCircle, ChevronLeft } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
 import * as interviewService from '../services/interviewService';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -55,8 +54,13 @@ const MockInterview = () => {
     // --- Init ---
     useEffect(() => {
         const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            const storedUser = localStorage.getItem('studentUser');
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            } else {
+                toast.error("Please log in to continue.");
+                navigate('/login');
+            }
         };
         getUser();
 
@@ -99,7 +103,7 @@ const MockInterview = () => {
         if (!user) return toast.error("Please log in first.");
         setLoading(true);
         try {
-            const data = await interviewService.startInterview(user.id, interviewType, mode);
+            const data = await interviewService.startInterview(user._id, interviewType, mode);
             setSessionId(data.sessionId);
             setMessages([{ sender: 'ai', text: data.question }]);
             setStep('interview');
@@ -356,8 +360,8 @@ const MockInterview = () => {
                         <button
                             onClick={toggleMic}
                             className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 ${isListening
-                                    ? 'bg-red-500 shadow-lg shadow-red-500/50 scale-110'
-                                    : 'bg-white/10 hover:bg-white/20 border border-white/20'
+                                ? 'bg-red-500 shadow-lg shadow-red-500/50 scale-110'
+                                : 'bg-white/10 hover:bg-white/20 border border-white/20'
                                 }`}
                         >
                             {isListening ? <Mic size={40} className="text-white" /> : <MicOff size={40} className="opacity-50" />}

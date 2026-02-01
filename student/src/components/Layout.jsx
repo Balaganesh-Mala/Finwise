@@ -21,7 +21,7 @@ import {
     Bot
 } from 'lucide-react';
 
-import { supabase } from '../lib/supabaseClient';
+
 import axios from 'axios';
 
 const Layout = () => {
@@ -32,8 +32,13 @@ const Layout = () => {
     const location = useLocation();
 
     useEffect(() => {
-        // Fetch user for the profile dropdown/avatar
-        supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+        // Fetch user from Local Storage
+        const storedUser = localStorage.getItem('studentUser');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        } else {
+            navigate('/login');
+        }
 
         // Fetch company settings
         const fetchSettings = async () => {
@@ -46,24 +51,32 @@ const Layout = () => {
             }
         };
         fetchSettings();
-    }, []);
+    }, [navigate]);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
+        localStorage.removeItem('studentUser'); // Clear local session
         navigate('/login');
     };
 
-    const navItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-        { icon: BookOpen, label: 'My Courses', path: '/courses' },
-        { icon: QrCode, label: 'My QR', path: '/my-qr' },
-        { icon: Calendar, label: 'My Attendance', path: '/my-attendance' },
-        { icon: Code2, label: 'Playground', path: '/playground' },
-        { icon: Keyboard, label: 'Typing Practice', path: '/typing-practice' },
-        { icon: Bot, label: 'AI Mock Interview', path: '/mock-interview' },
-        { icon: User, label: 'Profile', path: '/profile' },
-        { icon: Settings, label: 'Settings', path: '/settings' },
+    const allNavItems = [
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/', accessKey: 'dashboard' },
+        { icon: BookOpen, label: 'My Courses', path: '/courses', accessKey: 'myCourses' },
+        { icon: QrCode, label: 'My QR', path: '/my-qr', accessKey: 'myQR' },
+        { icon: Calendar, label: 'My Attendance', path: '/my-attendance', accessKey: 'attendance' },
+        { icon: Code2, label: 'Playground', path: '/playground', accessKey: 'playground' },
+        { icon: Keyboard, label: 'Typing Practice', path: '/typing-practice', accessKey: 'typingPractice' },
+        { icon: Bot, label: 'AI Mock Interview', path: '/mock-interview', accessKey: 'aiMockInterview' },
+        { icon: User, label: 'Profile', path: '/profile', accessKey: 'profile' },
+        { icon: Settings, label: 'Settings', path: '/settings', accessKey: 'settings' },
     ];
+
+    // Filter items based on user access
+    const navItems = allNavItems.filter(item => {
+        if (!user || !user.access) return false; // Safety check
+        // If accessKey is present, check user.access[accessKey]
+        // If not present (default), assume true or handle otherwise. Here we added accessKey to all.
+        return user.access[item.accessKey];
+    });
 
     const [collapsed, setCollapsed] = useState(false);
 

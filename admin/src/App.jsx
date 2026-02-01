@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Banners from './pages/Banners';
 import Layout from './components/Layout';
 import Students from './pages/Students';
+import AddStudent from './pages/AddStudent';
 import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import Inquiries from './pages/Inquiries';
@@ -39,6 +40,8 @@ function App() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="students" element={<Students />} />
+          <Route path="students/add" element={<AddStudent />} />
+          <Route path="students/edit/:id" element={<AddStudent />} />
           <Route path="banners" element={<Banners />} />
           <Route path="courses" element={<Courses />} /> {/* New Route */}
           <Route path="jobs" element={<Jobs />} />

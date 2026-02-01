@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { BookOpen, Award, Clock, TrendingUp, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -7,9 +6,10 @@ const Dashboard = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            setUser(user);
-        });
+        const storedUser = localStorage.getItem('studentUser');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
     }, []);
 
     // Mock Data for Analytics
@@ -41,7 +41,7 @@ const Dashboard = () => {
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">
-                        Welcome back, {user?.user_metadata?.full_name || 'Student'}! 👋
+                        Welcome back, {user?.name || 'Student'}! 👋
                     </h1>
                     <p className="text-gray-500 mt-1">Here is an overview of your learning progress.</p>
                 </div>

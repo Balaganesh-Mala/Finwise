@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import * as interviewService from '../services/interviewService';
 import { Calendar, ChevronRight } from 'lucide-react';
 
@@ -9,11 +8,12 @@ const InterviewHistory = () => {
 
     useEffect(() => {
         const loadHistory = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            console.log("Current User:", user?.id);
-            if (user) {
+            const storedUser = localStorage.getItem('studentUser');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                console.log("Current User:", user?._id);
                 try {
-                    const data = await interviewService.getHistory(user.id);
+                    const data = await interviewService.getHistory(user._id);
                     console.log("Loaded History:", data);
                     setHistory(data);
                 } catch (err) {

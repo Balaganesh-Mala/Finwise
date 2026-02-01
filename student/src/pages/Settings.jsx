@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import axios from 'axios';
 import { Lock, Bell, Shield, AlertTriangle, Save } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Settings = () => {
     const [loading, setLoading] = useState(false);
@@ -14,23 +15,30 @@ const Settings = () => {
     const updatePassword = async (e) => {
         e.preventDefault();
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            alert("Passwords do not match!");
+            toast.error("Passwords do not match!");
             return;
         }
         if (passwordData.newPassword.length < 6) {
-            alert("Password must be at least 6 characters.");
+            toast.error("Password must be at least 6 characters.");
             return;
         }
 
         setLoading(true);
-        const { error } = await supabase.auth.updateUser({ password: passwordData.newPassword });
-        setLoading(false);
+        try {
+            const user = JSON.parse(localStorage.getItem('studentUser'));
+            if (!user) return toast.error("User not found");
 
-        if (error) {
-            alert(`Error: ${error.message}`);
-        } else {
-            alert("Password updated successfully!");
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            await axios.put(`${API_URL}/api/students/update/${user._id}`, {
+                password: passwordData.newPassword
+            });
+
+            toast.success("Password updated successfully!");
             setPasswordData({ newPassword: '', confirmPassword: '' });
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to update password");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -52,13 +60,13 @@ const Settings = () => {
                         <p className="text-sm text-gray-500">Update your password and secure your account.</p>
                     </div>
                 </div>
-                
+
                 <div className="p-6">
                     <form onSubmit={updatePassword} className="max-w-md space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                            <input 
-                                type="password" 
+                            <input
+                                type="password"
                                 name="newPassword"
                                 value={passwordData.newPassword}
                                 onChange={handlePasswordChange}
@@ -68,8 +76,8 @@ const Settings = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                            <input 
-                                type="password" 
+                            <input
+                                type="password"
                                 name="confirmPassword"
                                 value={passwordData.confirmPassword}
                                 onChange={handlePasswordChange}
@@ -77,8 +85,8 @@ const Settings = () => {
                                 placeholder="Re-enter new password"
                             />
                         </div>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             disabled={loading}
                             className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-medium shadow-md shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-70"
                         >
@@ -99,7 +107,7 @@ const Settings = () => {
                         <p className="text-sm text-gray-500">Choose what updates you want to receive.</p>
                     </div>
                 </div>
-                
+
                 <div className="p-6 space-y-4">
                     {['Email me when a course is updated', 'Email me about new courses', 'Notify me on dashboard for assignments'].map((label, i) => (
                         <div key={i} className="flex items-center justify-between">

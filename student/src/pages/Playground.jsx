@@ -7,7 +7,6 @@ import {
     FileCode, FileJson, Files, Settings, ChevronDown, CheckCircle2, XCircle,
     Eye, PenTool
 } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
 
 const Playground = () => {
     // General State
@@ -84,7 +83,10 @@ console.log('Hello from Web Mode');`
     };
 
     useEffect(() => {
-        supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+        const storedUser = localStorage.getItem('studentUser');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
     }, []);
 
     // Effect: Switch mode and templates
@@ -134,7 +136,7 @@ console.log('Hello from Web Mode');`
         if (!user) return;
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-            const res = await axios.get(`${API_URL}/api/code/${user.id}`);
+            const res = await axios.get(`${API_URL}/api/code/${user._id}`);
             setHistory(res.data.data);
             setShowHistory(true);
         } catch (err) {
@@ -205,7 +207,7 @@ console.log('Hello from Web Mode');`
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             await axios.post(`${API_URL}/api/code/save`, {
-                studentId: user.id,
+                studentId: user._id,
                 language,
                 code: language === 'html' ? JSON.stringify(webCode) : code,
                 versionName: `Save ${new Date().toLocaleString()}`

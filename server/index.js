@@ -54,6 +54,23 @@ app.use('/api/qr', require('./routes/qrRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/typing', require('./routes/typingRoutes'));
 app.use('/api/interview', require('./routes/interviewRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
+
+// Test Email Route
+app.get('/api/test/email', async (req, res) => {
+    try {
+        const { sendEmail } = require('./utils/emailService');
+        await sendEmail(
+            process.env.MAIL_SENDER_EMAIL || 'info@wonew.in',
+            'Test Email from Wonew (Hostinger)',
+            '<h1>It Works!</h1><p>Hostinger SMTP is connected via Nodemailer.</p>'
+        );
+        res.json({ success: true, message: 'Test email sent!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 app.get('/', (req, res) => {
     res.send('JobReady Skills Center API is running');

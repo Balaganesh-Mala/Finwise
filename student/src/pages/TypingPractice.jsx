@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { typingLessons } from '../data/typingLessons';
 import axios from 'axios';
-import { supabase } from '../lib/supabaseClient';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -60,7 +59,6 @@ const TypingPractice = () => {
     const [lessonIndex, setLessonIndex] = useState(0);
     const [duration, setDuration] = useState(60); // 15, 30, 60, 120
     const [mode, setMode] = useState('time');
-    const [theme, setTheme] = useState('light');
 
     const [text, setText] = useState('');
     const [input, setInput] = useState('');
@@ -81,6 +79,9 @@ const TypingPractice = () => {
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [showHistory, setShowHistory] = useState(false);
     const [historyData, setHistoryData] = useState([]);
+
+    // We don't really need user state if we read from localStorage on demand, 
+    // but useful for consistent access
     const [user, setUser] = useState(null);
 
     const inputRef = useRef(null);
@@ -90,9 +91,12 @@ const TypingPractice = () => {
     useEffect(() => {
         // Fetch User & History
         const loadData = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-            if (user) fetchHistory(user.id);
+            const storedUser = localStorage.getItem('studentUser');
+            if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
+                fetchHistory(parsedUser._id);
+            }
         }
         loadData();
     }, []);
@@ -249,12 +253,13 @@ const TypingPractice = () => {
 
         // Save to Backend
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                console.log("Saving progress for user:", user.id);
+            const storedUser = localStorage.getItem('studentUser');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                console.log("Saving progress for user:", user._id);
                 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
                 await axios.post(`${API_URL}/api/typing/save`, {
-                    studentId: user.id, // Using Supabase ID as studentId
+                    studentId: user._id, // Using Mongo ID
                     wpm: finalWpm,
                     accuracy: finalAcc,
                     errors: stats.incorrectChars,
@@ -264,7 +269,7 @@ const TypingPractice = () => {
                 });
                 console.log("Progress saved successfully!");
                 toast.success("Progress Saved!", { id: 'save-success' });
-                fetchHistory(user.id); // Refresh history
+                fetchHistory(user._id); // Refresh history
             } else {
                 console.warn("User not logged in, cannot save progress.");
                 toast.error("Not logged in. Progress not saved.", { id: 'save-error' });

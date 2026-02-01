@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { supabase } from '../lib/supabaseClient';
 import { Calendar, Search, Filter } from 'lucide-react';
 
 const AttendanceHistory = () => {
@@ -14,11 +13,10 @@ const AttendanceHistory = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-        };
-        getUser();
+        const storedUser = localStorage.getItem('studentUser');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
     }, []);
 
     const fetchHistory = async (overrideFilters = null) => {
@@ -32,7 +30,7 @@ const AttendanceHistory = () => {
             const queryParams = new URLSearchParams({
                 startDate: activeFilters.startDate,
                 endDate: activeFilters.endDate,
-                studentId: user.id // Send Supabase UUID
+                studentId: user._id // Send Mongo ID
             }).toString();
 
             const res = await axios.get(`${API_URL}/api/attendance/history?${queryParams}`);

@@ -1,28 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import axios from 'axios';
-import { supabase } from '../lib/supabaseClient';
 
 const MyQR = () => {
     const [qrData, setQrData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [status, setStatus] = useState('Initializing...');
-    const [user, setUser] = useState(null);
     const componentRef = useRef();
 
     useEffect(() => {
         const fetchUserAndQR = async () => {
             try {
                 setStatus('Checking Authentication...');
-                const { data: { user } } = await supabase.auth.getUser();
+                const storedUser = localStorage.getItem('studentUser');
 
-                if (user) {
-                    console.log("User Authenticated:", user.id);
-                    setUser(user);
-                    await fetchQR(user.id);
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    console.log("User Authenticated:", user._id);
+                    await fetchQR(user._id);
                 } else {
-                    console.warn("User not authenticated in Supabase");
+                    console.warn("User not authenticated");
                     setError('User not authenticated. Please log in.');
                     setLoading(false);
                 }
