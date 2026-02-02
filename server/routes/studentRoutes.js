@@ -92,8 +92,12 @@ router.post('/request-reset', async (req, res) => {
         res.json({ success: true, message: 'Reset link sent to email' });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Request Reset Error:', err);
+        res.status(500).json({ 
+            message: 'Server Error', 
+            error: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
     }
 });
 

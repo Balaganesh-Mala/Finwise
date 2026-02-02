@@ -6,8 +6,12 @@ const transporter = nodemailer.createTransport({
   secure: process.env.MAIL_PORT == 465, // true for 465, false for other ports
   auth: {
     user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS, // Hostinger email password
+    pass: process.env.MAIL_PASS, 
   },
+  // Add timeout settings
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 5000,    // 5 seconds
+  socketTimeout: 10000,     // 10 seconds
 });
 
 const sendEmail = async (to, subject, html) => {
