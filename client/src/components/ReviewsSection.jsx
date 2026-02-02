@@ -71,7 +71,7 @@ const ReviewsSection = () => {
             id: 5,
             name: "Emily Davis",
             role: "UX Designer @ Airbnb",
-            review: "JobReady's design critique sessions were brutal but necessary. They shaped my design thinking.",
+            review: "Skill Up Academy's design critique sessions were brutal but necessary. They shaped my design thinking.",
             rating: 5,
             icon: Palette,
             color: "bg-pink-100 text-pink-600"

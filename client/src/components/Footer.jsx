@@ -6,7 +6,7 @@ import { useSettings } from '../context/SettingsContext';
 const Footer = () => {
   const { getContactInfo, getSocialLink, settings } = useSettings();
 
-  const siteTitle = settings?.siteTitle || 'JobReady';
+  const siteTitle = settings?.siteTitle || 'Skill Up Academy';
   const address = getContactInfo('address') || '123 Skills Ave, Tech City, State';
   const phone = getContactInfo('phone') || '+1 (555) 123-4567';
   const email = getContactInfo('email') || 'info@jobreadyskills.com';
@@ -15,29 +15,29 @@ const Footer = () => {
     <footer className="bg-[#0f172a] text-gray-300 pt-20 pb-10 border-t border-gray-800">
       <div className="container mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
-          
+
           {/* Brand & Newsletter - Spans 4 columns */}
           <div className="lg:col-span-4 space-y-6">
             <Link to="/" className="inline-block">
-                <h3 className="text-3xl font-bold text-white tracking-tight">{siteTitle}</h3>
+              <h3 className="text-3xl font-bold text-white tracking-tight">{siteTitle}</h3>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
               Empowering your career with industry-ready skills and professional training. Join thousands of students achieving their dreams.
             </p>
-            
+
             {/* Newsletter Input */}
             <div className="pt-2">
-                <h4 className="text-sm font-semibold text-white mb-3">Stay updated with our newsletter</h4>
-                <div className="flex gap-2">
-                    <input 
-                        type="email" 
-                        placeholder="Enter your email" 
-                        className="bg-gray-800/50 border border-gray-700 text-white text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 outline-none transition-all placeholder:text-gray-500"
-                    />
-                    <button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2.5 transition-colors flex items-center justify-center">
-                        <ArrowRight size={18} />
-                    </button>
-                </div>
+              <h4 className="text-sm font-semibold text-white mb-3">Stay updated with our newsletter</h4>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="bg-gray-800/50 border border-gray-700 text-white text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 outline-none transition-all placeholder:text-gray-500"
+                />
+                <button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2.5 transition-colors flex items-center justify-center">
+                  <ArrowRight size={18} />
+                </button>
+              </div>
             </div>
 
             <div className="flex space-x-4 pt-4">

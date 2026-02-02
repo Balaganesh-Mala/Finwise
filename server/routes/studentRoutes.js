@@ -76,6 +76,12 @@ router.post('/request-reset', async (req, res) => {
         // Fetch Settings
         const settings = await Setting.findOne() || {};
 
+        // Check if email service is configured
+        if (!process.env.MAIL_HOST || !process.env.MAIL_USER || !process.env.MAIL_PASS) {
+            console.error('Email service not configured properly');
+            return res.status(500).json({ message: 'Email service not configured on server' });
+        }
+
         // Send email
         await sendEmail(
             student.email,

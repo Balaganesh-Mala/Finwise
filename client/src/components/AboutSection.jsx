@@ -61,7 +61,7 @@ const AboutSection = () => {
                             </h2>
 
                             <p className="text-xl text-gray-600 mb-10 leading-relaxed font-light">
-                                JobReady isn't just an institute; it's a career launchpad. We replace traditional rote learning with immersive, project-based experiences that simulate the real corporate world.
+                                Skill Up Academy isn't just an institute; it's a career launchpad. We replace traditional rote learning with immersive, project-based experiences that simulate the real corporate world.
                             </p>
 
                             <div className="space-y-8 mb-12">

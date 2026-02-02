@@ -7,7 +7,7 @@ export const useSettings = () => useContext(SettingsContext);
 
 export const SettingsProvider = ({ children }) => {
     const defaultSettings = {
-        siteTitle: 'JobReady',
+        siteTitle: 'Skill Up Academy',
         logoUrl: '',
         contact: {
             phone: '+91 9874563210',

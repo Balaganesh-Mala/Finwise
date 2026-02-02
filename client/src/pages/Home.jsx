@@ -17,7 +17,7 @@ const Home = () => {
     <div className="bg-gray-50 min-h-screen">
       <SEO
         title="Home"
-        description="Launch your career with JobReady Skills Center. Expert-led courses in MERN Stack, Data Science, and Digital Marketing."
+        description="Launch your career with Skill Up Academy. Expert-led courses in MERN Stack, Data Science, and Digital Marketing."
       />
 
       {/* Hero Section */}
