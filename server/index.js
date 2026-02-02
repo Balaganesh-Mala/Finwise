@@ -21,6 +21,8 @@ app.use(cors({
         'http://localhost:5174', // Admin Panel
         'http://localhost:5175', // Potential Student Port
         'http://localhost:5176',
+        'http://127.0.0.1:5173', 
+        'http://127.0.0.1:5174',
         'http://localhost:5000',
         'http://wonew.in', // Also allow HTTP
         'http://student.wonew.in',
@@ -60,6 +62,12 @@ app.use('/api/qr', require('./routes/qrRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/typing', require('./routes/typingRoutes'));
 app.use('/api/interview', require('./routes/interviewRoutes'));
+
+// Course Module Routes
+app.use('/api', require('./routes/moduleRoutes'));
+app.use('/api', require('./routes/topicRoutes'));
+app.use('/api', require('./routes/progressRoutes'));
+app.use('/api', require('./routes/commentRoutes'));
 
 // Test Email Route
 app.get('/api/test/email', async (req, res) => {

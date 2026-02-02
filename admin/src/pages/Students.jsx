@@ -20,8 +20,9 @@ const Students = () => {
             const res = await axios.get(`${API_URL}/api/students/list`);
             setStudents(res.data);
         } catch (err) {
-            console.error(err);
-            toast.error('Failed to load students');
+            console.error('Fetch Students Error:', err);
+            const msg = err.response?.data?.message || err.message || 'Failed to load students';
+            toast.error(`Error: ${msg}`);
         } finally {
             setLoading(false);
         }

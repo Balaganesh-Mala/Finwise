@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Edit2, Trash2, Search, X, Image, BookOpen, Clock, DollarSign, BarChart, Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, X, Image, BookOpen, Clock, DollarSign, BarChart, Upload, FileText, CheckCircle, AlertCircle, Layers } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const Courses = () => {
+    const navigate = useNavigate();
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,13 +19,13 @@ const Courses = () => {
         duration: '',
         fee: '',
         skillLevel: 'Beginner',
-        image: null, 
-        syllabusPdf: null, 
+        image: null,
+        syllabusPdf: null,
         brochurePdf: null,
         highlights: [],
-        syllabus: [] 
+        syllabus: []
     };
-    
+
     const [formData, setFormData] = useState(initialFormState);
     const [newHighlight, setNewHighlight] = useState('');
     const [newModule, setNewModule] = useState({ title: '', modules: [] }); // modules here is array of strings (topics)
@@ -172,7 +174,7 @@ const Courses = () => {
                     <h1 className="text-2xl font-bold text-gray-800">Courses Management</h1>
                     <p className="text-gray-500 text-sm mt-1">Add, edit, and manage your course catalog.</p>
                 </div>
-                <button 
+                <button
                     onClick={() => handleOpenModal()}
                     className="bg-indigo-600 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium hover:bg-indigo-700 transition-colors shadow-sm"
                 >
@@ -189,20 +191,27 @@ const Courses = () => {
                     courses.map((course) => (
                         <div key={course._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
                             <div className="relative h-48 bg-gray-100">
-                                <img 
-                                    src={course.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image'} 
+                                <img
+                                    src={course.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image'}
                                     alt={course.title}
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded-lg shadow-sm backdrop-blur-sm">
-                                    <button 
+                                    <button
+                                        onClick={() => navigate(`/courses/${course._id}/modules`)}
+                                        className="p-1.5 text-gray-600 hover:text-indigo-600 rounded-md hover:bg-indigo-50 transition-colors"
+                                        title="Manage Content"
+                                    >
+                                        <Layers size={16} />
+                                    </button>
+                                    <button
                                         onClick={() => handleOpenModal(course)}
                                         className="p-1.5 text-gray-600 hover:text-indigo-600 rounded-md hover:bg-indigo-50 transition-colors"
                                         title="Edit"
                                     >
                                         <Edit2 size={16} />
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={() => handleDelete(course._id)}
                                         className="p-1.5 text-gray-600 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
                                         title="Delete"
@@ -211,12 +220,12 @@ const Courses = () => {
                                     </button>
                                 </div>
                                 <div className="absolute bottom-2 left-2">
-                                     <span className="bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                                    <span className="bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
                                         {course.skillLevel}
-                                     </span>
+                                    </span>
                                 </div>
                             </div>
-                            
+
                             <div className="p-5 flex flex-col flex-grow">
                                 <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1" title={course.title}>
                                     {course.title}
@@ -224,7 +233,7 @@ const Courses = () => {
                                 <p className="text-gray-500 text-sm line-clamp-2 mb-4 flex-grow" title={course.description}>
                                     {course.description}
                                 </p>
-                                
+
                                 <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t border-gray-100 mt-auto">
                                     <div className="flex items-center gap-1">
                                         <Clock size={16} className="text-gray-400" />
@@ -252,14 +261,14 @@ const Courses = () => {
                                 <X size={24} />
                             </button>
                         </div>
-                        
+
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                            
+
                             {/* Basic Details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Course Title</label>
-                                    <input 
+                                    <input
                                         type="text" name="title" value={formData.title} onChange={handleChange} required
                                         className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:border-indigo-500"
                                         placeholder="e.g. Full Stack Web Development"
@@ -267,7 +276,7 @@ const Courses = () => {
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Short Description (Card)</label>
-                                    <textarea 
+                                    <textarea
                                         name="description" value={formData.description} onChange={handleChange} required rows="2"
                                         className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:border-indigo-500"
                                         placeholder="Brief summary for the card view..."
@@ -275,7 +284,7 @@ const Courses = () => {
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Detailed Overview</label>
-                                    <textarea 
+                                    <textarea
                                         name="overview" value={formData.overview} onChange={handleChange} required rows="5"
                                         className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:border-indigo-500"
                                         placeholder="Detailed course overview, prerequisites, and goals..."
@@ -300,7 +309,7 @@ const Courses = () => {
                                         <option value="Advanced">Advanced</option>
                                     </select>
                                 </div>
-                                
+
                                 {/* File Inputs */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Course Image</label>
@@ -323,9 +332,9 @@ const Courses = () => {
                             <div className="border-t border-gray-100 pt-6">
                                 <label className="block text-sm font-bold text-gray-800 mb-2">Key Highlights</label>
                                 <div className="flex gap-2 mb-3">
-                                    <input 
-                                        type="text" 
-                                        value={newHighlight} 
+                                    <input
+                                        type="text"
+                                        value={newHighlight}
                                         onChange={(e) => setNewHighlight(e.target.value)}
                                         className="flex-1 p-2 border border-gray-300 rounded-lg outline-none focus:border-indigo-500"
                                         placeholder="Add a key highlight (e.g. 100+ Hours Live Classes)"
@@ -350,19 +359,19 @@ const Courses = () => {
                             {/* Syllabus Builder */}
                             <div className="border-t border-gray-100 pt-6">
                                 <label className="block text-sm font-bold text-gray-800 mb-2">Syllabus Modules</label>
-                                
+
                                 <div className="bg-gray-50 p-4 rounded-xl space-y-3 mb-4 border border-gray-200">
-                                    <input 
-                                        type="text" 
-                                        value={newModule.title} 
-                                        onChange={(e) => setNewModule({...newModule, title: e.target.value})}
+                                    <input
+                                        type="text"
+                                        value={newModule.title}
+                                        onChange={(e) => setNewModule({ ...newModule, title: e.target.value })}
                                         className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-indigo-500 font-medium"
                                         placeholder="Module Title (e.g. Introduction to Web)"
                                     />
                                     <div className="flex gap-2">
-                                       <input 
-                                            type="text" 
-                                            value={currentTopic} 
+                                        <input
+                                            type="text"
+                                            value={currentTopic}
                                             onChange={(e) => setCurrentTopic(e.target.value)}
                                             className="flex-1 p-2 border border-gray-300 rounded-lg outline-none focus:border-indigo-500 text-sm"
                                             placeholder="Topic (e.g. HTML5 Semantics)"
@@ -386,7 +395,7 @@ const Courses = () => {
                                     {formData.syllabus.map((mod, i) => (
                                         <div key={i} className="border border-gray-200 rounded-lg p-3">
                                             <div className="flex justify-between items-center mb-2">
-                                                <h4 className="font-bold text-gray-800 text-sm">Module {i+1}: {mod.title}</h4>
+                                                <h4 className="font-bold text-gray-800 text-sm">Module {i + 1}: {mod.title}</h4>
                                                 <button type="button" onClick={() => removeSyllabusModule(i)} className="text-red-400 hover:text-red-600">
                                                     <Trash2 size={16} />
                                                 </button>

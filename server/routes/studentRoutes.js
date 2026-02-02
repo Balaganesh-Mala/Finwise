@@ -313,4 +313,11 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+const { getStudentDashboardStats } = require('../controllers/dashboardController');
+
+// @route   GET /api/students/dashboard/:studentId
+// @desc    Get student dashboard stats
+// @access  Student
+router.get('/dashboard/:studentId', getStudentDashboardStats);
+
 module.exports = router;

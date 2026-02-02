@@ -15,6 +15,7 @@ import Inquiries from './pages/Inquiries';
 import Jobs from './pages/Jobs';
 import Applications from './pages/Applications';
 import Courses from './pages/Courses';
+import ManageCourseModules from './pages/ManageCourseModules';
 import Blogs from './pages/Blogs';
 import QRScanner from './pages/QRScanner';
 import AttendanceHistory from './pages/AttendanceHistory';
@@ -43,7 +44,8 @@ function App() {
           <Route path="students/add" element={<AddStudent />} />
           <Route path="students/edit/:id" element={<AddStudent />} />
           <Route path="banners" element={<Banners />} />
-          <Route path="courses" element={<Courses />} /> {/* New Route */}
+          <Route path="courses" element={<Courses />} />
+          <Route path="courses/:courseId/modules" element={<ManageCourseModules />} />
           <Route path="jobs" element={<Jobs />} />
           <Route path="applications" element={<Applications />} />
           <Route path="blogs" element={<Blogs />} />
