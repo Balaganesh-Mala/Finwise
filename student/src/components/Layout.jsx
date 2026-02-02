@@ -33,9 +33,49 @@ const Layout = () => {
 
     useEffect(() => {
         // Fetch user from Local Storage
-        const storedUser = localStorage.getItem('studentUser');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+        const storedUserString = localStorage.getItem('studentUser');
+        if (storedUserString) {
+            const storedUser = JSON.parse(storedUserString);
+            setUser(storedUser);
+
+            // Fetch fresh user data to update permissions
+            const fetchLatestUser = async () => {
+                try {
+                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                    const { data } = await axios.get(`${API_URL}/api/students/${storedUser._id}`);
+
+                    // Preserve the token if it exists in the stored object (though current login response structure doesn't seem to show a separate token field, assuming 'user' object is stored)
+                    // Based on login route: res.json({ success:true, user: {...} })
+                    // So localStorage likely just holds the user object.
+
+                    if (data) {
+                        // Merge or replace. The login response returns { user: ... }. 
+                        // The get/:id route returns the student object directly: res.json(student)
+
+                        // We need to make sure we format it consistently. 
+                        // Login response: { _id, name, email, access, courseName }
+                        // Get response: full student object.
+
+                        const updatedUser = {
+                            _id: data._id,
+                            name: data.name,
+                            email: data.email,
+                            access: data.access,
+                            courseName: data.courseName,
+                            // Keep other fields if needed
+                            ...data
+                        };
+
+                        setUser(updatedUser);
+                        localStorage.setItem('studentUser', JSON.stringify(updatedUser));
+                    }
+                } catch (error) {
+                    console.error("Failed to refresh user data:", error);
+                    // If 404, maybe user deleted? handleLogout();
+                }
+            };
+            fetchLatestUser();
+
         } else {
             navigate('/login');
         }
