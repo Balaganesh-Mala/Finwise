@@ -18,7 +18,11 @@ import {
     QrCode,
     Calendar, // Import Calendar
     Keyboard,
-    Bot
+    Bot,
+    Trophy,
+    Sparkles,
+    Shield,
+    ExternalLink
 } from 'lucide-react';
 
 
@@ -28,6 +32,9 @@ const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [settings, setSettings] = useState(null);
+    const [profileOpen, setProfileOpen] = useState(false);
+    const [attendanceCount, setAttendanceCount] = useState(0);
+    const [completedTasks, setCompletedTasks] = useState(0);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -92,6 +99,47 @@ const Layout = () => {
         };
         fetchSettings();
     }, [navigate]);
+
+    // Fetch Stats when user is set
+    useEffect(() => {
+        if (!user || !user._id) return;
+
+        const fetchStats = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+                // 1. Fetch Attendance
+                // Assuming /api/attendance/history exists and returns array
+                const attRes = await axios.get(`${API_URL}/api/attendance/history?studentId=${user._id}`);
+                // Filter distinct days if needed, but assuming api returns daily records
+                if (Array.isArray(attRes.data)) {
+                    // Count present
+                    const present = attRes.data.filter(r => r.status === 'present').length;
+                    setAttendanceCount(present);
+                }
+
+                // 2. Fetch Progress
+                // We need courseId first.
+                if (user.courseName) {
+                    const coursesRes = await axios.get(`${API_URL}/api/courses`);
+                    const course = coursesRes.data.find(c => c.title === user.courseName);
+
+                    if (course) {
+                        const progressRes = await axios.get(`${API_URL}/api/student/progress/${course._id}/${user._id}`);
+                        if (progressRes.data && progressRes.data.progress) {
+                            const completed = progressRes.data.progress.filter(p => p.completed).length;
+                            setCompletedTasks(completed);
+                        }
+                    }
+                }
+
+            } catch (err) {
+                console.error("Failed to fetch stats:", err);
+            }
+        };
+
+        fetchStats();
+    }, [user?._id, user?.courseName]);
 
     const handleLogout = async () => {
         localStorage.removeItem('studentUser'); // Clear local session
@@ -253,22 +301,102 @@ const Layout = () => {
 
                         <div className="h-8 w-px bg-gray-200 mx-2 hidden md:block"></div>
 
-                        {/* Profile Dropdown */}
-                        <div className="flex items-center gap-3 pl-2 cursor-pointer hover:bg-gray-50 py-1.5 px-2 rounded-lg transition-colors">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 p-[2px]">
-                                <div className="w-full h-full bg-white rounded-full p-[2px]">
-                                    <img
-                                        src={user?.user_metadata?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"}
-                                        alt="User"
-                                        className="w-full h-full rounded-full object-cover"
-                                    />
+                        <div className="relative">
+                            <button
+                                onClick={() => setProfileOpen(!profileOpen)}
+                                className="flex items-center gap-3 pl-2 cursor-pointer hover:bg-gray-50 py-1.5 px-2 rounded-lg transition-colors border border-transparent hover:border-gray-200 focus:outline-none"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 p-[2px] shadow-sm">
+                                    <div className="w-full h-full bg-white rounded-full p-[2px] overflow-hidden">
+                                        {user?.profilePicture ? (
+                                            <img
+                                                src={user.profilePicture}
+                                                alt="User"
+                                                className="w-full h-full rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 font-bold">
+                                                {user?.name?.charAt(0) || 'U'}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="hidden md:block text-left">
-                                <p className="text-sm font-bold text-gray-700 leading-none">{user?.user_metadata?.full_name || 'Student'}</p>
-                                <p className="text-xs text-gray-400 mt-1 truncate max-w-[100px]">{user?.email}</p>
-                            </div>
-                            <ChevronDown size={16} className="text-gray-400 hidden md:block" />
+                                <div className="hidden md:block text-left">
+                                    <p className="text-sm font-bold text-gray-700 leading-none">{user?.name || 'Student'}</p>
+                                    <p className="text-xs text-gray-400 mt-1 truncate max-w-[100px]">{user?.email}</p>
+                                </div>
+                                <ChevronDown size={16} className={`text-gray-400 hidden md:block transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Profile Dropdown */}
+                            {profileOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)}></div>
+                                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-50">
+                                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 p-[3px] shadow-md">
+                                                <div className="w-full h-full bg-white rounded-full p-[2px] overflow-hidden">
+                                                    {user?.profilePicture ? (
+                                                        <img
+                                                            src={user.profilePicture}
+                                                            alt="User"
+                                                            className="w-full h-full rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-2xl">
+                                                            {user?.name?.charAt(0) || 'U'}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 text-lg">{user?.name}</h3>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100 flex items-center gap-1">
+                                                        <Trophy size={10} /> Novice
+                                                    </span>
+                                                    <span className="text-xs text-gray-400">Level 1</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 mb-4">
+                                            <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+                                                <p className="text-xs text-gray-500 font-medium">Attendance</p>
+                                                <p className="text-lg font-bold text-gray-900">{attendanceCount} Days</p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+                                                <p className="text-xs text-gray-500 font-medium">Tasks Done</p>
+                                                <p className="text-lg font-bold text-gray-900">{completedTasks}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <button
+                                                onClick={() => { navigate('/profile'); setProfileOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-600 hover:text-indigo-600 transition-colors text-sm font-medium"
+                                            >
+                                                <User size={18} /> My Profile
+                                            </button>
+                                            <button
+                                                onClick={() => { navigate('/settings'); setProfileOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-600 hover:text-indigo-600 transition-colors text-sm font-medium"
+                                            >
+                                                <Settings size={18} /> Settings
+                                            </button>
+                                        </div>
+
+                                        <div className="mt-4 pt-3 border-t border-gray-100">
+                                            <button
+                                                onClick={handleLogout}
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 text-red-600 transition-colors text-sm font-medium"
+                                            >
+                                                <LogOut size={18} /> Sign Out
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </header>

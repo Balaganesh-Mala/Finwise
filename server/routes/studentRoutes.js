@@ -6,6 +6,33 @@ const Setting = require('../models/Setting'); // Import Settings Model
 const { sendEmail } = require('../utils/emailService');
 const { studentRegistrationTemplate, resetPasswordTemplate } = require('../templates/emailTemplates');
 const crypto = require('crypto');
+const { getStudentDashboardStats, getLeaderboard } = require('../controllers/dashboardController');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+
+// Configure Multer
+const upload = multer({ 
+    dest: 'uploads/',
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+// Helper: Upload to Cloudinary
+const uploadToCloudinary = async (filePath, folder) => {
+    try {
+        const result = await cloudinary.uploader.upload(filePath, {
+            folder: folder,
+            resource_type: 'auto',
+            use_filename: true,
+            unique_filename: true
+        });
+        fs.unlinkSync(filePath);
+        return result;
+    } catch (err) {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        throw err;
+    }
+};
 
 // ... (other routes)
 
@@ -217,6 +244,11 @@ router.post('/create', async (req, res) => {
     }
 });
 
+// @route   GET /api/students/leaderboard
+// @desc    Get student leaderboard
+// @access  Public
+router.get('/leaderboard', getLeaderboard);
+
 // @route   GET /api/students/list
 // @desc    Get all students
 // @access  Admin
@@ -232,16 +264,69 @@ router.get('/list', async (req, res) => {
     }
 });
 
-// @route   GET /api/students/:id
-// @desc    Get single student by ID
-// @access  Admin/Student
-router.get('/:id', async (req, res) => {
+
+
+// @route   PUT /api/students/profile/:id
+// @desc    Update student profile (Self Update)
+// @access  Student
+router.put('/profile/:id', upload.single('profilePicture'), async (req, res) => {
     try {
-        const student = await Student.findById(req.params.id).select('-passwordHash');
+        const { headline, bio, socials, education } = req.body;
+        let profilePictureUrl = null;
+
+        // Handle File Upload
+        if (req.file) {
+            const result = await uploadToCloudinary(req.file.path, 'student_profiles');
+            profilePictureUrl = result.secure_url;
+        }
+
+        const student = await Student.findById(req.params.id);
         if (!student) return res.status(404).json({ message: 'Student not found' });
-        res.json(student);
+
+        // Update Fields
+        if (headline) student.headline = headline;
+        if (bio) student.bio = bio;
+        if (profilePictureUrl) student.profilePicture = profilePictureUrl;
+
+        // Parse and update nested objects
+        if (socials) {
+            try {
+                const parsedSocials = typeof socials === 'string' ? JSON.parse(socials) : socials;
+                student.socials = { ...student.socials, ...parsedSocials };
+            } catch (e) {
+                console.error("Error parsing socials:", e);
+            }
+        }
+
+        if (education) {
+            try {
+                const parsedEducation = typeof education === 'string' ? JSON.parse(education) : education;
+                student.education = parsedEducation;
+            } catch (e) {
+                console.error("Error parsing education:", e);
+            }
+        }
+
+        student.updatedAt = Date.now();
+        await student.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Profile updated successfully', 
+            user: {
+                 _id: student._id,
+                 name: student.name,
+                 email: student.email,
+                 profilePicture: student.profilePicture, // Return updated pic
+                 headline: student.headline,
+                 bio: student.bio,
+                 socials: student.socials,
+                 education: student.education
+            }
+        });
+
     } catch (err) {
-        console.error('Error fetching student:', err);
+        console.error('Profile Update Error:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 });
@@ -313,11 +398,30 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-const { getStudentDashboardStats } = require('../controllers/dashboardController');
+
+
+// @route   GET /api/students/leaderboard
+// @desc    Get student leaderboard
+// @access  Public
+
 
 // @route   GET /api/students/dashboard/:studentId
 // @desc    Get student dashboard stats
 // @access  Student
 router.get('/dashboard/:studentId', getStudentDashboardStats);
+
+// @route   GET /api/students/:id
+// @desc    Get single student by ID
+// @access  Admin/Student
+router.get('/:id', async (req, res) => {
+    try {
+        const student = await Student.findById(req.params.id).select('-passwordHash');
+        if (!student) return res.status(404).json({ message: 'Student not found' });
+        res.json(student);
+    } catch (err) {
+        console.error('Error fetching student:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
 
 module.exports = router;

@@ -43,6 +43,24 @@ const StudentSchema = new mongoose.Schema({
   resetTokenExpiry: { type: Date },
   supabaseId: { type: String }, // Keep for backward compatibility if needed
 
+  // Profile Details (New)
+  profilePicture: { type: String, default: "" },
+  headline: { type: String, default: "" },
+  bio: { type: String, default: "" },
+  
+  socials: {
+    linkedin: { type: String, default: "" },
+    github: { type: String, default: "" },
+    portfolio: { type: String, default: "" },
+    instagram: { type: String, default: "" }
+  },
+
+  education: [{
+    degree: { type: String },
+    institution: { type: String },
+    year: { type: String }
+  }],
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

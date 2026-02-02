@@ -40,8 +40,11 @@ exports.createTopic = async (req, res) => {
             notes: []
         };
 
-        // Handle Video Upload
-        if (req.files && req.files['video']) {
+        // Handle Video (URL or File)
+        if (req.body.videoUrl) {
+             topicData.videoUrl = req.body.videoUrl;
+             // No publicId for external URLs
+        } else if (req.files && req.files['video']) {
             const videoPath = req.files['video'][0].path;
             const result = await uploadToCloudinary(videoPath, 'courses/topics/videos', 'video');
             topicData.videoUrl = result.secure_url;
@@ -95,7 +98,7 @@ exports.updateTopic = async (req, res) => {
         let topic = await Topic.findById(req.params.id);
         if (!topic) return res.status(404).json({ message: 'Topic not found' });
 
-        const { title, description, duration, order, classDate, keepVideo, keepNotes } = req.body;
+        const { title, description, duration, order, classDate, keepVideo, keepNotes, videoUrl } = req.body;
         
         // Update basic fields
         if (title) topic.title = title;
@@ -104,9 +107,15 @@ exports.updateTopic = async (req, res) => {
         if (order !== undefined) topic.order = order;
         if (classDate) topic.classDate = classDate;
 
-        // Handle Video Update
-        // If 'video' file is uploaded, replace existing
-        if (req.files && req.files['video']) {
+        // Handle Video Update (URL or File)
+        if (videoUrl) {
+             // If switching to URL, delete old Cloudinary video if exists
+             if (topic.videoPublicId) {
+                await cloudinary.uploader.destroy(topic.videoPublicId, { resource_type: 'video' });
+                topic.videoPublicId = undefined;
+            }
+            topic.videoUrl = videoUrl;
+        } else if (req.files && req.files['video']) {
             // Delete old video
             if (topic.videoPublicId) {
                 await cloudinary.uploader.destroy(topic.videoPublicId, { resource_type: 'video' });

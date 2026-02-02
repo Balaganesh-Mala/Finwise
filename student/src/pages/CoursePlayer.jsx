@@ -23,6 +23,14 @@ const CoursePlayer = () => {
     const videoRef = useRef(null);
 
     // Initial Data Fetch
+
+    // Helper to get YouTube ID
+    const getYouTubeVideoId = (url) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -296,20 +304,42 @@ const CoursePlayer = () => {
                         <div className="max-w-4xl mx-auto space-y-6">
 
                             {/* Video Player Container */}
-                            <div className="bg-black aspect-video w-full rounded-none md:rounded-xl overflow-hidden shadow-lg sticky top-0 md:static z-10">
+                            <div className="bg-black aspect-video w-full rounded-none md:rounded-xl overflow-hidden shadow-lg sticky top-0 md:static z-10 relative group">
                                 {activeTopic.videoUrl ? (
-                                    <video
-                                        ref={videoRef}
-                                        src={activeTopic.videoUrl}
-                                        controls
-                                        controlsList="nodownload" // Disable download button
-                                        onContextMenu={(e) => e.preventDefault()} // Disable right-click
-                                        className="w-full h-full"
-                                        onTimeUpdate={handleVideoProgress}
-                                        onEnded={() => updateProgress(true, videoRef.current.duration)}
-                                    >
-                                        Your browser does not support the video tag.
-                                    </video>
+                                    (activeTopic.videoUrl.includes('youtube.com') || activeTopic.videoUrl.includes('youtu.be')) ? (
+                                        <div className="w-full h-full">
+                                            <iframe
+                                                className="w-full h-full"
+                                                src={`https://www.youtube.com/embed/${getYouTubeVideoId(activeTopic.videoUrl)}?enablejsapi=1`}
+                                                title={activeTopic.title}
+                                                frameBorder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            ></iframe>
+                                            {/* Manual Complete Button for YouTube */}
+                                            <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => updateProgress(true, 1800)} // Mock duration for now
+                                                    className="bg-green-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:bg-green-700 transition flex items-center gap-2"
+                                                >
+                                                    <CheckCircle size={14} /> Mark Complete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <video
+                                            ref={videoRef}
+                                            src={activeTopic.videoUrl}
+                                            controls
+                                            controlsList="nodownload" // Disable download button
+                                            onContextMenu={(e) => e.preventDefault()} // Disable right-click
+                                            className="w-full h-full"
+                                            onTimeUpdate={handleVideoProgress}
+                                            onEnded={() => updateProgress(true, videoRef.current.duration)}
+                                        >
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    )
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">
                                         <p>No video available for this lesson.</p>

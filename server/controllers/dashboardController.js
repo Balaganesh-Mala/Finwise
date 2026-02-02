@@ -121,3 +121,79 @@ exports.getStudentDashboardStats = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+// @desc    Get Student Leaderboard (Top 10 of the week)
+// @route   GET /api/students/leaderboard
+// @access  Public
+exports.getLeaderboard = async (req, res) => {
+    try {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); 
+        const diffToMon = (dayOfWeek + 6) % 7;
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - diffToMon);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        console.log('Fetching Leaderboard from:', startOfWeek);
+
+        const leaderboard = await Progress.aggregate([
+            {
+                $match: {
+                    completed: true,
+                    completedAt: { $gte: startOfWeek } 
+                }
+            },
+            {
+                $group: {
+                    _id: "$studentId",
+                    totalSeconds: { $sum: "$watchedDuration" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "students",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "studentInfo"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$studentInfo",
+                    preserveNullAndEmptyArrays: false // Skip if student deleted
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: "$studentInfo.name",
+                    email: "$studentInfo.email", 
+                    totalHours: { $divide: ["$totalSeconds", 3600] }
+                }
+            },
+            {
+                $sort: { totalHours: -1 }
+            },
+            {
+                $limit: 10
+            }
+        ]);
+
+        console.log('Leaderboard Raw:', leaderboard);
+
+        // Format for frontend
+        const formattedLeaderboard = leaderboard.map((entry, index) => ({
+            rank: index + 1,
+            id: entry._id,
+            name: entry.name,
+            email: entry.email, // Can help generate gravatar if no image
+            hours: entry.totalHours ? entry.totalHours.toFixed(1) : "0.0"
+        }));
+
+        res.json({ success: true, leaderboard: formattedLeaderboard });
+
+    } catch (err) {
+        console.error('Error fetching leaderboard:', err);
+        res.status(500).json({ message: 'Server Error', error: err.message });
+    }
+};

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -16,25 +16,28 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ResetPassword from './pages/ResetPassword';
 import CoursePlayer from './pages/CoursePlayer';
 
+
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index element={<Dashboard />} />
-          <Route path="courses" element={<MyCourses />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="my-qr" element={<MyQR />} />
-          <Route path="my-attendance" element={<AttendanceHistory />} />
-          <Route path="playground" element={<Playground />} />
-          <Route path="typing-practice" element={<TypingPractice />} />
-          <Route path="mock-interview" element={<MockInterview />} />
-          <Route path="my-interview-history" element={<InterviewHistory />} />
-          <Route path="my-interview-history" element={<InterviewHistory />} />
+        {/* Protected Routes with Sidebar Layout */}
+        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/courses" element={<MyCourses />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/my-qr" element={<MyQR />} />
+          <Route path="/my-attendance" element={<AttendanceHistory />} />
+          <Route path="/playground" element={<Playground />} />
+          <Route path="/typing-practice" element={<TypingPractice />} />
+          <Route path="/mock-interview" element={<MockInterview />} />
+          <Route path="/my-interview-history" element={<InterviewHistory />} />
         </Route>
 
         {/* Standalone Protected Route for Course Player (Full Width) */}
