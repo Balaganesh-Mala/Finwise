@@ -26,7 +26,9 @@ console.log('Email Service Config:', {
 // Verify connection configuration immediately
 transporter.verify(function (error, success) {
   if (error) {
-    console.error('❌ SMTP Connection Error (Startup):', error);
+    console.error('❌ SMTP Connection Error (Startup):');
+    console.error(`Attempted connection to ${process.env.MAIL_HOST}:${process.env.MAIL_PORT}`);
+    console.error('Error Details:', error);
   } else {
     console.log('✅ SMTP Server is ready to take our messages');
   }
