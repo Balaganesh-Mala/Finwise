@@ -16,6 +16,13 @@ const transporter = nodemailer.createTransport({
   logger: true              // log information in console
 });
 
+console.log('Email Service Config:', {
+  host: process.env.MAIL_HOST,
+  port: process.env.MAIL_PORT,
+  secure: process.env.MAIL_PORT == 465,
+  user: process.env.MAIL_USER ? 'Set' : 'Not Set'
+});
+
 const sendEmail = async (to, subject, html) => {
   try {
     console.log(`Sending email to: ${to} via ${process.env.MAIL_HOST}`);
