@@ -9,6 +9,10 @@ const JobSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a company name']
     },
+    companyLogo: {
+        type: String,
+        default: '' // Optional logo URL
+    },
     location: {
         type: String,
         required: [true, 'Please add a location']
@@ -39,6 +43,18 @@ const JobSchema = new mongoose.Schema({
         required: [true, 'Please add salary range']
     },
     applyLink: {
+        type: String
+    },
+    deadline: {
+        type: Date
+    },
+    companyWebsite: {
+        type: String
+    },
+    companyLinkedin: {
+        type: String
+    },
+    workingHours: {
         type: String
     },
     postedAt: {

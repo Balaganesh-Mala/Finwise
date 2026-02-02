@@ -64,36 +64,12 @@ const MockInterview = () => {
         };
         getUser();
 
-        // Speech Recognition Setup
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognitionRef.current = new SpeechRecognition();
-            recognitionRef.current.continuous = true;
-            recognitionRef.current.interimResults = true;
-            recognitionRef.current.lang = 'en-US';
-
-            recognitionRef.current.onresult = (event) => {
-                if (isProcessingRef.current) return;
-                let transcript = '';
-                for (let i = 0; i < event.results.length; ++i) {
-                    transcript += event.results[i][0].transcript;
-                }
-                setInputText(baseTextRef.current + transcript);
-            };
-
-            recognitionRef.current.onerror = (event) => {
-                // Ignore 'aborted' error as it happens when we manually cancel
-                if (event.error === 'aborted') return;
-
-                console.error("Speech Error:", event.error);
-                toast.error("Microphone error. Using text mode.");
-                setIsListening(false);
-            };
-        }
-
         return () => {
             // Cleanup speech synthesis on unmount
             window.speechSynthesis.cancel();
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
         };
     }, []);
 
@@ -122,7 +98,10 @@ const MockInterview = () => {
         setInputText('');
         baseTextRef.current = '';
         setIsListening(false);
-        if (recognitionRef.current) recognitionRef.current.abort(); // Abort immediately, don't wait for final result
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+            recognitionRef.current = null; // Clear ref
+        }
 
         // 1. Add User Message
         const newMessages = [...messages, { sender: 'user', text: answer }];
@@ -168,15 +147,60 @@ const MockInterview = () => {
 
     const toggleMic = () => {
         if (isListening) {
-            recognitionRef.current.stop();
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
             setIsListening(false);
         } else {
+            // Start Listening - Create FRESH instance
+            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+                toast.error("Speech recognition not supported in this browser.");
+                return;
+            }
+
             // Add space if there is text and it doesn't end with a space
             const prefix = inputText + (inputText && !inputText.endsWith(' ') ? ' ' : '');
             baseTextRef.current = prefix;
             setInputText(prefix);
             isProcessingRef.current = false;
-            recognitionRef.current.start();
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                if (isProcessingRef.current) return;
+                let transcript = '';
+                for (let i = 0; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                setInputText(baseTextRef.current + transcript);
+            };
+
+            recognition.onerror = (event) => {
+                // Ignore 'aborted' error as it happens when we manually cancel
+                if (event.error === 'aborted' || event.error === 'not-allowed') {
+                    if (event.error === 'not-allowed') toast.error("Microphone access denied.");
+                    return;
+                }
+                console.error("Speech Error:", event.error);
+                toast.error("Microphone error. Stopped.");
+                setIsListening(false);
+            };
+
+            recognition.onend = () => {
+                // Auto-restart if we intended to keep listening? 
+                // For now, let's treat onend as a stop to be safe against loops
+                if (isListening) {
+                    // Optionally restart if disconnected unexpectedly, but better UX to let user toggle
+                    // setIsListening(false); 
+                }
+            };
+
+            recognitionRef.current = recognition;
+            recognition.start();
             setIsListening(true);
         }
     };

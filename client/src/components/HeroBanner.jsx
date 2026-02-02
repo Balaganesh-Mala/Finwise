@@ -34,6 +34,11 @@ const HeroBanner = () => {
         fetchBanners();
     }, []);
 
+    // Reset current index when banners change to prevent out-of-bounds access
+    useEffect(() => {
+        setCurrent(0);
+    }, [banners]);
+
     useEffect(() => {
         if (banners.length <= 1) return; // Don't cycle if only 1 banner
         const timer = setInterval(() => {
@@ -43,6 +48,9 @@ const HeroBanner = () => {
     }, [banners.length]);
 
     const currentBanner = banners[current];
+
+    // Safety guard
+    if (!currentBanner) return null;
 
     return (
         <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden pt-20 mx-auto px-4 md:px-12 lg:px-24">

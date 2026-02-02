@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Briefcase, IndianRupee, CheckCircle, ArrowRight } from 'lucide-react';
+import { X, MapPin, Briefcase, IndianRupee, CheckCircle, ArrowRight, Globe, Linkedin, Clock, Calendar } from 'lucide-react';
 
 const JobDetailsModal = ({ job, isOpen, onClose }) => {
     if (!isOpen || !job) return null;
@@ -25,8 +25,8 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                     {/* Header */}
                     <div className="bg-gray-900 text-white p-6 md:p-8 relative overflow-hidden flex-shrink-0">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF7F50] rounded-full blur-[80px] opacity-20 -mr-16 -mt-16"></div>
-                        
-                        <button 
+
+                        <button
                             onClick={onClose}
                             className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
                         >
@@ -38,7 +38,12 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                                 {job.type}
                             </span>
                             <h2 className="text-2xl md:text-3xl font-bold mb-2 pr-8">{job.title}</h2>
-                            <p className="text-gray-300 text-lg">{job.company}</p>
+                            <div className="flex items-center gap-3">
+                                {job.companyLogo && (
+                                    <img src={job.companyLogo} alt={job.company} className="w-12 h-12 object-contain bg-white rounded-lg p-1" />
+                                )}
+                                <p className="text-gray-300 text-lg">{job.company}</p>
+                            </div>
 
                             <div className="flex flex-wrap gap-4 mt-6 text-sm font-medium text-gray-300">
                                 <div className="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded-lg">
@@ -47,6 +52,30 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                                 <div className="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded-lg">
                                     <IndianRupee size={16} className="text-primary-400" /> {job.salary}
                                 </div>
+                                {job.workingHours && (
+                                    <div className="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded-lg">
+                                        <Clock size={16} className="text-primary-400" /> {job.workingHours}
+                                    </div>
+                                )}
+                                {job.deadline && (
+                                    <div className="flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded-lg">
+                                        <Calendar size={16} className="text-primary-400" />
+                                        Apply by {new Date(job.deadline).toLocaleDateString()}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3 mt-4">
+                                {job.companyWebsite && (
+                                    <a href={job.companyWebsite} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
+                                        <Globe size={18} />
+                                    </a>
+                                )}
+                                {job.companyLinkedin && (
+                                    <a href={job.companyLinkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
+                                        <Linkedin size={18} />
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -75,7 +104,7 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                                     )) || <p className="text-gray-500 italic">Detailed responsibilities available upon application.</p>}
                                 </ul>
                             </div>
-                            
+
                             <div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                                     <div className="w-1 h-6 bg-primary-500 rounded-full"></div>
@@ -106,13 +135,13 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
 
                     {/* Footer - Fixed Action Area */}
                     <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-4 flex-shrink-0">
-                        <button 
+                        <button
                             onClick={onClose}
                             className="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors"
                         >
                             Close
                         </button>
-                        <button 
+                        <button
                             onClick={() => onClose('apply')} // Pass a signal that we want to apply
                             className="px-8 py-3 rounded-xl bg-[#FF7F50] text-white font-bold hover:bg-[#e64a19] transition-colors shadow-lg shadow-orange-500/20 flex items-center gap-2"
                         >

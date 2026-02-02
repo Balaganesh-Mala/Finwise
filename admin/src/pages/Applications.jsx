@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Download, ExternalLink, Calendar, Mail, Phone, Briefcase, Trash2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PDFPreviewModal from '../components/PDFPreviewModal';
 
 const Applications = () => {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [viewModalApp, setViewModalApp] = useState(null);
 
     const fetchApplications = async () => {
         try {
@@ -61,78 +63,92 @@ const Applications = () => {
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="p-4 font-semibold text-gray-600 text-sm">Candidate</th>
-                                <th className="p-4 font-semibold text-gray-600 text-sm">Job Role</th>
-                                <th className="p-4 font-semibold text-gray-600 text-sm">Contact</th>
-                                <th className="p-4 font-semibold text-gray-600 text-sm">Applied On</th>
-                                <th className="p-4 font-semibold text-gray-600 text-sm">Resume</th>
-                                <th className="p-4 font-semibold text-gray-600 text-sm">Status</th>
-                                <th className="p-4 font-semibold text-gray-600 text-sm">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {applications.map((app) => (
-                                <tr key={app._id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="p-4">
-                                        <div className="font-bold text-gray-900">{app.fullName}</div>
-                                    </td>
-                                    <td className="p-4">
-                                        {app.jobId ? (
-                                            <div>
-                                                <div className="font-medium text-primary-600">{app.jobId.title}</div>
-                                                <div className="text-xs text-gray-400">{app.jobId.company}</div>
-                                            </div>
-                                        ) : (
-                                            <span className="text-red-400 text-sm italic">Job Deleted</span>
-                                        )}
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex flex-col gap-1 text-sm text-gray-600">
-                                            <div className="flex items-center gap-2"><Mail size={14}/> {app.email}</div>
-                                            <div className="flex items-center gap-2"><Phone size={14}/> {app.phone}</div>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-sm text-gray-500">
-                                        {formatDate(app.appliedAt)}
-                                    </td>
-                                    <td className="p-4">
-                                        <a 
-                                            href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications/${app._id}/download`} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-100 transition-colors"
-                                            title="Download Resume"
-                                        >
-                                            <Download size={16} /> Download
-                                        </a>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
-                                            app.status === 'New' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                                        }`}>
-                                            {app.status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        <button 
-                                            onClick={() => handleDelete(app._id)}
-                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Delete Application"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </td>
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    <th className="p-4 font-semibold text-gray-600 text-sm">Candidate</th>
+                                    <th className="p-4 font-semibold text-gray-600 text-sm">Job Role</th>
+                                    <th className="p-4 font-semibold text-gray-600 text-sm">Contact</th>
+                                    <th className="p-4 font-semibold text-gray-600 text-sm">Applied On</th>
+                                    <th className="p-4 font-semibold text-gray-600 text-sm">Resume</th>
+                                    <th className="p-4 font-semibold text-gray-600 text-sm">Status</th>
+                                    <th className="p-4 font-semibold text-gray-600 text-sm">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {applications.map((app) => (
+                                    <tr key={app._id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="p-4">
+                                            <div className="font-bold text-gray-900">{app.fullName}</div>
+                                        </td>
+                                        <td className="p-4">
+                                            {app.jobId ? (
+                                                <div>
+                                                    <div className="font-medium text-primary-600">{app.jobId.title}</div>
+                                                    <div className="text-xs text-gray-400">{app.jobId.company}</div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-red-400 text-sm italic">Job Deleted</span>
+                                            )}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex flex-col gap-1 text-sm text-gray-600">
+                                                <div className="flex items-center gap-2"><Mail size={14} /> {app.email}</div>
+                                                <div className="flex items-center gap-2"><Phone size={14} /> {app.phone}</div>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-sm text-gray-500">
+                                            {formatDate(app.appliedAt)}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => setViewModalApp(app)}
+                                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors"
+                                                    title="View Resume"
+                                                >
+                                                    <ExternalLink size={16} /> View
+                                                </button>
+                                                <a
+                                                    href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications/${app._id}/download`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-100 transition-colors"
+                                                    title="Download Resume"
+                                                >
+                                                    <Download size={16} /> Download
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${app.status === 'New' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                                                }`}>
+                                                {app.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <button
+                                                onClick={() => handleDelete(app._id)}
+                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Delete Application"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
 
+            {/* Modal */}
+            <PDFPreviewModal
+                isOpen={!!viewModalApp}
+                application={viewModalApp}
+                onClose={() => setViewModalApp(null)}
+            />
         </div>
     );
 };

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const JobApplicationModal = ({ job, isOpen, onClose }) => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
-    
+
     // Initial State matches the previous one but we will use better names for consent
     const [formData, setFormData] = useState({
         fullName: '',
@@ -34,9 +34,9 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
-             if (file.size > 5 * 1024 * 1024) {
-                 toast.error('File size exceeds 5MB');
-                 return;
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('File size exceeds 5MB');
+                return;
             }
             setFormData(prev => ({ ...prev, resume: file }));
         }
@@ -59,7 +59,7 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
             data.append('email', formData.email);
             data.append('phone', formData.phone);
             data.append('resume', formData.resume);
-            
+
             // Convert consents to the structure expected by backend schema if needed
             // Or just stringify the object
             data.append('consent', JSON.stringify({
@@ -75,44 +75,43 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            
+
             toast.dismiss(loadingToast);
             toast.custom((t) => (
                 <div
-                    className={`${
-                    t.visible ? 'animate-enter' : 'animate-leave'
-                    } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+                    className={`${t.visible ? 'animate-enter' : 'animate-leave'
+                        } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
                 >
                     <div className="flex-1 w-0 p-4">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0 pt-0.5">
-                            <CheckCircle className="h-10 w-10 text-green-500" />
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0 pt-0.5">
+                                <CheckCircle className="h-10 w-10 text-green-500" />
+                            </div>
+                            <div className="ml-3 flex-1">
+                                <p className="text-sm font-medium text-gray-900">
+                                    Application Submitted!
+                                </p>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Your application for {job.title} has been received. We will contact you soon.
+                                </p>
+                            </div>
                         </div>
-                        <div className="ml-3 flex-1">
-                        <p className="text-sm font-medium text-gray-900">
-                            Application Submitted!
-                        </p>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Your application for {job.title} has been received. We will contact you soon.
-                        </p>
-                        </div>
-                    </div>
                     </div>
                     <div className="flex border-l border-gray-200">
-                    <button
-                        onClick={() => toast.dismiss(t.id)}
-                        className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                        Close
-                    </button>
+                        <button
+                            onClick={() => toast.dismiss(t.id)}
+                            className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            Close
+                        </button>
                     </div>
                 </div>
             ), { duration: 5000 });
 
             setTimeout(() => {
                 onClose();
-                setStep(1); 
-                setFormData({ fullName: '', phone: '', email: '', resume: null }); 
+                setStep(1);
+                setFormData({ fullName: '', phone: '', email: '', resume: null });
                 setConsents({ salary: null, hiringProcess: null, interview: null, joining: null, terms: false });
             }, 2000);
 
@@ -126,11 +125,11 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
     };
 
     const isStep1Valid = formData.fullName && formData.email && formData.phone.length >= 10 && formData.resume;
-    const isStep2Valid = consents.salary === 'yes' && 
-                         consents.hiringProcess === 'yes' && 
-                         consents.interview === 'yes' && 
-                         consents.joining === 'yes' &&
-                         consents.terms;
+    const isStep2Valid = consents.salary === 'yes' &&
+        consents.hiringProcess === 'yes' &&
+        consents.interview === 'yes' &&
+        consents.joining === 'yes' &&
+        consents.terms;
 
     return (
         <AnimatePresence>
@@ -155,7 +154,7 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                             <h2 className="text-2xl font-bold text-gray-900">Apply for {job.title}</h2>
                             <p className="text-gray-500 text-sm mt-1">{job.company}</p>
                         </div>
-                        <button 
+                        <button
                             onClick={onClose}
                             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
                         >
@@ -165,7 +164,7 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
 
                     {/* Progress Bar */}
                     <div className="w-full h-1 bg-gray-100">
-                        <motion.div 
+                        <motion.div
                             className="h-full bg-[#FF7F50]"
                             initial={{ width: "0%" }}
                             animate={{ width: step === 1 ? "50%" : "100%" }}
@@ -185,8 +184,8 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             name="fullName"
                                             value={formData.fullName}
                                             onChange={handleInputChange}
@@ -202,8 +201,8 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                                             <span className="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm font-medium">
                                                 IN +91
                                             </span>
-                                            <input 
-                                                type="tel" 
+                                            <input
+                                                type="tel"
                                                 name="phone"
                                                 value={formData.phone}
                                                 onChange={handleInputChange}
@@ -216,8 +215,8 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Registered Email ID</label>
-                                        <input 
-                                            type="email" 
+                                        <input
+                                            type="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleInputChange}
@@ -229,15 +228,15 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Upload your Resume 
+                                            Upload your Resume
                                             <span className="block text-xs font-normal text-gray-500 mt-0.5">Make your resume stronger by adding unique projects with a focus on React.</span>
                                         </label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary-400 transition-colors bg-gray-50 group cursor-pointer relative">
-                                            <input 
-                                                type="file" 
-                                                accept=".pdf,.doc,.docx,.jpg,.png" 
+                                            <input
+                                                type="file"
+                                                accept=".pdf,.doc,.docx,.jpg,.png"
                                                 onChange={handleFileUpload}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                             />
                                             {formData.resume ? (
                                                 <div className="flex flex-col items-center text-primary-600">
@@ -247,11 +246,11 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                                                 </div>
                                             ) : (
                                                 <>
-                                                <Upload size={32} className="mx-auto text-gray-400 mb-3 group-hover:text-primary-500 transition-colors" />
-                                                <p className="text-sm text-gray-600 font-medium">
-                                                    <span className="text-primary-600">Click to upload</span> or drag and drop
-                                                </p>
-                                                <p className="text-xs text-gray-400 mt-1">PNG, JPG, PDF up to 5 MB</p>
+                                                    <Upload size={32} className="mx-auto text-gray-400 mb-3 group-hover:text-primary-500 transition-colors" />
+                                                    <p className="text-sm text-gray-600 font-medium">
+                                                        <span className="text-primary-600">Click to upload</span> or drag and drop
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, PDF up to 5 MB</p>
                                                 </>
                                             )}
                                         </div>
@@ -259,7 +258,7 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                                 </div>
                             ) : (
                                 <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
-                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                         <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-xs">2</span>
                                         Consent & Declaration
                                     </h3>
@@ -286,10 +285,10 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                                             <p className="text-sm font-medium text-gray-800 mb-3 leading-relaxed">{q.text}</p>
                                             <div className="flex gap-6">
                                                 <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input 
-                                                        type="radio" 
-                                                        name={q.id} 
-                                                        value="yes" 
+                                                    <input
+                                                        type="radio"
+                                                        name={q.id}
+                                                        value="yes"
                                                         checked={consents[q.id] === 'yes'}
                                                         onChange={() => handleConsentChange(q.id, 'yes')}
                                                         className="w-4 h-4 text-primary-600 focus:ring-primary-500"
@@ -297,10 +296,10 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                                                     <span className="text-sm text-gray-700">Yes</span>
                                                 </label>
                                                 <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input 
-                                                        type="radio" 
-                                                        name={q.id} 
-                                                        value="no" 
+                                                    <input
+                                                        type="radio"
+                                                        name={q.id}
+                                                        value="no"
                                                         checked={consents[q.id] === 'no'}
                                                         onChange={() => handleConsentChange(q.id, 'no')}
                                                         className="w-4 h-4 text-primary-600 focus:ring-primary-500"
@@ -315,8 +314,8 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                                         <AlertCircle size={20} className="text-orange-600 flex-shrink-0 mt-0.5" />
                                         <div className="text-sm text-orange-800">
                                             <label className="flex items-start gap-2 cursor-pointer">
-                                                 <input 
-                                                    type="checkbox" 
+                                                <input
+                                                    type="checkbox"
                                                     name="terms"
                                                     checked={consents.terms}
                                                     onChange={(e) => handleConsentChange('terms', e.target.checked)}
@@ -328,9 +327,17 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                                             </label>
                                         </div>
                                     </div>
-                                    
+
                                     <p className="text-xs text-gray-500 text-center">
-                                        The deadline for applying to this job is <span className="font-semibold text-gray-900">21 Jan, 2026, 11:00 AM</span>
+                                        The deadline for applying to this job is <span className="font-semibold text-gray-900">
+                                            {job.deadline ? new Date(job.deadline).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            }) : 'Open until filled'}
+                                        </span>
                                     </p>
                                 </div>
                             )}
@@ -339,9 +346,9 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
 
                     {/* Footer - Fixed */}
                     <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-between items-center flex-shrink-0">
-                         {step === 2 && (
-                            <button 
-                                type="button" 
+                        {step === 2 && (
+                            <button
+                                type="button"
                                 onClick={() => setStep(1)}
                                 className="px-6 py-2.5 rounded-lg text-gray-600 font-semibold hover:bg-gray-200 transition-colors"
                             >
@@ -350,8 +357,8 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                         )}
                         <div className="ml-auto">
                             {step === 1 ? (
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={() => isStep1Valid && setStep(2)}
                                     disabled={!isStep1Valid}
                                     className="px-8 py-3 rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -359,7 +366,7 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
                                     Next Step <ChevronRight size={18} />
                                 </button>
                             ) : (
-                                <button 
+                                <button
                                     onClick={handleSubmit}
                                     disabled={!isStep2Valid || loading}
                                     className="px-8 py-3 rounded-xl bg-[#FF7F50] text-white font-bold hover:bg-[#e64a19] transition-colors shadow-lg shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"

@@ -126,7 +126,11 @@ const Career = () => {
                             <div className="p-8 flex-grow">
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="bg-gray-50 p-3 rounded-2xl group-hover:bg-primary-50 transition-colors duration-300">
-                                        <Briefcase size={24} className="text-gray-600 group-hover:text-primary-600 transition-colors" />
+                                        {job.companyLogo ? (
+                                            <img src={job.companyLogo} alt={job.company} className="w-10 h-10 object-contain" />
+                                        ) : (
+                                            <Briefcase size={24} className="text-gray-600 group-hover:text-primary-600 transition-colors" />
+                                        )}
                                     </div>
                                     <span className="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                                         {job.type}

@@ -11,6 +11,8 @@ const QRScanner = () => {
 
     // Check if scanner is already rendered to avoid double render in Strict Mode
     const scannerRef = useRef(null);
+    const processingRef = useRef(false); // Synchronous lock
+    const lastScanRef = useRef({ text: '', time: 0 }); // Debounce tracker
 
     useEffect(() => {
         fetchTodayAttendance();
@@ -57,7 +59,7 @@ const QRScanner = () => {
             await html5QrCode.start(
                 { facingMode: "environment" },
                 {
-                    fps: 10,
+                    fps: 5, // Lower FPS to reduce load
                     qrbox: { width: 250, height: 250 },
                     aspectRatio: 1.0
                 },
@@ -95,17 +97,24 @@ const QRScanner = () => {
     };
 
     const handleScan = (decodedText) => {
-        if (decodedText !== data && !loading) {
-            setData(decodedText);
-            processScan(decodedText);
+        const now = Date.now();
 
-            // Optional: Pause scanner briefly?
-            // scannerRef.current.pause();
+        // 1. Debounce same code scan (3 seconds)
+        if (decodedText === lastScanRef.current.text && (now - lastScanRef.current.time) < 3000) {
+            return;
         }
+
+        // 2. Synchronous Lock
+        if (processingRef.current) return;
+
+        processingRef.current = true;
+        lastScanRef.current = { text: decodedText, time: now };
+
+        setData(decodedText);
+        processScan(decodedText);
     };
 
     const processScan = async (qrText) => {
-        if (loading) return;
         setLoading(true);
         setScanResult(null);
 
@@ -120,6 +129,7 @@ const QRScanner = () => {
             } catch (e) {
                 console.error("Invalid QR Format", qrText);
                 setScanResult({ success: false, message: 'Invalid QR Format. Is this a JobReady QR?' });
+                processingRef.current = false; // Release lock
                 setLoading(false);
                 return;
             }
@@ -146,7 +156,9 @@ const QRScanner = () => {
             setScanResult({ success: false, message: `Error: ${err.response?.data?.message || err.message}` });
             setTimeout(() => setData('No result'), 3000);
         }
+
         setLoading(false);
+        processingRef.current = false; // Release lock
     };
 
     return (
