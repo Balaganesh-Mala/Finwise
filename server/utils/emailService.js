@@ -23,6 +23,15 @@ console.log('Email Service Config:', {
   user: process.env.MAIL_USER ? 'Set' : 'Not Set'
 });
 
+// Verify connection configuration immediately
+transporter.verify(function (error, success) {
+  if (error) {
+    console.error('❌ SMTP Connection Error (Startup):', error);
+  } else {
+    console.log('✅ SMTP Server is ready to take our messages');
+  }
+});
+
 const sendEmail = async (to, subject, html) => {
   try {
     console.log(`Sending email to: ${to} via ${process.env.MAIL_HOST}`);
