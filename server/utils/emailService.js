@@ -9,9 +9,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.MAIL_PASS, 
   },
   // Add timeout settings
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 5000,    // 5 seconds
-  socketTimeout: 10000,     // 10 seconds
+  connectionTimeout: 30000, // 30 seconds
+  greetingTimeout: 15000,   // 15 seconds
+  socketTimeout: 30000,     // 30 seconds
   debug: true,              // show debug output
   logger: true              // log information in console
 });
