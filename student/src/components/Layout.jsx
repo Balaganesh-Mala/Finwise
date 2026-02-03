@@ -35,8 +35,46 @@ const Layout = () => {
     const [profileOpen, setProfileOpen] = useState(false);
     const [attendanceCount, setAttendanceCount] = useState(0);
     const [completedTasks, setCompletedTasks] = useState(0);
+    const [notifications, setNotifications] = useState([]);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Fetch Notifications
+    const fetchNotifications = async () => {
+        if (!user?._id) return;
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const { data } = await axios.get(`${API_URL}/api/notifications?studentId=${user._id}`);
+            setNotifications(data);
+            setUnreadCount(data.filter(n => !n.isRead).length);
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, [user?._id]);
+
+    const handleNotificationClick = async (notif) => {
+        if (!notif.isRead) {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                await axios.put(`${API_URL}/api/notifications/${notif._id}/read`);
+                // Update local state to reflect read status instantly
+                setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: true } : n));
+                setUnreadCount(prev => Math.max(0, prev - 1));
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        if (notif.link) navigate(notif.link);
+        setShowNotifications(false);
+    };
 
     useEffect(() => {
         // Fetch user from Local Storage
@@ -294,10 +332,51 @@ const Layout = () => {
                         </div>
 
                         {/* Notification Bell */}
-                        <button className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-                            <Bell size={22} />
-                            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowNotifications(!showNotifications)}
+                                className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <Bell size={22} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                                )}
+                            </button>
+
+                            {showNotifications && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)}></div>
+                                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                                        <div className="p-2 border-b border-gray-50 flex justify-between items-center">
+                                            <h3 className="font-semibold text-sm text-gray-700">Notifications</h3>
+                                            <span className="text-xs text-indigo-600 font-medium">{unreadCount} New</span>
+                                        </div>
+                                        <div className="max-h-80 overflow-y-auto">
+                                            {notifications.length > 0 ? (
+                                                notifications.map(n => (
+                                                    <div
+                                                        key={n._id}
+                                                        onClick={() => handleNotificationClick(n)}
+                                                        className={`p-3 rounded-lg mb-1 cursor-pointer transition-colors ${n.isRead ? 'bg-white hover:bg-gray-50' : 'bg-indigo-50/50 hover:bg-indigo-50'}`}
+                                                    >
+                                                        <div className="flex gap-3">
+                                                            <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${n.isRead ? 'bg-gray-300' : 'bg-indigo-500'}`} />
+                                                            <div>
+                                                                <p className={`text-sm ${n.isRead ? 'text-gray-600' : 'text-gray-900 font-medium'} leading-tight`}>{n.title}</p>
+                                                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{n.message}</p>
+                                                                <p className="text-[10px] text-gray-400 mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-center py-8 text-gray-400 text-sm">No notifications</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
                         <div className="h-8 w-px bg-gray-200 mx-2 hidden md:block"></div>
 

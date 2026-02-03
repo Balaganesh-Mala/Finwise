@@ -15,7 +15,7 @@ router.post('/save', async (req, res) => {
       studentId,
       wpm,
       accuracy,
-      errors,
+      errorCount: errors,
       mode,
       lesson,
       time

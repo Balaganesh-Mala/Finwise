@@ -79,6 +79,8 @@ const Layout = () => {
     { name: 'Blogs', path: '/blogs', icon: FileText },
     { name: 'Reviews', path: '/reviews', icon: Users },
     { name: 'Settings', path: '/settings', icon: Settings },
+    { name: 'Trainers', path: '/trainers', icon: Users },
+    { name: 'Test Bank', path: '/tests', icon: FileText },
   ];
 
   return (

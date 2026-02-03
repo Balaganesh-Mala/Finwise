@@ -20,6 +20,11 @@ const settingSchema = new mongoose.Schema({
     instagram: { type: String, default: '' },
     linkedin: { type: String, default: '' },
     youtube: { type: String, default: '' }
+  },
+  hiringRounds: {
+    mcq: { type: Boolean, default: true },
+    video: { type: Boolean, default: true },
+    assignment: { type: Boolean, default: true }
   }
 }, { timestamps: true });
 

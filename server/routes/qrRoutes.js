@@ -5,6 +5,8 @@ const QRCode = require('qrcode');
 const cloudinary = require('cloudinary').v2;
 const StudentQR = require('../models/StudentQR');
 const Student = require('../models/Student');
+const TrainerQR = require('../models/TrainerQR');
+const Trainer = require('../models/Trainer');
 
 // Configure Cloudinary
 cloudinary.config({
@@ -152,6 +154,97 @@ router.get('/:studentId', async (req, res) => {
          res.json({
              qrImageURL: studentQR.qrImageURL,
              tokenCreatedAt: studentQR.tokenCreatedAt
+         });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// @route   POST /api/qr/trainer/generate/:trainerId
+// @desc    Generate or Regenerate QR Token for a trainer
+// @access  Admin or Trainer
+router.post('/trainer/generate/:trainerId', async (req, res) => {
+    try {
+        const { trainerId } = req.params;
+
+        // 1. Verify trainer exists
+        const trainer = await Trainer.findById(trainerId);
+        if (!trainer) {
+            return res.status(404).json({ message: 'Trainer not found' });
+        }
+
+        // 2. Generate secure random token
+        const token = crypto.randomBytes(32).toString('hex');
+        const tokenCreatedAt = new Date();
+
+        // 3. Encode data for QR
+        const qrData = JSON.stringify({
+            trainerId: trainer._id.toString(),
+            token: token
+        });
+
+        // 4. Generate QR Image (Base64)
+        const qrImageBase64 = await QRCode.toDataURL(qrData);
+
+        // 5. Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(qrImageBase64, {
+            folder: 'trainer_qrs',
+            public_id: `qr_trainer_${trainer._id}`,
+            overwrite: true,
+            resource_type: 'image'
+        });
+
+        // 6. Save/Update DB
+        let trainerQR = await TrainerQR.findOne({ trainerId: trainer._id });
+
+        if (trainerQR) {
+            // Update
+            trainerQR.qrToken = token;
+            trainerQR.qrImageURL = result.secure_url;
+            trainerQR.tokenCreatedAt = tokenCreatedAt;
+            trainerQR.tokenExpiresAt = null; 
+            await trainerQR.save();
+        } else {
+            // Create
+            trainerQR = await TrainerQR.create({
+                trainerId: trainer._id,
+                qrToken: token,
+                qrImageURL: result.secure_url,
+                tokenCreatedAt: tokenCreatedAt
+            });
+        }
+
+        res.json({
+            success: true,
+            qrImageURL: result.secure_url,
+            token: token,
+            message: 'QR Code generated successfully'
+        });
+
+    } catch (err) {
+        console.error('Trainer QR Generation Error:', err);
+        res.status(500).json({ message: 'Server Error', error: err.message });
+    }
+});
+
+// @route   GET /api/qr/trainer/:trainerId
+// @desc    Get trainer QR data
+// @access  Public (protected by client logic)
+router.get('/trainer/:trainerId', async (req, res) => {
+    try {
+         const { trainerId } = req.params;
+         
+         const trainerQR = await TrainerQR.findOne({ trainerId: trainerId });
+         
+         if (!trainerQR) {
+             return res.status(404).json({ message: 'QR Code not generated yet' });
+         }
+
+         res.json({
+             qrImageURL: trainerQR.qrImageURL,
+             tokenCreatedAt: trainerQR.tokenCreatedAt
          });
 
     } catch (err) {

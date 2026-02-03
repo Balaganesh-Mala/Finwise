@@ -30,6 +30,7 @@ app.use(cors({
         'https://wonew.in', // Production HTTPS
         'https://student.wonew.in',
         'https://admin.wonew.in',
+        'https://trainer.wonew.in',
         'https://jobready-client.onrender.com',
         'https://jobready-q89p.onrender.com', // Student Portal Deployed
         process.env.CLIENT_URL,
@@ -42,7 +43,7 @@ app.use(express.json());
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    max: 1000 // limit each IP to 1000 requests per windowMs
 });
 app.use(limiter);
 
@@ -62,6 +63,10 @@ app.use('/api/qr', require('./routes/qrRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/typing', require('./routes/typingRoutes'));
 app.use('/api/interview', require('./routes/interviewRoutes'));
+app.use('/api/trainer', require('./routes/trainerRoutes'));
+app.use('/api/admin/trainers', require('./routes/adminTrainerRoutes'));
+app.use('/api/admin/tests', require('./routes/adminTestRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // Course Module Routes
 app.use('/api', require('./routes/moduleRoutes'));

@@ -271,7 +271,7 @@ router.get('/list', async (req, res) => {
 // @access  Student
 router.put('/profile/:id', upload.single('profilePicture'), async (req, res) => {
     try {
-        const { headline, bio, socials, education } = req.body;
+        const { headline, bio, socials, education, preferences } = req.body;
         let profilePictureUrl = null;
 
         // Handle File Upload
@@ -307,6 +307,10 @@ router.put('/profile/:id', upload.single('profilePicture'), async (req, res) => 
             }
         }
 
+        if (preferences) {
+            student.preferences = { ...student.preferences, ...preferences };
+        }
+
         student.updatedAt = Date.now();
         await student.save();
 
@@ -321,7 +325,8 @@ router.put('/profile/:id', upload.single('profilePicture'), async (req, res) => 
                  headline: student.headline,
                  bio: student.bio,
                  socials: student.socials,
-                 education: student.education
+                 education: student.education,
+                 preferences: student.preferences
             }
         });
 

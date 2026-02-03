@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import UpdatePassword from './pages/UpdatePassword';
+import ManageTests from './pages/ManageTests';
 import Dashboard from './pages/Dashboard';
 import Banners from './pages/Banners';
 import Layout from './components/Layout';
@@ -19,6 +20,10 @@ import ManageCourseModules from './pages/ManageCourseModules';
 import Blogs from './pages/Blogs';
 import QRScanner from './pages/QRScanner';
 import AttendanceHistory from './pages/AttendanceHistory';
+import AddTrainer from './pages/AddTrainer'; // New
+import TrainerList from './pages/TrainerList'; // New
+import TrainerDetails from './pages/TrainerDetails'; // New
+
 
 import { Toaster } from 'react-hot-toast';
 
@@ -53,6 +58,10 @@ function App() {
           <Route path="attendance/qr-scanner" element={<QRScanner />} />
           <Route path="attendance/history" element={<AttendanceHistory />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="trainers" element={<TrainerList />} />
+          <Route path="trainers/add" element={<AddTrainer />} />
+          <Route path="trainers/:id" element={<TrainerDetails />} />
+          <Route path="tests" element={<ManageTests />} />
           {/* Add more routes here as we migrate */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

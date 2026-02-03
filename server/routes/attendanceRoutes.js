@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const StudentQR = require('../models/StudentQR');
 const Student = require('../models/Student');
+const Trainer = require('../models/Trainer');
+const TrainerQR = require('../models/TrainerQR');
 const Attendance = require('../models/Attendance');
 
 // @route   POST /api/attendance/qr-mark
@@ -138,23 +140,35 @@ router.get('/history', async (req, res) => {
 
         // Student Filter (Optional)
         if (studentId) {
-            // Check if it's a valid Mongo ObjectId
             if (studentId.match(/^[0-9a-fA-F]{24}$/)) {
                 query.studentId = studentId;
             } else {
-                // Assume Supabase UUID, look up student _id
                 const student = await Student.findOne({ supabaseId: studentId });
                 if (student) {
                     query.studentId = student._id;
                 } else {
-                    // If student not found by UUID, return empty result instantly
                     return res.json([]);
                 }
             }
         }
+        
+        // Type Filter (student vs trainer)
+        const { type } = req.query;
+        if (type === 'student') {
+            query.studentId = { $exists: true, $ne: null };
+        } else if (type === 'trainer') {
+            query.trainerId = { $exists: true, $ne: null };
+        }
+
+        // Trainer Filter (Specific ID - kept for backward compatibility if needed, though type=trainer is better)
+        const { trainerId } = req.query;
+        if (trainerId) {
+             query.trainerId = trainerId;
+        }
 
         const records = await Attendance.find(query)
             .populate('studentId', 'name email')
+            .populate('trainerId', 'name email')
             .sort({ date: -1 });
 
         res.json(records);
@@ -162,6 +176,75 @@ router.get('/history', async (req, res) => {
     } catch (err) {
         console.error('History Error:', err);
         res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// @route   POST /api/attendance/trainer/qr-mark
+// @desc    Mark trainer attendance via QR Scan
+// @access  Admin
+router.post('/trainer/qr-mark', async (req, res) => {
+    try {
+        const { trainerId, token } = req.body;
+
+        if (!trainerId || !token) {
+            return res.status(400).json({ success: false, message: 'Invalid QR Data' });
+        }
+
+        const trainer = await Trainer.findById(trainerId);
+        if (!trainer) {
+            return res.status(404).json({ success: false, message: 'Trainer not found' });
+        }
+
+        const trainerQR = await TrainerQR.findOne({ trainerId: trainer._id });
+        if (!trainerQR) {
+            return res.status(400).json({ success: false, message: 'QR Record not found' });
+        }
+
+        if (trainerQR.qrToken !== token) {
+            return res.status(401).json({ success: false, message: 'Invalid or Expired QR Token' });
+        }
+
+        // Check Duplicate
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const existing = await Attendance.findOne({
+            trainerId: trainer._id,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (existing) {
+            return res.json({ 
+                success: false, 
+                message: 'Attendance Already Marked Today',
+                trainer: { name: trainer.name, email: trainer.email }
+            });
+        }
+
+        // Mark Attendance
+        const newAttendance = await Attendance.create({
+            trainerId: trainer._id,
+            status: 'present',
+            method: 'qr',
+            markedBy: 'qr-scanner',
+            date: new Date()
+        });
+
+        res.json({
+            success: true,
+            message: 'Trainer Attendance Marked Successfully',
+            trainer: {
+                name: trainer.name,
+                email: trainer.email,
+                scanTime: newAttendance.date
+            }
+        });
+
+    } catch (err) {
+        console.error('Trainer Attendance Mark Error:', err);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 

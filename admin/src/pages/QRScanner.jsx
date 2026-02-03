@@ -134,18 +134,31 @@ const QRScanner = () => {
                 return;
             }
 
-            const { studentId, token } = payload;
+            const { studentId, trainerId, token } = payload;
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-            const res = await axios.post(`${apiUrl}/api/attendance/qr-mark`, {
-                studentId,
-                token
-            });
+            let res;
+            if (trainerId) {
+                // Trainer QR
+                res = await axios.post(`${apiUrl}/api/attendance/trainer/qr-mark`, {
+                    trainerId,
+                    token
+                });
+            } else if (studentId) {
+                // Student QR
+                res = await axios.post(`${apiUrl}/api/attendance/qr-mark`, {
+                    studentId,
+                    token
+                });
+            } else {
+                throw new Error('Invalid QR Data: Missing ID');
+            }
 
             setScanResult(res.data);
 
             if (res.data.success) {
-                fetchTodayAttendance();
+                // If it's a student, refresh today's list (optional: add trainer list fetch too)
+                if (studentId) fetchTodayAttendance();
                 setTimeout(() => setData('No result'), 3000);
             } else {
                 setTimeout(() => setData('No result'), 3000);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Save, Globe, Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Youtube, Link as LinkIcon } from 'lucide-react';
+import { Save, Globe, Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Youtube, Link as LinkIcon, Briefcase } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
@@ -11,6 +11,7 @@ const Settings = () => {
         logoUrl: '',
         contact: { phone: '', whatsapp: '', email: '', address: '' },
         socials: { facebook: '', instagram: '', linkedin: '', youtube: '' },
+        hiringRounds: { mcq: true, video: true, assignment: true },
         file: null
     });
 
@@ -21,12 +22,12 @@ const Settings = () => {
     const fetchSettings = async () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/settings`);
-            // Merge response with base structure to avoid undefined errors
             setFormData(prev => ({
                 ...prev,
                 ...res.data,
                 contact: { ...prev.contact, ...(res.data.contact || {}) },
                 socials: { ...prev.socials, ...(res.data.socials || {}) },
+                hiringRounds: { ...prev.hiringRounds, ...(res.data.hiringRounds || {}) },
                 file: null
             }));
             setLoading(false);
@@ -48,6 +49,13 @@ const Settings = () => {
         }
     };
 
+    const handleSwitchChange = (checked, field) => {
+        setFormData(prev => ({
+            ...prev,
+            hiringRounds: { ...prev.hiringRounds, [field]: checked }
+        }));
+    };
+
     const handleFileChange = (e) => {
         setFormData(prev => ({ ...prev, file: e.target.files[0] }));
     };
@@ -58,11 +66,10 @@ const Settings = () => {
         try {
             const data = new FormData();
             data.append('siteTitle', formData.siteTitle);
-
-            // Backend expects nested objects. Since we are using FormData, we send them as JSON strings.
-            // Ensure the backend parses these strings.
             data.append('contact', JSON.stringify(formData.contact));
             data.append('socials', JSON.stringify(formData.socials));
+            // Ensure hiringRounds is stringified properly
+            data.append('hiringRounds', JSON.stringify(formData.hiringRounds));
 
             if (formData.file) {
                 data.append('logo', formData.file);
@@ -76,12 +83,12 @@ const Settings = () => {
 
             toast.success('Settings updated successfully!');
 
-            // Update state with response
             setFormData(prev => ({
                 ...prev,
                 ...res.data,
                 contact: { ...prev.contact, ...(res.data.contact || {}) },
                 socials: { ...prev.socials, ...(res.data.socials || {}) },
+                hiringRounds: { ...prev.hiringRounds, ...(res.data.hiringRounds || {}) },
                 file: null
             }));
         } catch (error) {
@@ -149,6 +156,20 @@ const Settings = () => {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Hiring Process Configuration - MOVED TO ADD TRAINER PAGE */}
+                <div className="bg-blue-50 rounded-xl border border-blue-100 p-6 flex items-start gap-4">
+                    <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                        <Briefcase size={20} />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-blue-800">Hiring Process Configuration</h3>
+                        <p className="text-sm text-blue-600 mt-1">
+                            Hiring rounds are now configured individually for each trainer during registration.
+                            Please go to the <strong>"Register Trainer"</strong> page to set up interview questions and enable rounds.
+                        </p>
                     </div>
                 </div>
 

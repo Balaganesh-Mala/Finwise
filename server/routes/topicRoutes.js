@@ -21,11 +21,23 @@ const cpUpload = upload.fields([
     { name: 'notes', maxCount: 10 }
 ]);
 
-// Routes
+// Auth Middleware
+const { protect, admin } = require('../middleware/authMiddleware');
+
+// Admin Routes (Secured)
+// Temporary: Removing protect/admin middleware because Admin frontend uses Supabase Auth
 router.post('/admin/topic/create', cpUpload, createTopic);
-router.get('/topics/:moduleId', getTopicsByModule); // Public/Student
 router.put('/admin/topic/:id', cpUpload, updateTopic);
 router.delete('/admin/topic/:id', deleteTopic);
 router.delete('/admin/topic/:id/note/:noteId', deleteTopicNote);
+
+// Trainer Routes (Secured)
+router.post('/trainer/topic/create', protect, cpUpload, createTopic);
+router.put('/trainer/topic/:id', protect, cpUpload, updateTopic);
+router.delete('/trainer/topic/:id', protect, deleteTopic);
+router.delete('/trainer/topic/:id/note/:noteId', protect, deleteTopicNote);
+
+// Public / Student Routes
+router.get('/topics/:moduleId', getTopicsByModule); 
 
 module.exports = router;

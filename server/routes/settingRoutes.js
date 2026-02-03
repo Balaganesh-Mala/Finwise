@@ -48,7 +48,7 @@ router.put('/', upload.single('logo'), async (req, res) => {
     // req.body fields will be available here
     // Note: Nested objects like 'contact' and 'socials' might come as strings if sent via FormData
     // We need to parse them if they are strings.
-    let { siteTitle, logoUrl, contact, socials } = req.body;
+    let { siteTitle, logoUrl, contact, socials, hiringRounds } = req.body;
 
     // Handle File Upload
     if (req.file) {
@@ -63,6 +63,9 @@ router.put('/', upload.single('logo'), async (req, res) => {
     if (typeof socials === 'string') {
         try { socials = JSON.parse(socials); } catch (e) {}
     }
+    if (typeof hiringRounds === 'string') {
+        try { hiringRounds = JSON.parse(hiringRounds); } catch (e) {}
+    }
     
     // Check if settings exist, if not create new
     let settings = await Setting.findOne();
@@ -71,6 +74,7 @@ router.put('/', upload.single('logo'), async (req, res) => {
         const initialData = { ...req.body, logoUrl };
         if (contact) initialData.contact = contact;
         if (socials) initialData.socials = socials;
+        if (hiringRounds) initialData.hiringRounds = hiringRounds;
         
         settings = await Setting.create(initialData);
         return res.json(settings);
@@ -80,7 +84,8 @@ router.put('/', upload.single('logo'), async (req, res) => {
     const updateFields = {
         siteTitle,
         contact,
-        socials
+        socials,
+        hiringRounds
     };
     if (logoUrl) updateFields.logoUrl = logoUrl;
 

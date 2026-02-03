@@ -61,6 +61,12 @@ const StudentSchema = new mongoose.Schema({
     year: { type: String }
   }],
 
+  preferences: {
+    emailUpdates: { type: Boolean, default: true },
+    newCourseAlerts: { type: Boolean, default: false },
+    assignmentNotifs: { type: Boolean, default: true }
+  },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

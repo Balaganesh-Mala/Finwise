@@ -146,10 +146,11 @@ const AttendanceHistory = () => {
                                                 {new Date(record.date).toLocaleDateString()} <span className="text-gray-400">|</span> {new Date(record.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                             <td className="px-6 py-4 font-medium text-gray-900">
-                                                {record.studentId?.name || 'Unknown Student'}
+                                                {record.studentId?.name || record.trainerId?.name || 'Unknown'}
+                                                {record.trainerId && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Trainer</span>}
                                             </td>
                                             <td className="px-6 py-4 text-gray-500">
-                                                {record.studentId?.email}
+                                                {record.studentId?.email || record.trainerId?.email}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${record.status === 'present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

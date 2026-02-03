@@ -14,7 +14,7 @@ const typingProgressSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  errors: {
+  errorCount: {
     type: Number,
     default: 0
   },

@@ -3,8 +3,11 @@ const mongoose = require('mongoose');
 const AttendanceSchema = new mongoose.Schema({
     studentId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Student',
-        required: true
+        ref: 'Student'
+    },
+    trainerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Trainer'
     },
     date: {
         type: Date,

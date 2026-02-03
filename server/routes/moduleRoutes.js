@@ -7,16 +7,24 @@ const {
     deleteModule 
 } = require('../controllers/moduleController');
 
-// All routes are prefixed with /api/admin (based on server.js mounting, likely /api)
-// Actually, let's look at how we mount it. 
-// Standard pattern: 
-// POST /api/modules/create
-// GET /api/modules/course/:courseId
+// Auth Middleware
+const { protect, admin } = require('../middleware/authMiddleware');
 
+// Admin Routes (Secured)
+// Temporary: Removing protect/admin middleware because Admin frontend uses Supabase Auth 
+// and doesn't send compatible tokens yet.
 router.post('/admin/module/create', createModule);
-router.get('/admin/modules/:courseId', getModulesByCourse); // Admin side
-router.get('/modules/:courseId', getModulesByCourse); // Student side (public or protected)
+router.get('/admin/modules/:courseId', getModulesByCourse); 
 router.put('/admin/module/:id', updateModule);
 router.delete('/admin/module/:id', deleteModule);
+
+// Trainer Routes (Secured)
+router.post('/trainer/module/create', protect, createModule);
+router.get('/trainer/modules/:courseId', protect, getModulesByCourse);
+router.put('/trainer/module/:id', protect, updateModule);
+router.delete('/trainer/module/:id', protect, deleteModule);
+
+// Public / Student Routes
+router.get('/modules/:courseId', getModulesByCourse); 
 
 module.exports = router;
