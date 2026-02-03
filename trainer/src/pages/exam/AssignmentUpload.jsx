@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, File } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const AssignmentUpload = () => {
     const { API_URL, user } = useAuth();
@@ -55,6 +56,7 @@ const AssignmentUpload = () => {
 
         } catch (error) {
             console.error("Upload failed", error);
+            toast.error("File upload failed");
         } finally {
             setUploading(false);
         }
@@ -68,9 +70,11 @@ const AssignmentUpload = () => {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            toast.success("Assignments submitted!");
             navigate('/exam/written');
         } catch (error) {
             console.error("Save failed", error);
+            toast.error("Failed to submit assignments");
         }
     };
 

@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { toast } from 'react-hot-toast';
 
 const WrittenTest = () => {
     const { API_URL } = useAuth();
@@ -30,8 +31,8 @@ const WrittenTest = () => {
 
             // Redirect to a Thank You / Status page (reusing Instructions or new page)
             // For now, back to Instructions which might show "Pending" status
-            alert("Exam Submitted Successfully!");
-            navigate('/exam/status'); // Need to create this or handle in instructions
+            toast.success("Exam Submitted Successfully!");
+            navigate('/exam/success'); // Need to create this or handle in instructions
         } catch (error) {
             console.error("Submission failed", error);
         } finally {

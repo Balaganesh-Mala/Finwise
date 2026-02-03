@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useReactMediaRecorder } from 'react-media-recorder';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Video, StopCircle, Upload, Play } from 'lucide-react';
 
+import { toast } from 'react-hot-toast';
+
 const VideoTest = () => {
     const { status, startRecording, stopRecording, mediaBlobUrl, previewStream } = useReactMediaRecorder({ video: true, audio: true });
     const [uploading, setUploading] = useState(false);
+    const [checkingStatus, setCheckingStatus] = useState(true);
     const [isMirrored, setIsMirrored] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const playbackVideoRef = React.useRef(null);
@@ -36,22 +39,86 @@ const VideoTest = () => {
 
     const [rounds, setRounds] = useState({ mcq: { enabled: true }, video: { enabled: true }, assignment: { enabled: true } });
 
+    // Check Exam Status
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const token = localStorage.getItem('trainerToken');
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+                const { data: exam } = await axios.get(`${API_URL}/api/trainer/exam/status`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (exam && (exam.status === 'submitted' || exam.status === 'reviewed')) {
+                    navigate('/exam/success');
+                }
+            } catch (err) {
+                console.error("Status Check Failed");
+            } finally {
+                setCheckingStatus(false);
+            }
+        };
+        checkStatus();
+    }, [navigate]);
+
+    // Fetch Settings
     useEffect(() => {
         if (user && user.hiringRounds) {
             setRounds(user.hiringRounds);
         }
     }, [user]);
 
+    if (checkingStatus) {
+        return <div className="flex min-h-screen items-center justify-center bg-gray-50">Checking status...</div>;
+    }
+
     const handleUpload = async () => {
-        // ... (existing upload logic) ...
-        // ... (inside success) ...
-        // Check if Assignment round is enabled
-        if (rounds.assignment?.enabled) {
-            navigate('/exam/assignment');
-        } else {
-            navigate('/exam/status');
+        if (!mediaBlobUrl) return;
+        setUploading(true);
+
+        try {
+            // 1. Get Blob from URL
+            const blob = await fetch(mediaBlobUrl).then(r => r.blob());
+            const file = new File([blob], `video_test_${user._id}.mp4`, { type: 'video/mp4' });
+
+            // 2. Upload to Cloudinary (via Backend)
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const token = localStorage.getItem('trainerToken');
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+            const uploadRes = await axios.post(`${API_URL}/api/trainer/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (uploadRes.data.success) {
+                toast.success("Video uploaded successfully!");
+                // 3. Save Video URL to Exam Profile
+                await axios.post(`${API_URL}/api/trainer/exam/video/save`, {
+                    videoUrl: uploadRes.data.url
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // 4. Navigate
+                if (rounds.assignment?.enabled) {
+                    navigate('/exam/assignment');
+                } else {
+                    navigate('/exam/success');
+                }
+            }
+
+        } catch (error) {
+            console.error("Upload Failed", error);
+            toast.error("Video upload failed. Please try again.");
+        } finally {
+            setUploading(false);
         }
-        // ...
     };
 
     return (

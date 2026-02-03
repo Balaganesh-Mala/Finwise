@@ -8,7 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { cn } from '@/lib/utils';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
     const { logout } = useAuth();
     const [settings, setSettings] = useState({ siteTitle: 'Trainer Portal', logoUrl: '' });
 
@@ -38,46 +38,62 @@ const Sidebar = () => {
     ];
 
     return (
-        <div className="h-screen w-64 bg-white border-r border-gray-200 flex flex-col">
-            <div className="p-6 flex items-center space-x-3 border-b border-gray-100">
-                {settings.logoUrl ? (
-                    <img src={settings.logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
-                ) : (
-                    <div className="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
-                        {settings.siteTitle.charAt(0)}
-                    </div>
-                )}
-                <span className="text-xl font-bold text-gray-800">{settings.siteTitle}</span>
-            </div>
-            <nav className="flex-1 space-y-1 px-3 py-4">
-                {links.map((link) => (
-                    <NavLink
-                        key={link.name}
-                        to={link.path}
-                        className={({ isActive }) =>
-                            cn(
-                                "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                                isActive
-                                    ? "bg-indigo-50 text-indigo-600"
-                                    : "text-gray-700 hover:bg-gray-100"
-                            )
-                        }
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
+
+            {/* Sidebar */}
+            <div className={cn(
+                "h-screen w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out z-50",
+                "fixed inset-y-0 left-0 md:static md:translate-x-0",
+                isOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
+                <div className="p-6 flex items-center space-x-3 border-b border-gray-100">
+                    {settings.logoUrl ? (
+                        <img src={settings.logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
+                    ) : (
+                        <div className="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+                            {settings.siteTitle.charAt(0)}
+                        </div>
+                    )}
+                    <span className="text-xl font-bold text-gray-800">{settings.siteTitle}</span>
+                </div>
+                <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+                    {links.map((link) => (
+                        <NavLink
+                            key={link.name}
+                            to={link.path}
+                            onClick={() => window.innerWidth < 768 && onClose()}
+                            className={({ isActive }) =>
+                                cn(
+                                    "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                    isActive
+                                        ? "bg-indigo-50 text-indigo-600"
+                                        : "text-gray-700 hover:bg-gray-100"
+                                )
+                            }
+                        >
+                            <link.icon className="mr-3 h-5 w-5" />
+                            {link.name}
+                        </NavLink>
+                    ))}
+                </nav>
+                <div className="border-t p-4">
+                    <button
+                        onClick={logout}
+                        className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
                     >
-                        <link.icon className="mr-3 h-5 w-5" />
-                        {link.name}
-                    </NavLink>
-                ))}
-            </nav>
-            <div className="border-t p-4">
-                <button
-                    onClick={logout}
-                    className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-                >
-                    <LogOut className="mr-3 h-5 w-5" />
-                    Logout
-                </button>
+                        <LogOut className="mr-3 h-5 w-5" />
+                        Logout
+                    </button>
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 

@@ -118,6 +118,7 @@ const MCQTest = () => {
         video: { enabled: true },
         assignment: { enabled: true }
     });
+    const [checkingStatus, setCheckingStatus] = useState(true);
 
     // Fetch Settings & Load Questions based on Roles
     useEffect(() => {
@@ -129,6 +130,22 @@ const MCQTest = () => {
             if (user.hiringRounds) {
                 setRounds(user.hiringRounds);
                 currentRounds = user.hiringRounds;
+            }
+
+            // CHECK EXAM STATUS
+            try {
+                const token = localStorage.getItem('trainerToken');
+                const { data: exam } = await axios.get(`${API_URL}/api/trainer/exam/status`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (exam && (exam.status === 'submitted' || exam.status === 'reviewed')) {
+                    navigate('/exam/success');
+                    return;
+                }
+            } catch (err) {
+                console.error("Status Check Failed", err);
+            } finally {
+                setCheckingStatus(false);
             }
 
             // 1. Check for Test Bank (High Priority)
@@ -274,6 +291,12 @@ const MCQTest = () => {
         const secs = seconds % 60;
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
+
+
+
+    if (checkingStatus) {
+        return <div className="p-10 text-center">Checking status...</div>;
+    }
 
     if (questions.length === 0) return <div className="p-10 text-center">Loading Assessment...</div>;
 

@@ -4,8 +4,61 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Clock, Send, ShieldCheck } from 'lucide-react';
 
+import axios from 'axios';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'react-hot-toast';
+
 const ExamSuccess = () => {
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
+    const hasSubmittedRef = React.useRef(false);
+    const [countdown, setCountdown] = React.useState(5);
+
+    React.useEffect(() => {
+        const finalizeSubmission = async () => {
+            if (hasSubmittedRef.current) return;
+            hasSubmittedRef.current = true; // Prevent double firing
+
+            try {
+                const token = localStorage.getItem('trainerToken');
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+                await axios.post(`${API_URL}/api/trainer/exam/submit`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                console.log("Exam formally submitted.");
+
+                toast.success('Exam Submitted Successfully!', {
+                    icon: '👏',
+                    style: {
+                        borderRadius: '10px',
+                        background: '#333',
+                        color: '#fff',
+                    },
+                });
+
+            } catch (error) {
+                console.error("Final submission failed", error);
+            }
+        };
+
+        finalizeSubmission();
+
+        // Countdown to logout/redirect
+        const timer = setInterval(() => {
+            setCountdown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    logout();
+                    navigate('/login');
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [logout, navigate]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -68,9 +121,17 @@ const ExamSuccess = () => {
                     </CardContent>
                 </Card>
 
-                <div className="text-center text-sm text-gray-400 flex items-center justify-center gap-2">
-                    <ShieldCheck className="h-4 w-4" />
-                    Secure Submission via Wonew Skill Up Academy Portal
+                <div className="text-center text-sm text-gray-400 flex flex-col items-center justify-center gap-2">
+                    <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4" />
+                        Secure Submission via Wonew Skill Up Academy Portal
+                    </div>
+                    <p className="text-gray-500 mt-2">
+                        Redirecting to login in {countdown} seconds...
+                    </p>
+                    <Button variant="link" onClick={() => { logout(); navigate('/login'); }} className="text-indigo-600 h-auto p-0">
+                        Return to Login Now
+                    </Button>
                 </div>
 
             </div>

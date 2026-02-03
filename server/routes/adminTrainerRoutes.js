@@ -64,17 +64,48 @@ router.post('/create', async (req, res) => {
         }
 
         // Email HTML Template
+        // Email HTML Template
+        const companyName = process.env.MAIL_SENDER_NAME || "Wonew Skill Up Academy";
+        const loginUrl = process.env.TRAINER_URL || "http://localhost:5176";
+        const logoUrl = "https://wonew.in/assets/logo.png"; // Fallback or use a real hosted logo if available
+
         const emailContent = `
-            <h2>Welcome to JobReady Skills Center</h2>
-            <p>Dear ${name},</p>
-            <p>You have been invited to join our team as a <strong>${role}</strong>.</p>
-            <p>Please login to the Trainer Portal to complete your hiring assessment.</p>
-            <br/>
-            <p><strong>Login URL:</strong> <a href="http://localhost:5176/login">http://localhost:5176/login</a></p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Password:</strong> ${password}</p>
-            <br/>
-            <p>Best Regards,<br/>Admin Team</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px; border-radius: 8px;">
+                <!-- Header -->
+                <div style="background-color: #ffffff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; border-bottom: 3px solid #4f46e5;">
+                    <h1 style="color: #4f46e5; margin: 0; font-size: 24px;">${companyName}</h1>
+                </div>
+
+                <!-- Body -->
+                <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <h2 style="color: #1f2937; margin-top: 0;">Welcome to the Team!</h2>
+                    <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">Dear <strong>${name}</strong>,</p>
+                    
+                    <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+                        We are thrilled to invite you to join us as a <strong style="color: #4f46e5;">${role}</strong>. 
+                        As part of our hiring process, please log in to the Trainer Portal to complete your assessment.
+                    </p>
+
+                    <!-- Credentials Box -->
+                    <div style="background-color: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; padding: 20px; margin: 20px 0;">
+                        <p style="margin: 0 0 10px 0; color: #374151; font-size: 14px;"><strong>Portal URL:</strong> <a href="${loginUrl}/login" style="color: #4f46e5; text-decoration: none;">${loginUrl}/login</a></p>
+                        <p style="margin: 0 0 10px 0; color: #374151; font-size: 14px;"><strong>Email:</strong> ${email}</p>
+                        <p style="margin: 0; color: #374151; font-size: 14px;"><strong>Only One Time Password :</strong> ${password}</p>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${loginUrl}/login" style="background-color: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Login to Portal</a>
+                    </div>
+                    
+                    <p style="color: #6b7280; font-size: 14px; margin-top: 30px; border-top: 1px solid #e5e7eb; paddingTop: 20px;">
+                        If you have any questions, feel free to reply to this email.
+                    </p>
+                    
+                    <p style="color: #9ca3af; font-size: 12px; margin-top: 10px; text-align: center;">
+                        &copy; ${new Date().getFullYear()} ${companyName}. All rights reserved.
+                    </p>
+                </div>
+            </div>
         `;
 
         try {
@@ -120,9 +151,12 @@ router.get('/list', async (req, res) => {
 // @access  Admin
 router.get('/:id', async (req, res) => {
     try {
-        const trainer = await Trainer.findById(req.params.id).populate('assignedCourses', 'title');
+        const trainer = await Trainer.findById(req.params.id)
+            .populate('assignedCourses', 'title')
+            .populate('hiringRounds.mcq.testId'); // Populate HiringTest to get question count
+            
         if (!trainer) return res.status(404).json({ message: 'Trainer not found' });
-
+        
         const exam = await TrainerExam.findOne({ trainerId: trainer._id });
 
         res.json({

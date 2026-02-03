@@ -60,6 +60,8 @@ router.post('/upload', protect, upload.single('file'), async (req, res) => {
 
 // Auth
 router.post('/auth/login', loginTrainer);
+router.post('/auth/request-reset', require('../controllers/trainerAuthController').requestPasswordReset);
+router.post('/auth/reset-password', require('../controllers/trainerAuthController').resetPassword);
 router.get('/auth/me', protect, getMe);
 
 // Hiring / Exam (Protected - Applicant)

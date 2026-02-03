@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, AlertCircle } from 'lucide-react';
+import { Lock, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import axios from 'axios';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -10,17 +11,19 @@ const Login = () => {
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [settings, setSettings] = useState({ siteTitle: 'Trainer Portal', logoUrl: '' });
+
+    // Forgot Password States
+    const [showForgotModal, setShowForgotModal] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotLoading, setForgotLoading] = useState(false);
+    const [forgotStatus, setForgotStatus] = useState({ success: false, message: '' });
 
     // Fetch site settings
     React.useEffect(() => {
         const fetchSettings = async () => {
             try {
-                // Use API_URL from auth context or fallback
-                // Note: API_URL in context might be for 'api/trainer', we need base api
-                // Assuming API_URL is 'http://localhost:5000/api' or similar. 
-                // Let's use a direct fetch for now or rely on a known endpoint structure if needed.
-                // Admin login used: import.meta.env.VITE_API_URL || 'http://localhost:5000'
                 const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
                 const res = await fetch(`${baseUrl}/api/settings`);
                 const data = await res.json();
@@ -52,6 +55,31 @@ const Login = () => {
         }
     };
 
+    const handleForgotPassword = async (e) => {
+        e.preventDefault();
+        setForgotLoading(true);
+        setForgotStatus({ success: false, message: '' });
+
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            // Use local axios or fetch since auth context might wrap requests differently
+            // but for public route plain axios is fine.
+            const res = await axios.post(`${baseUrl}/api/trainer/auth/request-reset`, { email: forgotEmail });
+
+            if (res.data.success) {
+                setForgotStatus({ success: true, message: 'Reset link sent! Check your inbox.' });
+                setForgotEmail('');
+            }
+        } catch (err) {
+            setForgotStatus({
+                success: false,
+                message: err.response?.data?.message || 'Failed to send reset link. Try again.'
+            });
+        } finally {
+            setForgotLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex">
             {/* Left Side - Visual & Branding */}
@@ -78,7 +106,7 @@ const Login = () => {
             </div>
 
             {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 px-6 lg:px-20 xl:px-24 bg-white">
+            <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 px-6 lg:px-20 xl:px-24 bg-white relative">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
                     <div className="flex justify-center mb-8">
                         {settings.logoUrl ? (
@@ -151,14 +179,21 @@ const Login = () => {
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     autoComplete="current-password"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all outline-none"
+                                    className="block w-full pl-10 pr-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all outline-none"
                                     placeholder="••••••••"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 cursor-pointer"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
                             </div>
                         </div>
 
@@ -176,9 +211,13 @@ const Login = () => {
                             </div>
 
                             <div className="text-sm">
-                                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForgotModal(true)}
+                                    className="font-medium text-indigo-600 hover:text-indigo-500 bg-transparent border-none p-0"
+                                >
                                     Forgot password?
-                                </a>
+                                </button>
                             </div>
                         </div>
 
@@ -197,6 +236,53 @@ const Login = () => {
                         &copy; {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.
                     </div>
                 </div>
+
+                {/* Forgot Password Modal */}
+                {showForgotModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative animate-in fade-in zoom-in duration-200">
+                            <button
+                                onClick={() => setShowForgotModal(false)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                            >
+                                ✕
+                            </button>
+
+                            <div className="text-center mb-6">
+                                <h3 className="text-xl font-bold text-gray-900">Reset Password</h3>
+                                <p className="text-sm text-gray-500 mt-2">Enter your email to receive a reset link.</p>
+                            </div>
+
+                            {forgotStatus.message && (
+                                <div className={`p-3 mb-4 rounded-lg text-sm flex items-center gap-2 ${forgotStatus.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                    <span>{forgotStatus.success ? '✓' : '⚠'}</span>
+                                    {forgotStatus.message}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleForgotPassword} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={forgotEmail}
+                                        onChange={(e) => setForgotEmail(e.target.value)}
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        placeholder="Enter your registered email"
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={forgotLoading}
+                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-colors flex justify-center"
+                                >
+                                    {forgotLoading ? 'Sending...' : 'Send Reset Link'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

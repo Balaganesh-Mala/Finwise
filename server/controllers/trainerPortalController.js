@@ -2,6 +2,10 @@ const Trainer = require('../models/Trainer');
 const Class = require('../models/Class');
 const TrainerAttendance = require('../models/TrainerAttendance');
 const Student = require('../models/Student');
+const Course = require('../models/Course');
+const Module = require('../models/Module');
+const Topic = require('../models/Topic');
+const Progress = require('../models/Progress');
 const mongoose = require('mongoose');
 
 // @desc    Get Trainer Dashboard Stats
@@ -104,11 +108,6 @@ exports.markAttendance = async (req, res) => {
 exports.getCandidates = async (req, res) => {
     try {
         const candidates = await Trainer.find({ status: 'applicant' });
-        // Possibly join with Exam status
-        // const populatedCandidates = await Promise.all(candidates.map(async (c) => {
-        //     const exam = await TrainerExam.findOne({ trainerId: c._id });
-        //     return { ...c._doc, examStatus: exam ? exam.status : 'not_started' };
-        // }));
         res.json(candidates);
     } catch (err) {
         console.error(err);
@@ -118,7 +117,103 @@ exports.getCandidates = async (req, res) => {
 
 // @desc    Get Trainer Students
 exports.getStudents = async (req, res) => {
-    // ... existing getStudents code ...
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+        const courseFilter = req.query.course || 'All';
+        const skip = (page - 1) * limit;
+
+        // 1. Identify Trainer's Courses
+        const trainer = await Trainer.findById(req.user.id).populate('assignedCourses');
+        let allowedCourses = [];
+
+        if (trainer.assignedCourses && trainer.assignedCourses.length > 0) {
+            allowedCourses = trainer.assignedCourses.map(c => c.title);
+        } else if (trainer.role) {
+            let searchKeyword = '';
+            if (trainer.role.includes('MS Office')) searchKeyword = 'MS Office';
+            else if (trainer.role.includes('Spoken English')) searchKeyword = 'Spoken English';
+            else if (trainer.role.includes('Coding')) searchKeyword = 'Full Stack';
+
+            if (searchKeyword) {
+                const Course = mongoose.model('Course');
+                const matchingCourses = await Course.find({ 
+                    title: { $regex: searchKeyword, $options: 'i' } 
+                });
+                allowedCourses = matchingCourses.map(c => c.title);
+            }
+        }
+        
+        // 2. Build Query
+        let query = {};
+        if (allowedCourses.length > 0) {
+            query.courseName = { $in: allowedCourses };
+        }
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+        if (courseFilter !== 'All') {
+            query.courseName = courseFilter;
+        }
+
+        // 3. Execute Query
+        const total = await Student.countDocuments(query);
+        const students = await Student.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .select('-passwordHash')
+            .lean(); // Convert into a plain JS object so we can append properties
+
+        // 4. Calculate Progress for each student
+        const studentsWithProgress = await Promise.all(students.map(async (student) => {
+            let progressData = { percentage: 0, completed: 0, total: 0 };
+            
+            if (student.courseName) {
+                // Find course to look up modules/topics
+                const course = await Course.findOne({ title: student.courseName });
+                
+                if (course) {
+                    // Get all modules for this course
+                    const modules = await Module.find({ courseId: course._id });
+                    const moduleIds = modules.map(m => m._id);
+                    
+                    // Get total topics count
+                    const totalTopics = await Topic.countDocuments({ moduleId: { $in: moduleIds } });
+                    
+                    // Get completed topics count for this student
+                    const completedCount = await Progress.countDocuments({ 
+                        studentId: student._id,
+                        completed: true,
+                        courseId: course._id 
+                    });
+
+                    progressData = {
+                        percentage: totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0,
+                        completed: completedCount,
+                        total: totalTopics
+                    };
+                }
+            }
+
+            return { ...student, progress: progressData };
+        }));
+
+        res.json({
+            students: studentsWithProgress,
+            page,
+            pages: Math.ceil(total / limit),
+            total
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 };
 
 // @desc    Get Assigned Courses for Trainer

@@ -9,6 +9,7 @@ import MCQTest from './pages/exam/MCQTest';
 import VideoTest from './pages/exam/VideoTest'; // Planned
 import AssignmentUpload from './pages/exam/AssignmentUpload'; // Planned
 import ExamSuccess from './pages/exam/ExamSuccess';
+import NotFound from './pages/NotFound';
 import Students from './pages/Students';
 
 import WrittenTest from './pages/exam/WrittenTest'; // Planned
@@ -32,10 +33,13 @@ const ProtectedRoute = ({ children }) => {
 
 
 
+import { Toaster } from 'react-hot-toast';
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
         <Routes>
           <Route path="/login" element={<Login />} />
 
@@ -78,10 +82,10 @@ function App() {
               <WrittenTest />
             </ProtectedRoute>
           } />
-          <Route path="/exam/status" element={<ExamSuccess />} />
+          <Route path="/exam/success" element={<ExamSuccess />} />
 
           {/* Catch all */}
-          {/* <Route path="*" element={<Navigate to="/login" />} /> */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

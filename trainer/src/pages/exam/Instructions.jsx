@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CheckCircle, Clock, Video, FileText } from 'lucide-react';
@@ -14,15 +15,43 @@ const Instructions = () => {
         assignment: { enabled: false }
     });
 
+    const [checkingStatus, setCheckingStatus] = React.useState(true);
+
     React.useEffect(() => {
         if (user && user.hiringRounds) {
             setRounds(user.hiringRounds);
         }
     }, [user]);
 
-    // In a real app, check 'examStatus' to see where they left off
+    // Check Exam Status on Mount
+    React.useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                if (!user) {
+                    setCheckingStatus(false); // If no user, stop checking and show content
+                    return;
+                }
+                const token = localStorage.getItem('trainerToken');
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+                const { data: exam } = await axios.get(`${API_URL}/api/trainer/exam/status`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (exam && (exam.status === 'submitted' || exam.status === 'reviewed')) {
+                    navigate('/exam/success'); // Or a dedicated 'status' page if you have one
+                }
+            } catch (error) {
+                console.error("Failed to check exam status", error);
+            } finally {
+                setCheckingStatus(false);
+            }
+        };
+        checkStatus();
+    }, [user, navigate]);
+
     const startExam = () => {
-        if (!user) return; // Wait for user to load
+        if (!user) return;
 
         if (rounds.mcq?.enabled) {
             navigate('/exam/mcq');
@@ -31,9 +60,20 @@ const Instructions = () => {
         } else if (rounds.assignment?.enabled) {
             navigate('/exam/assignment');
         } else {
-            navigate('/exam/status');
+            navigate('/exam/success');
         }
     };
+
+    if (checkingStatus) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Checking assessment status...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
@@ -53,7 +93,7 @@ const Instructions = () => {
                                     <h3 className="font-semibold text-lg text-gray-800">Round 1: Multiple Choice Questions</h3>
                                     <p className="text-sm text-gray-600 mt-1">
                                         You will face <strong>{rounds.mcq.testId?.questions?.length || rounds.mcq.questionCount || 15} questions</strong> designed to test your domain knowledge.
-                                        Calculated time: ~{Math.ceil((rounds.mcq.testId?.questions?.length || rounds.mcq.questionCount || 15) * 1.5)} Minutes.
+                                        Calculated time: ~{(rounds.mcq.testId?.questions?.length || rounds.mcq.questionCount || 15) * 2} Minutes.
                                     </p>
                                     {(rounds.mcq.testId?.instructions || rounds.mcq.instructions) && (
                                         <div className="mt-2 text-sm text-indigo-800 bg-indigo-50 p-2.5 rounded border border-indigo-100">

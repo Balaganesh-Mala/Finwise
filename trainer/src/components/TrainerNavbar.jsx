@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Search, ChevronDown, LogOut, User, Settings } from 'lucide-react';
+import { Bell, Search, ChevronDown, LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const TrainerNavbar = () => {
+const TrainerNavbar = ({ onMenuClick }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
@@ -50,18 +50,27 @@ const TrainerNavbar = () => {
     };
 
     return (
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-30">
-            {/* Search (Placeholder) */}
-            <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
-                <Search size={18} className="text-gray-400" />
-                <input
-                    type="text"
-                    placeholder="Search..."
-                    className="bg-transparent border-none outline-none text-sm ml-2 w-full text-gray-700 placeholder-gray-400"
-                />
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30">
+            <div className="flex items-center gap-4">
+                <button
+                    onClick={onMenuClick}
+                    className="p-2 -ml-2 text-gray-400 hover:text-gray-600 md:hidden"
+                >
+                    <Menu size={24} />
+                </button>
+
+                {/* Search (Placeholder) */}
+                <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 w-48 sm:w-64 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                    <Search size={18} className="text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        className="bg-transparent border-none outline-none text-sm ml-2 w-full text-gray-700 placeholder-gray-400"
+                    />
+                </div>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 sm:gap-6">
                 {/* Notification Bell */}
                 <div className="relative">
                     <button
@@ -109,7 +118,7 @@ const TrainerNavbar = () => {
                     )}
                 </div>
 
-                <div className="h-8 w-px bg-gray-200"></div>
+                <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
 
                 {/* Profile Dropdown */}
                 <div className="relative">
