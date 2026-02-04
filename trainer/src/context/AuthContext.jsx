@@ -32,6 +32,28 @@ export const AuthProvider = ({ children }) => {
         checkUser();
     }, []);
 
+    // Axios Interceptor to handle 401/403 (Forced Logout)
+    useEffect(() => {
+        const interceptor = axios.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                    // Ignore 401 on login page itself to avoid loops (though login is POST)
+                    // But for general protection:
+                    if (localStorage.getItem('trainerToken')) {
+                        logout();
+                        window.location.href = '/login';
+                    }
+                }
+                return Promise.reject(error);
+            }
+        );
+
+        return () => {
+            axios.interceptors.response.eject(interceptor);
+        };
+    }, []);
+
     const login = async (email, password) => {
         try {
             const res = await axios.post(`${API_URL}/auth/login`, { email, password });

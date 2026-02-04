@@ -95,9 +95,13 @@ const Instructions = () => {
                                         You will face <strong>{rounds.mcq.testId?.questions?.length || rounds.mcq.questionCount || 15} questions</strong> designed to test your domain knowledge.
                                         Calculated time: ~{(rounds.mcq.testId?.questions?.length || rounds.mcq.questionCount || 15) * 2} Minutes.
                                     </p>
-                                    {(rounds.mcq.testId?.instructions || rounds.mcq.instructions) && (
+                                    {(rounds.mcq.testId?.instructions || rounds.mcq.instructions) ? (
                                         <div className="mt-2 text-sm text-indigo-800 bg-indigo-50 p-2.5 rounded border border-indigo-100">
                                             <strong>Note:</strong> {rounds.mcq.testId?.instructions || rounds.mcq.instructions}
+                                        </div>
+                                    ) : (
+                                        <div className="mt-2 text-sm text-gray-500 bg-gray-50 p-2.5 rounded border border-gray-100">
+                                            <strong>Note:</strong> Please complete all questions within the time limit.
                                         </div>
                                     )}
                                 </div>
@@ -111,8 +115,8 @@ const Instructions = () => {
                                     <p className="text-sm text-gray-600 mt-1">
                                         You will be asked to record a short video/audio response. Ensure your camera and microphone are ready.
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        <em>Task Preview:</em> {rounds.video.testId?.prompt || rounds.video.testId?.instructions || rounds.video.question || "Record a 2-5 minute video explaining a concept."}
+                                    <p className="text-sm text-gray-800 font-medium mt-2 bg-yellow-50 p-2 rounded border border-yellow-100">
+                                        <span className="text-yellow-700 font-bold">Task:</span> {rounds.video.testId?.prompt || rounds.video.testId?.instructions || rounds.video.question || "Record a 2-5 minute video explaining a concept related to your domain."}
                                     </p>
                                 </div>
                             </div>
@@ -124,6 +128,14 @@ const Instructions = () => {
                                     <h3 className="font-semibold text-lg text-gray-800">Round 3: Assignment Upload</h3>
                                     <p className="text-sm text-gray-600 mt-1">
                                         Upload requested documents such as Lesson Plans, Resumes, or specific Task Files (PDF/Word/Excel accepted).
+                                    </p>
+                                    {(rounds.assignment.testId?.instructions || rounds.assignment.question) && (
+                                        <p className="text-sm text-gray-800 font-medium mt-2 bg-blue-50 p-2 rounded border border-blue-100">
+                                            <span className="text-blue-700 font-bold">Details:</span> {rounds.assignment.testId?.instructions || rounds.assignment.question}
+                                        </p>
+                                    )}
+                                    <p className="text-xs text-gray-400 mt-1 italic">
+                                        * Ensure your file is under 10MB.
                                     </p>
                                 </div>
                             </div>

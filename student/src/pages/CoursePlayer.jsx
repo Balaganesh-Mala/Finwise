@@ -317,14 +317,7 @@ const CoursePlayer = () => {
                                                 allowFullScreen
                                             ></iframe>
                                             {/* Manual Complete Button for YouTube */}
-                                            <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button
-                                                    onClick={() => updateProgress(true, 1800)} // Mock duration for now
-                                                    className="bg-green-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:bg-green-700 transition flex items-center gap-2"
-                                                >
-                                                    <CheckCircle size={14} /> Mark Complete
-                                                </button>
-                                            </div>
+                                            {/* Manual Complete Button Moved */}
                                         </div>
                                     ) : (
                                         <video
@@ -345,6 +338,33 @@ const CoursePlayer = () => {
                                         <p>No video available for this lesson.</p>
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Lesson Controls Toolbar */}
+                            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-gray-800 line-clamp-1">{activeTopic.title}</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">Lesson {modules.findIndex(m => m.topics.some(t => t._id === activeTopic._id)) + 1}.{modules.find(m => m.topics.some(t => t._id === activeTopic._id))?.topics.findIndex(t => t._id === activeTopic._id) + 1}</p>
+                                </div>
+                                <button
+                                    onClick={() => updateProgress(!progress[activeTopic._id]?.completed, 1800)}
+                                    className={`
+                                        px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2
+                                        ${progress[activeTopic._id]?.completed
+                                            ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
+                                            : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200'}
+                                    `}
+                                >
+                                    {progress[activeTopic._id]?.completed ? (
+                                        <>
+                                            <CheckCircle size={16} className="fill-current" /> Completed
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle size={16} /> Mark Complete
+                                        </>
+                                    )}
+                                </button>
                             </div>
 
                             {/* Tabs & Details */}

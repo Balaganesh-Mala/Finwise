@@ -35,6 +35,8 @@ const ProtectedRoute = ({ children }) => {
 
 import { Toaster } from 'react-hot-toast';
 
+import ResetPassword from './pages/ResetPassword';
+
 function App() {
   return (
     <AuthProvider>
@@ -42,6 +44,7 @@ function App() {
         <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Employee / Trainer Routes */}
           <Route path="/" element={<ProtectedRoute><TrainerLayout /></ProtectedRoute>}>

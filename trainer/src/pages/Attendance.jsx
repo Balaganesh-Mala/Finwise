@@ -145,10 +145,10 @@ const Attendance = () => {
                     <h1 className="text-2xl font-bold text-gray-800">Attendance Manager</h1>
                     <p className="text-gray-500">Scan student QR codes or view attendance logs.</p>
                 </div>
-                <div className="flex space-x-2 bg-white p-1 rounded-lg border border-gray-200">
+                <div className="flex flex-wrap gap-2 w-full md:w-auto bg-white p-1 rounded-lg border border-gray-200">
                     <button
                         onClick={() => setActiveTab('scan')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'scan' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
+                        className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'scan' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
                             }`}
                     >
                         <QrCode size={18} />
@@ -156,7 +156,7 @@ const Attendance = () => {
                     </button>
                     <button
                         onClick={() => setActiveTab('student_history')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'student_history' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
+                        className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'student_history' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
                             }`}
                     >
                         <ClipboardList size={18} />
@@ -164,7 +164,7 @@ const Attendance = () => {
                     </button>
                     <button
                         onClick={() => setActiveTab('my_history')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'my_history' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
+                        className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'my_history' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
                             }`}
                     >
                         <UserCheck size={18} />
@@ -182,8 +182,9 @@ const Attendance = () => {
                                 {isScanning ? 'LIVE' : 'IDLE'}
                             </span>
                         </div>
-                        <div className="bg-black relative rounded-lg overflow-hidden aspect-square flex items-center justify-center mb-6">
-                            <div id="reader" className="w-full h-full"></div>
+                        {/* Scanner Container - Forced Square */}
+                        <div className="bg-black relative rounded-lg overflow-hidden aspect-square w-full max-w-[400px] mx-auto flex items-center justify-center mb-6 border-2 border-gray-100">
+                            <div id="reader" className="w-full h-full object-cover"></div>
                             {!isScanning && <div className="absolute text-white/50">Camera Off</div>}
                         </div>
                         <button

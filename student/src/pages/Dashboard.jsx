@@ -513,65 +513,63 @@ const Dashboard = () => {
                         )}
                     </div>
                 </div>
-            </div>
 
-            {/* Leaderboard Widget */}
-            {/* Ensure parent grid is lg:grid-cols-3 and this takes 1 col effectively if Recent Activity takes 2 */}
-            {/* Leaderboard Widget */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 flex flex-col h-full bg-gradient-to-b from-white to-gray-50">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                        <Trophy className="text-yellow-500 fill-yellow-100" size={20} /> Top Learners
-                    </h2>
-                    {userRankInfo && (
-                        <button
-                            onClick={() => setShowRankCard(true)}
-                            className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold hover:bg-indigo-200 transition-colors"
-                        >
-                            View My Rank
-                        </button>
-                    )}
-                </div>
-
-                <div className="flex-1 overflow-y-auto pr-1 space-y-3 min-h-[200px]">
-                    {leaderboard.length > 0 ? (
-                        leaderboard.map((student, idx) => (
-                            <div
-                                key={student.id}
-                                className={`flex items-center justify-between p-3 rounded-xl transition-all ${user && user._id === student.id ? 'bg-indigo-50 border border-indigo-100 shadow-sm' : 'hover:bg-gray-100 border border-transparent'
-                                    }`}
+                {/* Leaderboard Widget */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 flex flex-col h-full bg-gradient-to-b from-white to-gray-50">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <Trophy className="text-yellow-500 fill-yellow-100" size={20} /> Top Learners
+                        </h2>
+                        {userRankInfo && (
+                            <button
+                                onClick={() => setShowRankCard(true)}
+                                className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold hover:bg-indigo-200 transition-colors"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className={`
+                                View My Rank
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto pr-1 space-y-3 min-h-[200px]">
+                        {leaderboard.length > 0 ? (
+                            leaderboard.map((student, idx) => (
+                                <div
+                                    key={student.id}
+                                    className={`flex items-center justify-between p-3 rounded-xl transition-all ${user && user._id === student.id ? 'bg-indigo-50 border border-indigo-100 shadow-sm' : 'hover:bg-gray-100 border border-transparent'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`
                                             w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm
                                             ${idx === 0 ? 'bg-yellow-100 text-yellow-700 ring-2 ring-yellow-200' :
-                                            idx === 1 ? 'bg-gray-100 text-gray-600 ring-2 ring-gray-200' :
-                                                idx === 2 ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-200' :
-                                                    'bg-white border border-gray-200 text-gray-500'}
+                                                idx === 1 ? 'bg-gray-100 text-gray-600 ring-2 ring-gray-200' :
+                                                    idx === 2 ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-200' :
+                                                        'bg-white border border-gray-200 text-gray-500'}
                                         `}>
-                                        {idx === 0 ? <Crown size={14} /> : idx + 1}
+                                            {idx === 0 ? <Crown size={14} /> : idx + 1}
+                                        </div>
+                                        <div>
+                                            <p className={`text-sm font-semibold line-clamp-1 ${user && user._id === student.id ? 'text-indigo-700' : 'text-gray-800'}`}>
+                                                {student.name}
+                                            </p>
+                                            {user && user._id === student.id && (
+                                                <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide">You</span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className={`text-sm font-semibold line-clamp-1 ${user && user._id === student.id ? 'text-indigo-700' : 'text-gray-800'}`}>
-                                            {student.name}
-                                        </p>
-                                        {user && user._id === student.id && (
-                                            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide">You</span>
-                                        )}
+                                    <div className="flex items-center gap-1.5">
+                                        <Clock size={12} className="text-gray-400" />
+                                        <span className="text-sm font-bold text-gray-700">{student.hours}h</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                    <Clock size={12} className="text-gray-400" />
-                                    <span className="text-sm font-bold text-gray-700">{student.hours}h</span>
-                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-10 text-gray-400">
+                                <Award size={32} className="mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">No rankings yet.</p>
                             </div>
-                        ))
-                    ) : (
-                        <div className="text-center py-10 text-gray-400">
-                            <Award size={32} className="mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No rankings yet.</p>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

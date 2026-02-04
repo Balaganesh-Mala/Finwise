@@ -14,6 +14,11 @@ exports.protect = async (req, res, next) => {
                  return res.status(401).json({ message: 'Not authorized, user not found' });
             }
 
+            // Status Check: Block access if rejected or on hold
+            if (req.user.status === 'rejected' || req.user.status === 'hold') {
+                return res.status(403).json({ message: 'Access denied. Account is deactivated.' });
+            }
+
             next();
         } catch (error) {
             console.error(error);

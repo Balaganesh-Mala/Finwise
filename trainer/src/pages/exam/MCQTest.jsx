@@ -278,7 +278,7 @@ const MCQTest = () => {
             } else if (rounds.assignment?.enabled) {
                 navigate('/exam/assignment');
             } else {
-                navigate('/exam/status');
+                navigate('/exam/success');
             }
 
         } catch (error) {

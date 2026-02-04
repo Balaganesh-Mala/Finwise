@@ -194,4 +194,28 @@ router.put('/status/:id', async (req, res) => {
     }
 });
 
+// @desc    Delete Trainer
+// @route   DELETE /api/admin/trainers/:id
+// @access  Admin
+router.delete('/:id', async (req, res) => {
+    try {
+        const trainer = await Trainer.findById(req.params.id);
+
+        if (!trainer) {
+            return res.status(404).json({ message: 'Trainer not found' });
+        }
+
+        // Delete associated exams
+        await TrainerExam.deleteMany({ trainerId: trainer._id });
+
+        // Delete the trainer
+        await Trainer.findByIdAndDelete(req.params.id);
+
+        res.json({ message: 'Trainer removed' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;
