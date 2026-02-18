@@ -31,7 +31,7 @@ app.use(cors({
         'https://student.wonew.in',
         'https://admin.wonew.in',
         'https://trainer.wonew.in',
-        'https://jobready-client.onrender.com',
+        'https://finwise-64g1.onrender.com',
         'https://jobready-q89p.onrender.com', // Student Portal Deployed
         process.env.CLIENT_URL,
         process.env.ADMIN_URL
