@@ -12,7 +12,7 @@ import img01 from '../assets/01T.png';
 import img02 from '../assets/02T.png';
 import img03 from '../assets/03T.png';
 import img04 from '../assets/04T.png';
-import img05 from '../assets/05.jpeg';
+import img05 from '../assets/05T.png';
 import img06 from '../assets/06T.png';
 import googleLogo from '../assets/googleLogo.png';
 
@@ -85,7 +85,7 @@ const HeroBanner = () => {
     };
 
     return (
-        <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-primary-100 via-white to-gray-50 overflow-hidden pt-[32%] pb-12 md:pt-[10%] mx-auto px-4 md:px-12 lg:px-24">
+        <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-primary-100 via-white to-gray-50 overflow-hidden pt-[32%] pb-12 md:pt-[10%] mx-auto md:px-24 lg:px-24">
 
             {/* Light Grid Background */}
             <div className="absolute inset-0 pointer-events-none" style={{
@@ -102,7 +102,7 @@ const HeroBanner = () => {
             <div className="container mx-auto px-4 md:px-6 relative z-10 grid lg:grid-cols-2 gap-12 lg:gap-12 items-center">
 
                 {/* Text Content (Left) */}
-                <div className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
+                <div className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0 mr-[40px]">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -123,11 +123,11 @@ const HeroBanner = () => {
                             </span>
                         </h1>
 
-                        <p className="text-base md:text-xl text-gray-600 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                        <p className="text-base md:text-xl text-gray-600 mb-6 leading-relaxed max-w-lg mx-auto lg:mx-0">
                             Stop learning outdated theory. Get hands-on experience with real-world projects and mentorship from engineers at top companies.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-10">
+                        <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-8">
                             <button
                                 onClick={() => setIsDemoModalOpen(true)}
                                 className="w-full sm:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-gray-200"
