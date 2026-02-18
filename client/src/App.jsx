@@ -45,7 +45,7 @@ function App() {
                 <FloatingContact />
                 <WhatsAppButton />
                 <FloatingLocation />
-                <main className="flex-grow pt-20">
+                <main className="flex-grow">
                   <Home />
                 </main>
                 <Footer />

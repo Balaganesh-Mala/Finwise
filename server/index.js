@@ -56,6 +56,7 @@ app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/jobs', require('./routes/jobRoutes'));
 app.use('/api/applications', require('./routes/applicationRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
+app.use('/api/demos', require('./routes/demoRoutes'));
 app.use('/api/blogs', require('./routes/blogRoutes'));
 app.use('/api/run', require('./routes/runRoutes'));
 app.use('/api/code', require('./routes/codeRoutes'));
@@ -67,6 +68,8 @@ app.use('/api/trainer', require('./routes/trainerRoutes'));
 app.use('/api/admin/trainers', require('./routes/adminTrainerRoutes'));
 app.use('/api/admin/tests', require('./routes/adminTestRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/admin/meetings', require('./routes/adminMeetingRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes'));
 
 // Course Module Routes
 app.use('/api', require('./routes/moduleRoutes'));

@@ -23,7 +23,10 @@ import AttendanceHistory from './pages/AttendanceHistory';
 import AddTrainer from './pages/AddTrainer'; // New
 import TrainerList from './pages/TrainerList'; // New
 import TrainerDetails from './pages/TrainerDetails'; // New
-
+import StudentJobs from './pages/StudentJobs';
+import Meetings from './pages/Meetings';
+import ManageDemos from './pages/ManageDemos';
+import ManageReviews from './pages/ManageReviews';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -52,6 +55,7 @@ function App() {
           <Route path="courses" element={<Courses />} />
           <Route path="courses/:courseId/modules" element={<ManageCourseModules />} />
           <Route path="jobs" element={<Jobs />} />
+          <Route path="student-jobs" element={<StudentJobs />} />
           <Route path="applications" element={<Applications />} />
           <Route path="blogs" element={<Blogs />} />
           <Route path="inquiries" element={<Inquiries />} />
@@ -61,7 +65,10 @@ function App() {
           <Route path="trainers" element={<TrainerList />} />
           <Route path="trainers/add" element={<AddTrainer />} />
           <Route path="trainers/:id" element={<TrainerDetails />} />
+          <Route path="meetings" element={<Meetings />} />
           <Route path="tests" element={<ManageTests />} />
+          <Route path="demos" element={<ManageDemos />} />
+          <Route path="reviews" element={<ManageReviews />} />
           {/* Add more routes here as we migrate */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

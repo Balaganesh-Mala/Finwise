@@ -2,6 +2,8 @@ const Student = require('../models/Student');
 const Course = require('../models/Course');
 const Progress = require('../models/Progress');
 const Attendance = require('../models/Attendance');
+const Module = require('../models/Module');
+const Topic = require('../models/Topic');
 
 // @desc    Get Student Dashboard Statistics
 // @route   GET /api/student/dashboard/:studentId
@@ -57,15 +59,33 @@ exports.getStudentDashboardStats = async (req, res) => {
             date: p.completedAt
         }));
 
-        // 6. Calculate Average Progress (Batch Based)
+        // 6. Calculate Average Progress (Topic Based) -> Replaces "Batch Based" time calculation
         let batchProgress = 0;
-        if (student.startDate) {
-            const start = new Date(student.startDate);
-            const today = new Date();
-            const diffTime = Math.abs(today - start);
-            const daysPassed = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            const totalDays = 90; // Default or fetch from course
-            batchProgress = Math.min(100, Math.round((daysPassed / totalDays) * 100));
+        if (student.courseName) {
+            // Find the Course (Exact + Regex Fallback)
+            let course = await Course.findOne({ title: student.courseName });
+            if (!course) {
+                 course = await Course.findOne({ 
+                    title: { $regex: new RegExp(`^${student.courseName}$`, 'i') } 
+                });
+            }
+
+            if (course) {
+                 const modules = await Module.find({ courseId: course._id }).select('_id');
+                 const moduleIds = modules.map(m => m._id);
+                 const totalTopics = await Topic.countDocuments({ moduleId: { $in: moduleIds } });
+
+                 const completedTopics = await Progress.countDocuments({ 
+                    studentId: student._id, 
+                    courseId: course._id, 
+                    completed: true 
+                });
+
+                if (totalTopics > 0) {
+                    batchProgress = Math.round((completedTopics / totalTopics) * 100);
+                }
+                batchProgress = Math.min(100, batchProgress);
+            }
         }
 
         // 7. Calculate Weekly Activity (Mon-Sun)

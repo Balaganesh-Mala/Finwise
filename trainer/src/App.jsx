@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TrainerLayout from './layouts/TrainerLayout';
 import Instructions from './pages/exam/Instructions';
+import Classes from './pages/Classes';
 import Attendance from './pages/Attendance';
 import MCQTest from './pages/exam/MCQTest';
 import VideoTest from './pages/exam/VideoTest'; // Planned
@@ -49,7 +50,7 @@ function App() {
           {/* Employee / Trainer Routes */}
           <Route path="/" element={<ProtectedRoute><TrainerLayout /></ProtectedRoute>}>
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="classes" element={<div>Classes Page</div>} />
+            <Route path="classes" element={<Classes />} />
             <Route path="students" element={<Students />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="materials" element={<MyCourses />} />

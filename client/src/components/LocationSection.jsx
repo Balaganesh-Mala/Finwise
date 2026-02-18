@@ -28,11 +28,11 @@ const LocationSection = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                     >
-                        <h2 className="text-sm font-bold tracking-widest text-[#FF7F50] uppercase mb-3">
+                        <h2 className="text-sm font-bold tracking-widest text-primary-600 uppercase mb-3">
                             Connect With Us
                         </h2>
                         <h3 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
-                            Visit Our <span className="text-[#FF7F50]">Campus</span>
+                            Visit Our <span className="text-primary-600">Campus</span>
                         </h3>
                         <p className="text-lg text-gray-600 leading-relaxed">
                             Experience our state-of-the-art learning environment. Whether you're coming for a class or a consultation, we're ready to welcome you.
@@ -51,15 +51,15 @@ const LocationSection = () => {
                         className="lg:col-span-4 space-y-6"
                     >
                         {/* Address Card */}
-                        <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 hover:border-[#FF7F50]/20 transition-all duration-300 group">
-                            <div className="w-12 h-12 bg-[#FF7F50]/10 rounded-2xl flex items-center justify-center shrink-0 text-[#FF7F50] mb-6 group-hover:scale-110 transition-transform">
+                        <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 hover:border-primary-600/20 transition-all duration-300 group">
+                            <div className="w-12 h-12 bg-primary-600/10 rounded-2xl flex items-center justify-center shrink-0 text-primary-600 mb-6 group-hover:scale-110 transition-transform">
                                 <MapPin size={24} />
                             </div>
                             <h4 className="text-xl font-bold text-gray-900 mb-3">Headquarters</h4>
                             <p className="text-gray-500 leading-relaxed mb-4">
                                 {address}
                             </p>
-                            <a href={(import.meta.env.VITE_MAP_URL)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-[#FF7F50] font-semibold text-sm hover:gap-2 transition-all">
+                            <a href={(import.meta.env.VITE_MAP_URL)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary-600 font-semibold text-sm hover:gap-2 transition-all">
                                 Get Directions <ArrowRight size={16} className="ml-1" />
                             </a>
                         </div>

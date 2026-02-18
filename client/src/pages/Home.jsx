@@ -10,6 +10,7 @@ import ReviewsSection from '../components/ReviewsSection';
 import FaqSection from '../components/FaqSection';
 import StudentSuccessDashboard from '../components/StudentSuccessDashboard';
 import LocationSection from '../components/LocationSection';
+import BottomNav from '../components/BottomNav';
 
 
 const Home = () => {
@@ -51,6 +52,7 @@ const Home = () => {
 
       {/* Location Section */}
       <LocationSection />
+      <BottomNav />
     </div>
 
   );

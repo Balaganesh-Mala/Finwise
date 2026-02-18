@@ -25,12 +25,51 @@ const uploadToCloudinary = (buffer) => {
     });
 };
 
-// @desc    Get all jobs
+// @desc    Get all jobs (legacy/admin)
 // @route   GET /api/jobs
 // @access  Public
 router.get('/', async (req, res) => {
     try {
-        const jobs = await Job.find({ isActive: true }).sort({ postedAt: -1 });
+        let query = { isActive: true };
+        
+        // Retain query param logic for backward compatibility or direct calls
+        if (req.query.type === 'student') {
+            query.isStudentOnly = true;
+        } else if (req.query.type === 'client') {
+            query.isStudentOnly = { $ne: true };
+        }
+
+        const jobs = await Job.find(query).sort({ postedAt: -1 });
+        res.json(jobs);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @desc    Get STRICT Student Jobs
+// @route   GET /api/jobs/fetch/student
+// @access  Public
+router.get('/fetch/student', async (req, res) => {
+    try {
+        console.log("API: Fetching STRICT Student Jobs");
+        const jobs = await Job.find({ isActive: true, isStudentOnly: true }).sort({ postedAt: -1 });
+        console.log(`API: Found ${jobs.length} student jobs`);
+        res.json(jobs);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @desc    Get STRICT Client Jobs
+// @route   GET /api/jobs/fetch/client
+// @access  Public
+router.get('/fetch/client', async (req, res) => {
+    try {
+        console.log("API: Fetching STRICT Client Jobs");
+        const jobs = await Job.find({ isActive: true, isStudentOnly: { $ne: true } }).sort({ postedAt: -1 });
+        console.log(`API: Found ${jobs.length} client jobs`);
         res.json(jobs);
     } catch (err) {
         console.error(err.message);
@@ -62,7 +101,16 @@ router.get('/:id', async (req, res) => {
 // @access  Private (Admin)
 router.post('/', upload.single('companyLogo'), async (req, res) => {
     try {
-        let jobData = req.body;
+        // Clone body to ensure standard object behavior
+        let jobData = { ...req.body };
+        console.log("Creating Job. Raw Body:", req.body);
+
+        // Explicitly handle isStudentOnly conversion from FormData string or JSON boolean
+        if (jobData.isStudentOnly === 'true' || jobData.isStudentOnly === true) {
+            jobData.isStudentOnly = true;
+        } else if (jobData.isStudentOnly === 'false' || jobData.isStudentOnly === false) {
+             jobData.isStudentOnly = false;
+        }
 
         // Handle File Upload
         if (req.file) {
@@ -105,7 +153,18 @@ router.put('/:id', upload.single('companyLogo'), async (req, res) => {
             return res.status(404).json({ msg: 'Job not found' });
         }
 
-        let updateData = req.body;
+        // Clone body to ensure standard object behavior
+        let updateData = { ...req.body };
+        console.log(`PUT /api/jobs/${req.params.id} Raw Body:`, req.body);
+
+        // Explicitly handle isStudentOnly conversion from FormData string or JSON boolean
+        if (updateData.isStudentOnly === 'true' || updateData.isStudentOnly === true) {
+            updateData.isStudentOnly = true;
+        } else if (updateData.isStudentOnly === 'false' || updateData.isStudentOnly === false) {
+            updateData.isStudentOnly = false;
+        }
+        
+        console.log("Processed updateData:", updateData);
 
          // Handle File Upload
         if (req.file) {
@@ -130,13 +189,19 @@ router.put('/:id', upload.single('companyLogo'), async (req, res) => {
         }
 
 
-        job = await Job.findByIdAndUpdate(
-            req.params.id,
-            { $set: updateData },
-            { new: true }
-        );
+        // Merge updates
+        Object.assign(job, updateData);
 
-        res.json(job);
+        // Explicit safe-guard for isStudentOnly
+        if (req.body.isStudentOnly === 'true' || req.body.isStudentOnly === true) {
+            job.isStudentOnly = true;
+        } else if (req.body.isStudentOnly === 'false' || req.body.isStudentOnly === false) {
+             job.isStudentOnly = false;
+        }
+
+        const updatedJob = await job.save();
+        console.log("Job Updated Successfully:", updatedJob.isStudentOnly);
+        res.json(updatedJob);
     } catch (err) {
         console.error(err.message);
         if (err.kind === 'ObjectId') {

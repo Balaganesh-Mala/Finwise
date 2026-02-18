@@ -16,7 +16,7 @@ const TrainerDetails = () => {
     useEffect(() => {
         const fetchTrainer = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/admin/trainers/${id}`);
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/trainers/${id}`);
                 setTrainer(res.data);
                 if (res.data.assignedCourses) {
                     setSelectedCourses(res.data.assignedCourses.map(c => c._id));
@@ -30,7 +30,7 @@ const TrainerDetails = () => {
 
         const fetchCourses = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/courses');
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/courses`);
                 setCourses(res.data);
             } catch (error) {
                 console.error('Failed to fetch courses', error);
@@ -44,7 +44,7 @@ const TrainerDetails = () => {
     const updateStatus = async (newStatus) => {
         if (!window.confirm(`Mark as ${newStatus}?`)) return;
         try {
-            await axios.put(`http://localhost:5000/api/admin/trainers/status/${id}`, { status: newStatus });
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/trainers/status/${id}`, { status: newStatus });
             toast.success('Status updated');
             navigate('/trainers');
         } catch (error) {
@@ -54,7 +54,7 @@ const TrainerDetails = () => {
 
     const handleAssignCourses = async () => {
         try {
-            const res = await axios.put(`http://localhost:5000/api/admin/trainers/status/${id}`, {
+            const res = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/trainers/status/${id}`, {
                 assignedCourses: selectedCourses
             });
             setTrainer(prev => ({ ...prev, assignedCourses: res.data.assignedCourses }));

@@ -22,7 +22,8 @@ import {
     Trophy,
     Sparkles,
     Shield,
-    ExternalLink
+    ExternalLink,
+    Briefcase
 } from 'lucide-react';
 
 
@@ -185,7 +186,7 @@ const Layout = () => {
     };
 
     const allNavItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/', accessKey: 'dashboard' },
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/', accessKey: 'dashboard', end: true },
         { icon: BookOpen, label: 'My Courses', path: '/courses', accessKey: 'myCourses' },
         { icon: QrCode, label: 'My QR', path: '/my-qr', accessKey: 'myQR' },
         { icon: Calendar, label: 'My Attendance', path: '/my-attendance', accessKey: 'attendance' },
@@ -193,6 +194,7 @@ const Layout = () => {
         { icon: Keyboard, label: 'Typing Practice', path: '/typing-practice', accessKey: 'typingPractice' },
         { icon: Bot, label: 'AI Mock Interview', path: '/mock-interview', accessKey: 'aiMockInterview' },
         { icon: User, label: 'Profile', path: '/profile', accessKey: 'profile' },
+        { icon: Briefcase, label: 'Jobs', path: '/jobs', accessKey: 'dashboard' }, // Accessible to everyone who has dashboard access
         { icon: Settings, label: 'Settings', path: '/settings', accessKey: 'settings' },
     ];
 
@@ -220,11 +222,11 @@ const Layout = () => {
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-gray-200 shadow-xl lg:shadow-none transform transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-gray-200 shadow-xl lg:shadow-none transform transition-all duration-300 ease-in-out flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     } ${collapsed ? 'w-20' : 'w-72'}`}
             >
                 {/* Logo Area */}
-                <div className={`h-20 flex items-center ${collapsed ? 'justify-center' : 'justify-between px-8'} border-b border-gray-100 relative`}>
+                <div className={`h-20 flex items-center ${collapsed ? 'justify-center' : 'justify-between px-8'} border-b border-gray-100 relative shrink-0`}>
                     <div className="flex items-center gap-3">
                         {settings?.logoUrl ? (
                             <img
@@ -266,11 +268,12 @@ const Layout = () => {
                 </div>
 
                 {/* Navigation Links */}
-                <nav className="p-4 space-y-2">
+                <nav className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                     {navItems.map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}
+                            end={item.end}
                             onClick={() => setSidebarOpen(false)}
                             className={({ isActive }) =>
                                 `flex items-center ${collapsed ? 'justify-center px-2' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all duration-200 group relative ${isActive
@@ -280,14 +283,18 @@ const Layout = () => {
                             }
                             title={collapsed ? item.label : ''}
                         >
-                            <item.icon size={22} className={`shrink-0 ${location.pathname === item.path ? 'text-white' : 'text-gray-400 group-hover:text-indigo-600'}`} />
-                            {!collapsed && <span className="font-medium whitespace-nowrap">{item.label}</span>}
+                            {({ isActive }) => (
+                                <>
+                                    <item.icon size={22} className={`shrink-0 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-indigo-600'}`} />
+                                    {!collapsed && <span className="font-medium whitespace-nowrap">{item.label}</span>}
+                                </>
+                            )}
                         </NavLink>
                     ))}
                 </nav>
 
                 {/* Bottom Section */}
-                <div className={`absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-gray-50/50`}>
+                <div className={`p-4 border-t border-gray-100 bg-gray-50/50 shrink-0`}>
                     <button
                         onClick={handleLogout}
                         className={`flex items-center ${collapsed ? 'justify-center' : 'justify-center gap-3 w-full'} px-4 py-3 text-red-600 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-all font-medium shadow-sm hover:shadow`}

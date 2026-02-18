@@ -18,7 +18,21 @@ export default {
           700: 'var(--primary-700)',
           800: 'var(--primary-800)',
           900: 'var(--primary-900)',
-          DEFAULT: 'var(--primary-600)', // Allow bg-primary to still work
+          950: 'var(--primary-950)',
+          DEFAULT: 'var(--primary-600)', // Deep Blue
+        },
+        accent: {
+          50: 'var(--accent-50)',
+          100: 'var(--accent-100)',
+          200: 'var(--accent-200)',
+          300: 'var(--accent-300)',
+          400: 'var(--accent-400)',
+          500: 'var(--accent-500)',
+          600: 'var(--accent-600)',
+          700: 'var(--accent-700)',
+          800: 'var(--accent-800)',
+          900: 'var(--accent-900)',
+          DEFAULT: 'var(--accent-600)', // Emerald Green
         },
         indigo: {
           50: 'var(--primary-50)',

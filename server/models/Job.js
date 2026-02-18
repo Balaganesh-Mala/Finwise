@@ -64,6 +64,10 @@ const JobSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    isStudentOnly: {
+        type: Boolean,
+        default: false
     }
 });
 

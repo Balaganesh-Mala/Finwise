@@ -19,7 +19,7 @@ const AttendanceHistory = () => {
                 endDate: activeFilters.endDate
             }).toString();
 
-            const res = await axios.get(`http://localhost:5000/api/attendance/history?${queryParams}`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/attendance/history?${queryParams}`);
             setRecords(res.data);
             if (res.data.length === 0) {
                 toast.success('No records found for this period');

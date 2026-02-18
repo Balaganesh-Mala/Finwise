@@ -12,12 +12,12 @@ const Jobs = () => {
 
     const fetchJobs = async () => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs/fetch/client`);
             setJobs(res.data);
             setLoading(false);
         } catch (error) {
-            console.error('Error fetching jobs:', error);
-            toast.error('Failed to load jobs');
+            console.error("Error fetching client jobs:", error);
+            toast.error("Failed to fetch jobs");
             setLoading(false);
         }
     };
@@ -28,7 +28,7 @@ const Jobs = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this job?')) return;
-        
+
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs/${id}`);
             toast.success('Job deleted');
@@ -56,7 +56,7 @@ const Jobs = () => {
                     <h1 className="text-3xl font-bold text-gray-800">Job Listings</h1>
                     <p className="text-gray-500 mt-1">Manage open positions and career opportunities</p>
                 </div>
-                <button 
+                <button
                     onClick={openCreateModal}
                     className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-md transition-colors"
                 >
@@ -73,7 +73,7 @@ const Jobs = () => {
                     <Briefcase size={48} className="mx-auto text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900">No Jobs Found</h3>
                     <p className="text-gray-500 mb-6">Get started by creating your first job posting.</p>
-                    <button 
+                    <button
                         onClick={openCreateModal}
                         className="text-primary-600 font-bold hover:underline"
                     >
@@ -91,18 +91,23 @@ const Jobs = () => {
                                     <span className="flex items-center gap-1"><MapPin size={16} /> {job.location}</span>
                                     <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-medium">{job.type}</span>
                                     <span className="text-gray-900 font-semibold">{job.salary}</span>
+                                    {job.isStudentOnly && (
+                                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200 text-xs font-bold">
+                                            Student Only
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
-                                <button 
+                                <button
                                     onClick={() => openEditModal(job)}
                                     className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                                     title="Edit"
                                 >
                                     <Edit2 size={18} />
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => handleDelete(job._id)}
                                     className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                     title="Delete"
@@ -115,11 +120,12 @@ const Jobs = () => {
                 </div>
             )}
 
-            <JobFormModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                jobToEdit={editingJob} 
-                fetchJobs={fetchJobs} 
+            <JobFormModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                jobToEdit={editingJob}
+                fetchJobs={fetchJobs}
+                defaultIsStudentOnly={false}
             />
         </div>
     );

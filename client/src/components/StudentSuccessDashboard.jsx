@@ -102,11 +102,11 @@ const StudentSuccessDashboard = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                     >
-                        <h2 className="text-sm font-bold tracking-widest text-[#FF7F50] uppercase mb-3">
+                        <h2 className="text-sm font-bold tracking-widest text-primary-600 uppercase mb-3">
                             Student Features
                         </h2>
                         <h3 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
-                            Your <span className="text-[#FF7F50]">Success Dashboard</span>
+                            Your <span className="text-primary-600">Success Dashboard</span>
                         </h3>
                         <p className="text-lg text-gray-600 leading-relaxed">
                             Everything you need to master your skills and land your dream job, all in one place.
@@ -169,7 +169,7 @@ const StudentSuccessDashboard = () => {
                 >
                     <Link
                         to="/student/login"
-                        className="inline-flex items-center justify-center gap-2 bg-[#FF7F50] text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg shadow-[#FF7F50]/30 hover:bg-[#FF6347] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                        className="inline-flex items-center justify-center gap-2 bg-primary-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg shadow-primary-600/30 hover:bg-primary-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                     >
                         Access Student Login
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

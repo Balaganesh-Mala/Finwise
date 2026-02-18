@@ -9,6 +9,10 @@ const ReviewSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add the course taken']
     },
+    role: {
+        type: String,
+        required: [true, 'Please add the student role (e.g., Analyst @ Company)']
+    },
     rating: {
         type: Number,
         min: 1,
@@ -22,6 +26,9 @@ const ReviewSchema = new mongoose.Schema({
     studentImage: {
         type: String,
         default: 'no-photo.jpg'
+    },
+    imagePublicId: {
+        type: String
     },
     isApproved: {
         type: Boolean,

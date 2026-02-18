@@ -9,7 +9,7 @@ const TrainerList = () => {
 
     const fetchTrainers = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/admin/trainers/list');
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/trainers/list`);
             setTrainers(res.data);
         } catch (error) {
             toast.error('Failed to load trainers');
@@ -36,7 +36,7 @@ const TrainerList = () => {
         if (!result.isConfirmed) return;
 
         try {
-            await axios.put(`http://localhost:5000/api/admin/trainers/status/${id}`, { status: newStatus });
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/trainers/status/${id}`, { status: newStatus });
             toast.success(`Trainer updated to ${newStatus}`);
             fetchTrainers();
         } catch (error) {
@@ -58,7 +58,7 @@ const TrainerList = () => {
         if (!result.isConfirmed) return;
 
         try {
-            await axios.delete(`http://localhost:5000/api/admin/trainers/${id}`);
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/trainers/${id}`);
             Swal.fire(
                 'Deleted!',
                 'Trainer has been deleted.',

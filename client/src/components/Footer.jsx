@@ -1,25 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { Facebook, Twitter, Instagram, Linkedin, MapPin, Phone, Mail, Youtube, ArrowRight } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 
 const Footer = () => {
   const { getContactInfo, getSocialLink, settings } = useSettings();
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/courses`);
+        // Take top 4-5 courses. Assuming order returned is relevance or recent.
+        setCourses(res.data.slice(0, 5));
+      } catch (err) {
+        console.error("Failed to fetch footer courses", err);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   const siteTitle = settings?.siteTitle || 'Skill Up Academy';
+  const logo = settings?.logoUrl || '';
   const address = getContactInfo('address') || '123 Skills Ave, Tech City, State';
   const phone = getContactInfo('phone') || '+1 (555) 123-4567';
   const email = getContactInfo('email') || 'info@jobreadyskills.com';
 
   return (
-    <footer className="bg-[#0f172a] text-gray-300 pt-20 pb-10 border-t border-gray-800">
+    <footer className="bg-black text-gray-300 pt-20 pb-10 border-t border-gray-800">
       <div className="container mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
 
           {/* Brand & Newsletter - Spans 4 columns */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-0">
+            <img src={logo} alt='logo' className='w-40 h-40 my-[-60px] ' />
             <Link to="/" className="inline-block">
               <h3 className="text-3xl font-bold text-white tracking-tight">{siteTitle}</h3>
+              <p className="text-gray-400 text-sm leading-relaxed max-w-sm">Career Solutions</p>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
               Empowering your career with industry-ready skills and professional training. Join thousands of students achieving their dreams.
@@ -67,10 +85,21 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <h4 className="text-white font-semibold mb-6">Top Courses</h4>
             <ul className="space-y-4 text-sm">
-              <li><Link to="/courses" className="hover:text-indigo-400 transition-colors block">Full Stack Dev</Link></li>
-              <li><Link to="/courses" className="hover:text-indigo-400 transition-colors block">Data Science</Link></li>
-              <li><Link to="/courses" className="hover:text-indigo-400 transition-colors block">UI/UX Design</Link></li>
-              <li><Link to="/courses" className="hover:text-indigo-400 transition-colors block">Digital Marketing</Link></li>
+              {courses.length > 0 ? (
+                courses.map(course => (
+                  <li key={course._id}>
+                    <Link to={`/courses/${course._id}`} className="hover:text-indigo-400 transition-colors block truncate">
+                      {course.title}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <>
+                  <li><Link to="/courses" className="hover:text-indigo-400 transition-colors block">Full Stack Dev</Link></li>
+                  <li><Link to="/courses" className="hover:text-indigo-400 transition-colors block">Data Science</Link></li>
+                  <li><Link to="/courses" className="hover:text-indigo-400 transition-colors block">UI/UX Design</Link></li>
+                </>
+              )}
             </ul>
           </div>
 

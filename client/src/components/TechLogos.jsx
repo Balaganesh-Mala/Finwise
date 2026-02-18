@@ -2,37 +2,30 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const technologies = [
-    // Row 1: Office, Productivity & Design
-    { name: "MS Word", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg" },
-    { name: "MS Excel", logo: "https://upload.wikimedia.org/wikipedia/commons/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg" },
-    { name: "MS PowerPoint", logo: "https://upload.wikimedia.org/wikipedia/commons/0/0d/Microsoft_Office_PowerPoint_%282019%E2%80%93present%29.svg" },
-    { name: "MS Power BI", logo: "https://upload.wikimedia.org/wikipedia/commons/c/cf/New_Power_BI_Logo.svg" },
-    { name: "MS Outlook", logo: "https://upload.wikimedia.org/wikipedia/commons/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg" },
+    // Row 1: Core Accounting & ERP
     { name: "Tally Prime", logo: "https://upload.wikimedia.org/wikipedia/en/9/9d/Tally_Prime_Logo.png" },
-    { name: "Typing", logo: "https://cdn-icons-png.flaticon.com/512/2620/2620582.png" },
-    { name: "Photoshop", logo: "https://upload.wikimedia.org/wikipedia/commons/a/af/Adobe_Photoshop_CC_icon.svg" },
-    { name: "Figma", logo: "https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg" },
+    { name: "QuickBooks", logo: "https://upload.wikimedia.org/wikipedia/commons/1/1a/QuickBooks.svg" },
+    { name: "Zoho Books", logo: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Zoho_Books_logo.svg" },
+    { name: "Xero", logo: "https://upload.wikimedia.org/wikipedia/commons/7/70/Xero_software_logo.svg" },
+    { name: "SAP FICO", logo: "https://upload.wikimedia.org/wikipedia/commons/5/58/SAP_2011_logo.svg" },
+    { name: "Oracle NetSuite", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b3/Oracle_NetSuite_logo.svg" },
+    { name: "Microsoft Dynamics", logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Microsoft_Dynamics_365_Logo.svg" },
 
-    // Row 2: Frontend & Web
-    { name: "HTML5", logo: "https://upload.wikimedia.org/wikipedia/commons/6/61/HTML5_logo_and_wordmark.svg" },
-    { name: "CSS3", logo: "https://upload.wikimedia.org/wikipedia/commons/d/d5/CSS3_logo_and_wordmark.svg" },
-    { name: "JavaScript", logo: "https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png" },
-    { name: "Bootstrap", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b2/Bootstrap_logo.svg" },
-    { name: "Tailwind CSS", logo: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Tailwind_CSS_Logo.svg" },
-    { name: "React", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg" },
-    { name: "Sass", logo: "https://upload.wikimedia.org/wikipedia/commons/9/96/Sass_Logo_Color.svg" },
-    { name: "Next.js", logo: "https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg" },
-
-    // Row 3: Backend, Programming & Tools
-    { name: "Node.js", logo: "https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg" },
-    { name: "Express.js", logo: "https://upload.wikimedia.org/wikipedia/commons/6/64/Expressjs.png" },
+    // Row 2: Analytics & Visualization
+    { name: "Advanced Excel", logo: "https://upload.wikimedia.org/wikipedia/commons/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg" },
+    { name: "Power BI", logo: "https://upload.wikimedia.org/wikipedia/commons/c/cf/New_Power_BI_Logo.svg" },
+    { name: "Tableau", logo: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Tableau_Logo.png" },
+    { name: "Alteryx", logo: "https://upload.wikimedia.org/wikipedia/commons/3/36/Alteryx_Logo_2023.svg" },
     { name: "Python", logo: "https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" },
-    { name: "Java", logo: "https://upload.wikimedia.org/wikipedia/en/3/30/Java_programming_language_logo.svg" },
-    { name: "C++", logo: "https://upload.wikimedia.org/wikipedia/commons/1/18/ISO_C%2B%2B_Logo.svg" },
-    { name: "MongoDB", logo: "https://upload.wikimedia.org/wikipedia/commons/9/93/MongoDB_Logo.svg" },
     { name: "SQL", logo: "https://upload.wikimedia.org/wikipedia/commons/8/87/Sql_data_base_with_logo.png" },
-    { name: "Git", logo: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Git-logo.svg" },
-    { name: "GitHub", logo: "https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg" },
+
+    // Row 3: Financial Markets & Taxation
+    { name: "Bloomberg", logo: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Bloomberg_logo.svg" },
+    { name: "Reuters", logo: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Thomson_Reuters_logo.svg" },
+    { name: "GST Portal", logo: "https://cdn-icons-png.flaticon.com/512/2620/2620582.png" }, // Using generic document icon for GST/Tax
+    { name: "Income Tax", logo: "https://upload.wikimedia.org/wikipedia/en/4/46/Income_Tax_Department_logo.png" },
+    { name: "MS Word", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg" },
+    { name: "MS PowerPoint", logo: "https://upload.wikimedia.org/wikipedia/commons/0/0d/Microsoft_Office_PowerPoint_%282019%E2%80%93present%29.svg" },
 ];
 
 const Marquee = ({ children, direction = "left", speed = 50 }) => {
@@ -67,9 +60,9 @@ const Marquee = ({ children, direction = "left", speed = 50 }) => {
 };
 
 const TechLogos = () => {
-    const row1 = technologies.slice(0, 9);
-    const row2 = technologies.slice(9, 17);
-    const row3 = technologies.slice(17);
+    const row1 = technologies.slice(0, 7);
+    const row2 = technologies.slice(7, 13);
+    const row3 = technologies.slice(13);
 
     // Duplicate rows to ensure enough width for seamless looping on large screens
     const extendedRow1 = [...row1, ...row1, ...row1, ...row1];

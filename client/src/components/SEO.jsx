@@ -6,9 +6,9 @@ const SEO = ({ title, description, keywords, image }) => {
     const { settings } = useSettings();
 
     // Fallback/Default values
-    const siteTitle = settings?.siteTitle || 'Skill Up Academy';
+    const siteTitle = settings?.siteTitle || 'Finwise Career Solutions';
     const defaultDescription = 'Master in-demand skills like MERN Stack, Data Science, and Digital Marketing with Skill Up Academy. Get career-ready with our expert-led courses.';
-    const defaultKeywords = 'MERN Stack, Data Science, Digital Marketing, Coding Courses, Job Ready Skills, Web Development';
+    const defaultKeywords = 'Invested Banking, Finance, Accounting';
     const defaultImage = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80';
 
     const metaTitle = title ? `${title} | ${siteTitle}` : siteTitle;

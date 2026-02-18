@@ -17,7 +17,7 @@ const Career = () => {
     useEffect(() => {
         const fetchJobs = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs`);
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/jobs/fetch/client`);
                 setJobs(res.data);
             } catch (err) {
                 console.error("Failed to fetch jobs", err);

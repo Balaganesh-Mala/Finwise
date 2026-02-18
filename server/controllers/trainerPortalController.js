@@ -20,14 +20,48 @@ exports.getDashboardStats = async (req, res) => {
         const todaysClasses = await Class.find({
             trainerId: req.user.id,
             date: { $gte: today, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
-        });
+        }).sort({ date: 1 });
 
         const totalClasses = await Class.countDocuments({ trainerId: req.user.id });
         
+        // Get Trainer Details
+        const trainer = await Trainer.findById(req.user.id).populate('assignedCourses');
+        
+        let coursesCount = 0;
+        let studentsCount = 0;
+        let allowedCourses = [];
+
+        if (trainer) {
+             // 1. Determine Courses
+            if (trainer.assignedCourses && trainer.assignedCourses.length > 0) {
+                allowedCourses = trainer.assignedCourses.map(c => c.title);
+                coursesCount = trainer.assignedCourses.length;
+            } else if (trainer.role) {
+                let searchKeyword = '';
+                if (trainer.role.includes('MS Office')) searchKeyword = 'MS Office';
+                else if (trainer.role.includes('Spoken English')) searchKeyword = 'Spoken English';
+                else if (trainer.role.includes('Coding')) searchKeyword = 'Full Stack';
+
+                if (searchKeyword) {
+                    const matchingCourses = await Course.find({ 
+                        title: { $regex: searchKeyword, $options: 'i' } 
+                    });
+                    allowedCourses = matchingCourses.map(c => c.title);
+                    coursesCount = matchingCourses.length;
+                }
+            }
+
+            // 2. Count Students
+            if (allowedCourses.length > 0) {
+                 studentsCount = await Student.countDocuments({ courseName: { $in: allowedCourses } });
+            }
+        }
+
         res.json({
             todaysClasses,
             totalClasses,
-            // Add student stats etc here
+            studentsCount,
+            coursesCount
         });
     } catch (err) {
         console.error(err);

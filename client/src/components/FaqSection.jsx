@@ -9,28 +9,28 @@ const FaqSection = () => {
 
   const faqs = [
     {
-      question: "What is the 'JobReady Guarantee' program?",
-      answer: "Our JobReady Guarantee is a commitment to your career success. If you complete our 'Mastery' tracks and don't secure a job within 6 months of graduation, we'll refund 100% of your tuition. Terms and conditions apply, ensuring you're fully prepared for the market."
+      question: "What specific finance roles can I apply for after this course?",
+      answer: "Our curriculum prepares you for high-demand roles such as Investment Banking Analyst, Equity Research Associate, Financial Analyst (FP&A), Risk Analyst, and Private Equity Associate. We target roles at top-tier banks and financial firms."
     },
     {
-      question: "Do I get a certificate upon completion?",
-      answer: "Yes! Upon successfully completing any course and its final project, you receive a verified industry-recognized certificate. These can be added to your LinkedIn profile and resume to showcase your new skills to recruiters."
+      question: "Is this course suitable for non-commerce graduates?",
+      answer: "Absolutely. We have a 'Finance for Non-Finance' module that starts from the very basics of accounting and economics. Engineers and science graduates have successfully transitioned into finance roles through our program."
     },
     {
-      question: "Are the courses suitable for beginners?",
-      answer: "Absolutely. We have dedicated paths for absolute beginners that start from the basics (no coding experience required) and gradually build up to advanced concepts. Look for the 'Beginner Friendly' tag on our course cards."
+      question: "Do you teach practical Financial Modeling?",
+      answer: "Yes, Financial Modeling is the core of our program. You will build comprehensive 3-statement models, DCF valuations, and LBO models from scratch using real historical data of public companies."
     },
     {
-      question: "How does the placement support work?",
-      answer: "Our dedicated Career Services team helps you with resume building, mock interviews, and portfolio reviews. We also have partnerships with over 50+ hiring companies and share exclusive job openings with our qualified graduates."
+      question: "Which companies hire from Finwise Career Solutions?",
+      answer: "Our graduates are working at leading firms like J.P. Morgan, Goldman Sachs, Morgan Stanley, Deloitte, KPMG, and various boutique investment banks. We have a dedicated placement team to connect you with these opportunities."
     },
     {
-      question: "Can I access the course content on mobile?",
-      answer: "Yes, our platform is fully responsive. You can learn on-the-go using your smartphone or tablet through our Student Portal, ensuring you never miss a lesson."
+      question: "What tools will I master during the course?",
+      answer: "You will gain advanced proficiency in Excel (including macros and VBA), Power BI for financial dashboarding, and Python for Finance. We also continually update our tool stack based on industry requirements."
     },
     {
-      question: "What if I miss a live session?",
-      answer: "Don't worry! All live sessions are recorded and uploaded to your dashboard within 24 hours. You have lifetime access to these recordings and all course materials."
+      question: "How is this different from doing a CFA or MBA?",
+      answer: "While CFA/MBA provide theoretical knowledge, Finwise focuses on practical, job-ready skills. You will be building models and pitchbooks just like an analyst on the job. Our program is designed to get you hired immediately."
     }
   ];
 

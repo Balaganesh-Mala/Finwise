@@ -2,11 +2,20 @@ import React, { useState, useEffect } from 'react';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { Star, Quote, Code, Palette, Database, TrendingUp } from 'lucide-react';
+import { Star, TrendingUp, PieChart, BarChart, CircleDollarSign, Briefcase, Calculator, LineChart } from 'lucide-react';
+import axios from 'axios';
+
+// Default images if needed, though we expect URLs from backend or we can use these as fallbacks
+import Img01 from '../assets/01T.png';
+import Img02 from '../assets/02T.png';
+import Img04 from '../assets/04T.png';
+import Img06 from '../assets/06T.png';
 
 const ReviewsSection = () => {
     // Manual responsive logic
     const [slidesToShow, setSlidesToShow] = useState(3);
+    const [reviews, setReviews] = useState({ row1: [], row2: [] });
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const handleResize = () => {
@@ -25,85 +34,64 @@ const ReviewsSection = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // 1st Row Data (Tech/Dev focus)
-    const reviewsRow1 = [
-        {
-            id: 1,
-            name: "Sarah Johnson",
-            role: "SDE II @ Google",
-            review: "The Full Stack course was a game-changer. The depth of backend knowledge I gained helped me crack my interviews.",
-            rating: 5,
-            icon: Code,
-            color: "bg-blue-100 text-blue-600"
-        },
-        {
-            id: 2,
-            name: "David Wilson",
-            role: "Frontend Dev @ Netflix",
-            review: "React & Node.js ecosystem concepts were explained perfectly. Building real projects made all the difference.",
-            rating: 5,
-            icon: Code,
-            color: "bg-indigo-100 text-indigo-600"
-        },
-        {
-            id: 3,
-            name: "Priya Patel",
-            role: "Data Analyst @ Microsoft",
-            review: "SQL and Python modules were fantastic. I pivoted from a non-tech background easily.",
-            rating: 5,
-            icon: Database,
-            color: "bg-green-100 text-green-600"
-        },
-        {
-            id: 4,
-            name: "James Rodriguez",
-            role: "Mobile Dev @ Uber",
-            review: "Flutter roadmap was precise. Published my first app within 2 months of joining.",
-            rating: 4,
-            icon: Code,
-            color: "bg-orange-100 text-orange-600"
-        }
-    ];
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reviews?isApproved=true`);
+                const allReviews = res.data.data;
 
-    // 2nd Row Data (Design/Management focus)
-    const reviewsRow2 = [
-        {
-            id: 5,
-            name: "Emily Davis",
-            role: "UX Designer @ Airbnb",
-            review: "Skill Up Academy's design critique sessions were brutal but necessary. They shaped my design thinking.",
-            rating: 5,
-            icon: Palette,
-            color: "bg-pink-100 text-pink-600"
-        },
-        {
-            id: 6,
-            name: "Michael Chen",
-            role: "Product Manager @ Amazon",
-            review: "The logic building and system design aspects helped me transition into Product Management seamlessly.",
-            rating: 5,
-            icon: TrendingUp,
-            color: "bg-yellow-100 text-yellow-600"
-        },
-        {
-            id: 7,
-            name: "Anita Roy",
-            role: "Marketing Head @ Zomato",
-            review: "Digital marketing strategies taught here are current and very effective. ROI focused learning.",
-            rating: 5,
-            icon: TrendingUp,
-            color: "bg-red-100 text-red-600"
-        },
-        {
-            id: 8,
-            name: "Karthik S",
-            role: "Full Stack @ Swiggy",
-            review: "Best investment for my career. The placement assistance team really works hard for you.",
-            rating: 5,
-            icon: Code,
-            color: "bg-indigo-100 text-indigo-600"
-        }
-    ];
+                // Process reviews to add UI specific props (icon, color, image fallback)
+                const processedReviews = allReviews.map((review, index) => {
+                    // Cyclic assignment of metadata for visual variety
+                    const meta = getReviewMetadata(index);
+                    return {
+                        id: review._id,
+                        name: review.studentName,
+                        role: review.role,
+                        review: review.reviewText,
+                        rating: review.rating,
+                        icon: meta.icon,
+                        color: meta.color,
+                        image: review.studentImage && review.studentImage !== 'no-photo.jpg' ? review.studentImage : meta.image
+                    };
+                });
+
+                // Split into two rows
+                const midpoint = Math.ceil(processedReviews.length / 2);
+                setReviews({
+                    row1: processedReviews.slice(0, midpoint),
+                    row2: processedReviews.slice(midpoint)
+                });
+                setLoading(false);
+            } catch (err) {
+                console.error("Failed to fetch reviews", err);
+                setLoading(false);
+            }
+        };
+
+        fetchReviews();
+    }, []);
+
+    // Helper to get consistent random-like UI data
+    const getReviewMetadata = (index) => {
+        const icons = [TrendingUp, CircleDollarSign, PieChart, BarChart, Briefcase, Calculator, LineChart];
+        const colors = [
+            "bg-blue-100 text-blue-600",
+            "bg-indigo-100 text-indigo-600",
+            "bg-green-100 text-green-600",
+            "bg-orange-100 text-orange-600",
+            "bg-primary-100 text-primary-600",
+            "bg-accent-100 text-accent-600",
+            "bg-primary-50 text-primary-600"
+        ];
+        const images = [Img01, Img02, Img04, Img06];
+
+        return {
+            icon: icons[index % icons.length],
+            color: colors[index % colors.length],
+            image: images[index % images.length]
+        };
+    };
 
     // Base settings for the "Marquee" effect
     const baseSettings = {
@@ -157,18 +145,22 @@ const ReviewsSection = () => {
                             </div>
                         </div>
 
-                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
+                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4 line-clamp-5">
                             "{data.review}"
                         </p>
                     </div>
 
                     <div className="flex items-center gap-3 border-t border-gray-50 pt-4 mt-auto">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-500 font-bold text-xs">
-                            {data.name.charAt(0)}
+                        <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
+                            <img
+                                src={data.image}
+                                alt={data.name}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                         <div>
                             <h4 className="font-bold text-gray-900 text-sm">{data.name}</h4>
-                            <p className="text-xs text-indigo-600 font-medium">{data.role}</p>
+                            <p className="text-xs text-primary-600 font-medium">{data.role}</p>
                         </div>
                     </div>
                 </div>
@@ -176,14 +168,22 @@ const ReviewsSection = () => {
         );
     };
 
+    if (loading) {
+        return <div className="py-20 text-center text-gray-400">Loading reviews...</div>;
+    }
+
+    if (reviews.row1.length === 0 && reviews.row2.length === 0) {
+        return null; // Or show a default message
+    }
+
     return (
         <section className="py-8 bg-gray-50 overflow-hidden">
             <div className="container mx-auto px-6 mb-16 text-center">
-                <span className="inline-block py-1 px-3 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold tracking-widest uppercase mb-4">
+                <span className="inline-block py-1 px-3 rounded-full bg-primary-100 text-primary-600 text-xs font-bold tracking-widest uppercase mb-4">
                     Wall of Love
                 </span>
                 <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                    Trusted by <span className="text-indigo-600">Thousands</span>
+                    Trusted by <span className="text-primary-600">Thousands</span>
                 </h2>
                 <p className="text-gray-500 text-lg max-w-2xl mx-auto">
                     Join the community of developers, designers, and managers who have transformed their careers with us.
@@ -192,24 +192,28 @@ const ReviewsSection = () => {
 
             <div className="space-y-8 container mx-auto">
                 {/* Row 1 - Left Loop */}
-                <div className="cursor-grab active:cursor-grabbing">
-                    <Slider key={`row1-${slidesToShow}`} {...settingsRow1}>
-                        {reviewsRow1.map(review => (
-                            <ReviewCard key={review.id} data={review} />
-                        ))}
-                    </Slider>
-                </div>
+                {reviews.row1.length > 0 && (
+                    <div className="cursor-grab active:cursor-grabbing">
+                        <Slider key={`row1-${slidesToShow}`} {...settingsRow1}>
+                            {reviews.row1.map(review => (
+                                <ReviewCard key={review.id} data={review} />
+                            ))}
+                        </Slider>
+                    </div>
+                )}
 
                 {/* Row 2 - Right Loop */}
-                <div className="cursor-grab active:cursor-grabbing" dir="rtl">
-                    <Slider key={`row2-${slidesToShow}`} {...settingsRow2}>
-                        {reviewsRow2.map(review => (
-                            <div key={review.id} dir="ltr"> {/* Reset direction for text readability inside card */}
-                                <ReviewCard data={review} />
-                            </div>
-                        ))}
-                    </Slider>
-                </div>
+                {reviews.row2.length > 0 && (
+                    <div className="cursor-grab active:cursor-grabbing" dir="rtl">
+                        <Slider key={`row2-${slidesToShow}`} {...settingsRow2}>
+                            {reviews.row2.map(review => (
+                                <div key={review.id} dir="ltr"> {/* Reset direction for text readability inside card */}
+                                    <ReviewCard data={review} />
+                                </div>
+                            ))}
+                        </Slider>
+                    </div>
+                )}
             </div>
         </section>
     );

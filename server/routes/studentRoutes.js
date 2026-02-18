@@ -7,6 +7,10 @@ const { sendEmail } = require('../utils/emailService');
 const { studentRegistrationTemplate, resetPasswordTemplate } = require('../templates/emailTemplates');
 const crypto = require('crypto');
 const { getStudentDashboardStats, getLeaderboard } = require('../controllers/dashboardController');
+const Course = require('../models/Course');
+const Module = require('../models/Module');
+const Topic = require('../models/Topic');
+const Progress = require('../models/Progress');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
@@ -426,6 +430,88 @@ router.get('/:id', async (req, res) => {
     } catch (err) {
         console.error('Error fetching student:', err);
         res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// @route   GET /api/student/progress/stats/:studentId
+// @desc    Get Student Course Progress Stats (For Job Eligibility)
+// @access  Public (or protected if middleware added)
+router.get('/progress/stats/:studentId', async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        const student = await Student.findById(studentId);
+
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+
+        // Check Enrollment
+        if (!student.courseName) {
+            return res.json({ 
+                success: true, 
+                stats: { 
+                    enrolled: false, 
+                    completionPercentage: 0 
+                } 
+            });
+        }
+
+        // Find the Course - Try Exact Match First (Like Trainer Portal)
+        let course = await Course.findOne({ title: student.courseName });
+        
+        // Fallback to Regex if Exact Match Fails (Case Insensitive)
+        if (!course) {
+             course = await Course.findOne({ 
+                title: { $regex: new RegExp(`^${student.courseName}$`, 'i') } 
+            });
+        }
+
+        if (!course) {
+             console.log(`Course not found for name: "${student.courseName}"`);
+             return res.json({ 
+                success: true, 
+                stats: { 
+                    enrolled: false, 
+                    completionPercentage: 0 
+                } 
+            });
+        }
+
+        // Calculate Total Topics for this Course
+        const modules = await Module.find({ courseId: course._id }).select('_id');
+        const moduleIds = modules.map(m => m._id);
+        const totalTopics = await Topic.countDocuments({ moduleId: { $in: moduleIds } });
+
+        // Calculate Completed Topics for this Student in this Course
+        const completedTopics = await Progress.countDocuments({ 
+            studentId: student._id, 
+            courseId: course._id, 
+            completed: true 
+        });
+
+        // Calculate Percentage
+        let percentage = 0;
+        if (totalTopics > 0) {
+            percentage = Math.round((completedTopics / totalTopics) * 100);
+        }
+        
+        // Cap at 100
+        percentage = Math.min(percentage, 100);
+
+        console.log(`Stats for ${student.name}: Course "${course.title}", Progress ${percentage}% (${completedTopics}/${totalTopics})`);
+
+        res.json({
+            success: true,
+            stats: {
+                enrolled: true,
+                completionPercentage: percentage,
+                courseName: course.title
+            }
+        });
+
+    } catch (err) {
+        console.error("Error calculating progress stats:", err);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 

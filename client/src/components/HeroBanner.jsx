@@ -1,19 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Play, Star, CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowRight, Play, CheckCircle, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import BookDemoModal from './BookDemoModal';
+import { useSettings } from '../context/SettingsContext';
+import img01 from '../assets/01T.png';
+import img02 from '../assets/02T.png';
+import img03 from '../assets/03T.png';
+import img04 from '../assets/04T.png';
+import img05 from '../assets/05.jpeg';
+import img06 from '../assets/06T.png';
+import googleLogo from '../assets/googleLogo.png';
+
 
 const HeroBanner = () => {
+    const { getContactInfo } = useSettings();
+    const phone = getContactInfo('phone') || '+919963624087';
+
     // Default hardcoded banners as fallback
     const defaultBanners = [
-        { fileUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80", resourceType: 'image', _id: 'd1' },
-        { fileUrl: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80", resourceType: 'image', _id: 'd2' },
-        { fileUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80", resourceType: 'image', _id: 'd3' }
+        { fileUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1", title: "Alex Johnson", description: "Placed at Google", _id: 'd1' },
+        { fileUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1", title: "Sarah Smith", description: "Works as SDE-II", _id: 'd2' },
+        { fileUrl: "https://images.unsplash.com/photo-1556157382-97eda2d62296?ixlib=rb-1.2.1", title: "Michael Brown", description: "Data Scientist", _id: 'd3' },
+        { fileUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-1.2.1", title: "Emily Davis", description: "Product Manager", _id: 'd4' },
+        { fileUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-1.2.1", title: "James Wilson", description: "Full Stack Dev", _id: 'd5' }
     ];
 
     const [banners, setBanners] = useState(defaultBanners);
-    const [current, setCurrent] = useState(0);
+    const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchBanners = async () => {
@@ -34,176 +52,193 @@ const HeroBanner = () => {
         fetchBanners();
     }, []);
 
-    // Reset current index when banners change to prevent out-of-bounds access
-    useEffect(() => {
-        setCurrent(0);
-    }, [banners]);
+    const [slidesToShow, setSlidesToShow] = useState(3);
 
     useEffect(() => {
-        if (banners.length <= 1) return; // Don't cycle if only 1 banner
-        const timer = setInterval(() => {
-            setCurrent(prev => (prev + 1) % banners.length);
-        }, 5000); // 5 seconds per slide
-        return () => clearInterval(timer);
-    }, [banners.length]);
+        const handleResize = () => {
+            const width = window.innerWidth;
+            if (width < 768) {
+                setSlidesToShow(1);
+            } else if (width < 1280) { // adjusted breakpoint for better fit
+                setSlidesToShow(2);
+            } else {
+                setSlidesToShow(3);
+            }
+        };
 
-    const currentBanner = banners[current];
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
-    // Safety guard
-    if (!currentBanner) return null;
+    const settings = {
+        dots: false,
+        infinite: true,
+        speed: 500,
+        slidesToShow: slidesToShow,
+        slidesToScroll: 1,
+        autoplay: true,
+        autoplaySpeed: 3000,
+        arrows: false, // Match usage or keep false as per design
+        centerMode: window.innerWidth < 768, // Add center mode for mobile for better preview
+        centerPadding: window.innerWidth < 768 ? '40px' : '0px',
+    };
 
     return (
-        <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden pt-20 mx-auto px-4 md:px-12 lg:px-24">
+        <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-primary-100 via-white to-gray-50 overflow-hidden pt-[32%] pb-12 md:pt-[10%] mx-auto px-4 md:px-12 lg:px-24">
 
             {/* Light Grid Background */}
             <div className="absolute inset-0 pointer-events-none" style={{
-                backgroundImage: `linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px)`,
+                backgroundImage: `linear-gradient(rgba(8, 131, 149, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(8, 131, 149, 0.05) 1px, transparent 1px)`,
                 backgroundSize: '50px 50px',
                 maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)',
                 WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)'
             }}></div>
 
             {/* Background Blobs */}
-            <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[800px] h-[800px] bg-indigo-200/30 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-purple-200/30 rounded-full blur-3xl" />
+            <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-primary-100/20 rounded-full blur-3xl opacity-50 md:opacity-100" />
+            <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-accent-50 rounded-full blur-3xl opacity-50 md:opacity-100" />
 
-            <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+            <div className="container mx-auto px-4 md:px-6 relative z-10 grid lg:grid-cols-2 gap-12 lg:gap-12 items-center">
 
                 {/* Text Content (Left) */}
-                <div className="max-w-2xl">
+                <div className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm font-semibold mb-6">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-50 text-accent-700 text-xs md:text-sm font-semibold mb-6">
                             <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0d9488] opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#0d9488]"></span>
                             </span>
                             New Batch Starting Soon
                         </div>
 
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-[1.1] mb-6">
-                            Unlock Your <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
-                                Global Potential
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.1] mb-6">
+                            Launch your Career in <br className="hidden md:block" />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-[#E2D6FE] block md:inline mt-2 md:mt-0">
+                                Core Finance
                             </span>
                         </h1>
 
-                        <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                        <p className="text-base md:text-xl text-gray-600 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
                             Stop learning outdated theory. Get hands-on experience with real-world projects and mentorship from engineers at top companies.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-10">
-                            <Link
-                                to="/courses"
-                                className="px-8 py-4 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all flex items-center gap-2 shadow-xl shadow-gray-200"
+                        <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-10">
+                            <button
+                                onClick={() => setIsDemoModalOpen(true)}
+                                className="w-full sm:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-gray-200"
                             >
-                                Browse Courses <ArrowRight size={20} />
-                            </Link>
-                            <Link
-                                to="/about"
-                                className="px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center gap-2"
+                                Book your Slot <ArrowRight size={20} />
+                            </button>
+                            <a
+                                href={`tel:${phone}`}
+                                className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                             >
-                                <Play size={20} fill="currentColor" className="text-gray-900" />
-                                How it works
-                            </Link>
+                                <Phone size={20} className="text-gray-900" />
+                                Call Now
+                            </a>
                         </div>
 
-                        <div className="flex items-center gap-8 text-sm font-medium text-gray-500">
+                        {/* Trust Section */}
+                        <div className="flex flex-col gap-4 border-t border-gray-100 pt-8 items-center lg:items-start">
                             <div className="flex items-center gap-2">
-                                <CheckCircle size={18} className="text-green-500" /> 100% Job Assist
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <CheckCircle size={18} className="text-green-500" /> Live Mentorship
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <CheckCircle size={18} className="text-green-500" /> Verified Certs
+                                <div className="flex -space-x-2">
+                                    {[img01, img02, img03, img04, img05, img06].map((img, index) => (
+                                        <div key={index} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden">
+                                            <img src={img} alt={`User ${index + 1}`} className="w-full h-full object-cover" />
+                                        </div>
+                                    ))}
+                                    <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-600">
+                                        2k+
+                                    </div>
+                                </div>
+                                <div className="text-sm text-left">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <img
+                                            src={googleLogo}
+                                            alt="Google"
+                                            className="w-18 h-4"
+                                        />
+                                        <span className="text-gray-900 font-bold">4.9/5</span>
+                                        <div className="flex items-center text-yellow-400 text-xs">
+                                            {[1, 2, 3, 4, 5].map(s => (
+                                                <svg key={s} className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                                </svg>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-500 text-xs">Rated by Students</p>
+                                </div>
                             </div>
                         </div>
+
                     </motion.div>
                 </div>
 
-                {/* Visual Content (Right) */}
-                <div className="relative hidden lg:block h-[600px]">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8 }}
-                        className="relative h-full w-full"
-                    >
-                        {/* Main Image Slider Shape */}
-                        <div className="absolute top-10 right-10 w-4/5 h-4/5 bg-gray-900 rounded-[3rem] overflow-hidden shadow-2xl rotate-3 transition-transform hover:rotate-0 duration-500">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={currentBanner._id || current}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.8 }}
-                                    className="w-full h-full"
-                                >
-                                    {currentBanner.resourceType === 'video' ? (
-                                        <video
-                                            src={currentBanner.fileUrl}
-                                            className="w-full h-full object-cover"
-                                            autoPlay
-                                            muted
-                                            loop
-                                            playsInline
-                                        />
-                                    ) : (
-                                        <img
-                                            src={currentBanner.fileUrl}
-                                            alt="Hero"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    )}
-                                </motion.div>
-                            </AnimatePresence>
-                            {/* Overlay Gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent pointer-events-none"></div>
-                        </div>
+                {/* Visual Content (Right) - Student Carousel */}
+                <div className="relative h-full w-full min-h-[400px] md:min-h-[500px] flex items-center justify-center mt-8 lg:mt-0">
+                    <div className="w-full max-w-sm md:max-w-lg lg:max-w-xl">
+                        <Slider key={slidesToShow} {...settings}>
+                            {banners.map((item) => (
+                                <div key={item._id} className="px-2 pb-8 pt-4 cursor-grab active:cursor-grabbing">
+                                    <div className="relative group overflow-hidden rounded-[12px] transition-all duration-300 h-[550px] md:h-[400px] flex flex-col bg-white  mx-auto max-w-[280px] md:max-w-full">
 
-                        {/* Floating Badge 1 */}
-                        <motion.div
-                            initial={{ x: 50, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                            className="absolute top-20 right-0 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-3 z-20"
-                        >
-                            <div className="bg-yellow-100 p-2 rounded-lg text-yellow-600">
-                                <Star fill="currentColor" size={24} />
-                            </div>
-                            <div>
-                                <p className="font-bold text-gray-900">4.9/5 Rating</p>
-                                <p className="text-xs text-gray-500">Student Reviews</p>
-                            </div>
-                        </motion.div>
+                                        {/* Top Content Area (approx 35%) - clean white bg */}
+                                        <div className="relative h-[35%] p-4 md:p-6 flex flex-col justify-between z-20 bg-white">
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="inline-block px-1 py-1 bg-accent-50 text-accent-700 text-[8px] font-bold uppercase tracking-wider rounded-md border border-accent-200 mb-2">
+                                                    Success Story
+                                                </span>
+                                            </div>
 
-                        {/* Floating Badge 2 */}
-                        <motion.div
-                            initial={{ y: 50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.7 }}
-                            className="absolute bottom-20 left-10 bg-white p-4 pr-8 rounded-2xl shadow-xl border border-gray-100 flex -space-x-4 items-center z-20"
-                        >
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
-                                    <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" />
+                                            <div className="">
+                                                <p className="text-gray-500 text-[10px] font-medium line-clamp-3 md:line-clamp-4">
+                                                    {item.description || "Placed at top firms"}
+                                                </p>
+                                                <p className="text-gray-900 text-[12px] font-bold truncate mt-1">Placed at:</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Bottom Image Area (approx 65%) - Vibrant Gradient Background */}
+                                        <div className="relative h-[100%] md:h-[65%] w-full flex items-end justify-center z-10 bg-gradient-to-t from-primary-600 to-transparent overflow-hidden">
+
+                                            {/* Title Overlay */}
+                                            <div className="absolute bottom-4 left-0 right-0 px-4 md:px-6 z-20 text-start">
+                                                <h3 className="text-[12px] md:text-sm font-bold text-white tracking-wide drop-shadow-lg leading-tight truncate">
+                                                    {item.title || "Student Name"}
+                                                </h3>
+                                            </div>
+
+                                            {/* Abstract decorative shape for interest */}
+                                            <div className="absolute top-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/10 to-transparent"></div>
+
+                                            <img
+                                                src={item.fileUrl}
+                                                alt={item.title || "Student Success"}
+                                                className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                                            />
+
+                                            {/* Bottom overlay for depth */}
+                                            <div className="absolute bottom-0 inset-x-0 h-1/3 bg-gradient-to-t from-primary-900/60 to-transparent"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
-                            <div className="ml-6 pl-2">
-                                <p className="font-bold text-gray-900">10k+ Students</p>
-                                <p className="text-xs text-gray-500">Improving skills</p>
-                            </div>
-                        </motion.div>
+                        </Slider>
+                    </div>
 
-                    </motion.div>
+                    {/* Decorative Background Elements behind carousel */}
+                    <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[80%] bg-gradient-to-tr from-primary-200/20 to-accent-200/20 rounded-[3rem] rotate-6 blur-2xl hidden md:block"></div>
                 </div>
 
             </div>
+
+            <BookDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
         </section>
     );
 };

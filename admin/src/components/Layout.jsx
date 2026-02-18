@@ -72,7 +72,8 @@ const Layout = () => {
     { name: 'Banners', path: '/banners', icon: Image },
     { name: 'Courses', path: '/courses', icon: BookOpen }, // Re-verified
     { name: 'Inquiries', path: '/inquiries', icon: MessageSquare, badge: inquiryCount > 0 ? inquiryCount : null },
-    { name: 'Jobs', path: '/jobs', icon: Briefcase },
+    { name: 'Client Jobs', path: '/jobs', icon: Briefcase },
+    { name: 'Student Jobs', path: '/student-jobs', icon: Briefcase },
     { name: 'Applications', path: '/applications', icon: FileText },
     { name: 'Attendance Scanner', path: '/attendance/qr-scanner', icon: QrCode },
     { name: 'Att. History', path: '/attendance/history', icon: Calendar },
@@ -80,6 +81,8 @@ const Layout = () => {
     { name: 'Reviews', path: '/reviews', icon: Users },
     { name: 'Settings', path: '/settings', icon: Settings },
     { name: 'Trainers', path: '/trainers', icon: Users },
+    { name: 'Meetings', path: '/meetings', icon: Calendar }, // Using Calendar or Video
+    { name: 'Manage Demos', path: '/demos', icon: MessageSquare },
     { name: 'Test Bank', path: '/tests', icon: FileText },
   ];
 

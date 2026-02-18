@@ -15,6 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import ResetPassword from './pages/ResetPassword';
 import CoursePlayer from './pages/CoursePlayer';
+import JobPortal from './pages/JobPortal';
 
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
           <Route path="/typing-practice" element={<TypingPractice />} />
           <Route path="/mock-interview" element={<MockInterview />} />
           <Route path="/my-interview-history" element={<InterviewHistory />} />
+          <Route path="/jobs" element={<JobPortal />} />
         </Route>
 
         {/* Standalone Protected Route for Course Player (Full Width) */}

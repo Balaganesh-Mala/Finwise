@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Users, Zap, ArrowRight, Star } from 'lucide-react';
+import { Target, Users, Zap, ArrowRight, Star, Linkedin, Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const AboutSection = () => {
     // Default Images
-    const defaultImage1 = "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80";
-    const defaultImage2 = "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80";
+    const defaultImage1 = "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80"; // Office meeting
+    const defaultImage2 = "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"; // Finance chart
 
     const [images, setImages] = useState({ img1: defaultImage1, img2: defaultImage2 });
 
@@ -31,13 +31,13 @@ const AboutSection = () => {
     }, []);
 
     return (
-        <section className="py-24 bg-gray-50 relative overflow-hidden p-30 mx-auto px-4 md:px-12 lg:px-24">
+        <section className="py-24 bg-gray-50 relative overflow-hidden">
             {/* Abstract Shapes */}
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-96 h-96 bg-indigo-200 rounded-full blur-[100px] opacity-50" />
-            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-96 h-96 bg-violet-200 rounded-full blur-[100px] opacity-50" />
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3  w-96 h-96 bg-indigo-200 rounded-full blur-[100px] opacity-50" />
+            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-96 h-96 bg-accent-200 rounded-full blur-[100px] opacity-50" />
 
-            <div className="container mx-auto px-8 md:px-12 relative z-10">
-                <div className="grid lg:grid-cols-2 gap-20 items-center">
+            <div className="max-w-[90%] mx-auto px-6 lg:px-12 relative z-10">
+                <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
 
                     {/* Content Side */}
                     <div className="order-2 lg:order-1">
@@ -47,28 +47,28 @@ const AboutSection = () => {
                             viewport={{ once: true }}
                             transition={{ duration: 0.6 }}
                         >
-                            <div className="flex items-center gap-4 mb-8">
+                            <div className="flex items-center gap-4 mb-6">
                                 <span className="h-0.5 w-12 bg-indigo-600 rounded-full"></span>
-                                <span className="text-indigo-600 font-bold uppercase tracking-widest text-sm">Who We Are</span>
+                                <span className="text-indigo-600 font-bold uppercase tracking-widest text-sm">About Finwise</span>
                             </div>
 
-                            <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-8 leading-tight">
-                                We Build The <br />
+                            <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
+                                Empowering <br />
                                 <span className="relative inline-block mt-2">
-                                    <span className="relative z-10 text-indigo-600">Workforce of Tomorrow</span>
-                                    <span className="absolute bottom-2 left-0 w-full h-3 bg-indigo-100 -z-10 bg-opacity-60 skew-x-12"></span>
+                                    <span className="relative z-10 text-indigo-600">Financial Careers</span>
+                                    <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-100 -z-10 bg-opacity-60 skew-x-12"></span>
                                 </span>
                             </h2>
 
-                            <p className="text-xl text-gray-600 mb-10 leading-relaxed font-light">
-                                Skill Up Academy isn't just an institute; it's a career launchpad. We replace traditional rote learning with immersive, project-based experiences that simulate the real corporate world.
+                            <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                                <strong>Finwise Career Solutions</strong> is a premier institute in Hyderabad dedicated to transforming commerce graduates into industry-ready professionals. We bridge the gap between academic theory and corporate requirements through practical training in <strong>Global Accounting, Investment Banking, and Taxation</strong>.
                             </p>
 
-                            <div className="space-y-8 mb-12">
+                            <div className="space-y-6 mb-10">
                                 {[
-                                    { title: "Visionary Curriculum", desc: "Updated weekly to match tech trends.", icon: Target },
-                                    { title: "Elite Mentorship", desc: "Learn directly from Senior Engineers.", icon: Users },
-                                    { title: "Rapid Placement", desc: "Dedicated hiring partners network.", icon: Zap }
+                                    { title: "Expert Mentorship", desc: "Learn from veterans in Big 4 and Top Tier Banks.", icon: Users },
+                                    { title: "Practical Exposure", desc: "Hands-on training with real-world case studies.", icon: Target },
+                                    { title: "Career Launchpad", desc: "Specialized placement support for MNCs.", icon: Zap }
                                 ].map((item, idx) => (
                                     <motion.div
                                         key={idx}
@@ -76,115 +76,105 @@ const AboutSection = () => {
                                         whileInView={{ opacity: 1, x: 0 }}
                                         viewport={{ once: true }}
                                         transition={{ delay: 0.2 + (idx * 0.1) }}
-                                        className="flex items-start gap-6 p-6 rounded-2xl hover:bg-white hover:shadow-xl transition-all border border-transparent hover:border-gray-50 bg-white/50 backdrop-blur-sm"
+                                        className="flex items-start gap-4 p-4 rounded-xl hover:bg-white hover:shadow-lg transition-all border border-transparent hover:border-gray-100 bg-white/50 backdrop-blur-sm"
                                     >
-                                        <div className="bg-indigo-600 text-white p-4 rounded-xl shadow-lg shadow-indigo-200 shrink-0">
-                                            <item.icon size={24} />
+                                        <div className="bg-indigo-100 text-indigo-600 p-3 rounded-lg shrink-0">
+                                            <item.icon size={22} />
                                         </div>
                                         <div>
-                                            <h4 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h4>
-                                            <p className="text-gray-500 leading-relaxed">{item.desc}</p>
+                                            <h4 className="text-lg font-bold text-gray-900 mb-1">{item.title}</h4>
+                                            <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
                                         </div>
                                     </motion.div>
                                 ))}
                             </div>
 
-                            <Link
-                                to="/about"
-                                className="inline-flex items-center gap-3 text-indigo-600 font-bold text-lg hover:gap-5 transition-all group px-6"
-                            >
-                                Read our full story <ArrowRight className="group-hover:text-indigo-700 w-6 h-6" />
-                            </Link>
+                            <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+                                <Link
+                                    to="/about"
+                                    className="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                                >
+                                    Read Our Story <ArrowRight size={18} />
+                                </Link>
+                                <div className="flex gap-4">
+                                    <a
+                                        href="https://www.linkedin.com/company/finwise-career-solutions/?originalSubdomain=in"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-3 bg-white rounded-full text-blue-700 hover:bg-blue-50 hover:scale-110 transition-all shadow-sm border border-gray-100"
+                                    >
+                                        <Linkedin size={20} />
+                                    </a>
+                                    <a
+                                        href="https://www.instagram.com/finwisecareersolutions/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-3 bg-white rounded-full text-pink-600 hover:bg-pink-50 hover:scale-110 transition-all shadow-sm border border-gray-100"
+                                    >
+                                        <Instagram size={20} />
+                                    </a>
+                                </div>
+                            </div>
                         </motion.div>
                     </div>
 
                     {/* Visual Side */}
                     <div className="order-1 lg:order-2 py-10 lg:py-0">
-                        <div className="
-    relative 
-    grid gap-6
-    max-w-lg mx-auto
-    lg:block lg:max-w-none lg:h-[600px]
-  ">
+                        <div className="relative max-w-lg mx-auto lg:max-w-none lg:h-[600px]">
 
                             {/* Image 1 */}
                             <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.7 }}
-                                className="
-        relative
-        w-full
-        h-[360px]
-        rounded-[2rem]
-        overflow-hidden
-        shadow-2xl
-        border-8 border-white
-        lg:absolute lg:right-0 lg:top-0
-        lg:w-4/5 lg:h-4/5
-        z-10
-      "
+                                className="relative w-full h-[400px] lg:h-[480px] rounded-3xl overflow-hidden shadow-2xl border-4 border-white lg:absolute lg:right-0 lg:top-10 lg:w-4/5 z-10"
                             >
                                 <img
                                     src={images.img1}
-                                    alt="About Main"
-                                    className="w-full h-full object-cover"
+                                    alt="Finwise Training"
+                                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
                                 />
-                                <div className="absolute inset-0 bg-indigo-900/10 mix-blend-multiply"></div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                                <div className="absolute bottom-6 left-6 text-white">
+                                    <p className="font-bold text-lg">Excellence in Finance</p>
+                                    <p className="text-sm text-gray-200">Processing Future Leaders</p>
+                                </div>
                             </motion.div>
 
-                            {/* Image 2 */}
+                            {/* Image 2 - Floating Card */}
                             <motion.div
-                                initial={{ opacity: 0, x: -30 }}
-                                whileInView={{ opacity: 1, x: 0 }}
+                                initial={{ opacity: 0, x: -30, y: 30 }}
+                                whileInView={{ opacity: 1, x: 0, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ delay: 0.2, duration: 0.7 }}
-                                className="
-        relative
-        w-full
-        h-[220px]
-        rounded-[1.5rem]
-        overflow-hidden
-        shadow-xl
-        border-4 border-gray-100
-        lg:absolute lg:left-0 lg:bottom-0
-        lg:w-3/5 lg:h-1/2
-        z-20
-      "
+                                transition={{ delay: 0.3, duration: 0.7 }}
+                                className="hidden lg:block absolute left-0 bottom-20 w-64 h-40 rounded-2xl overflow-hidden shadow-xl border-4 border-white z-20 bg-white"
                             >
                                 <img
                                     src={images.img2}
-                                    alt="About Secondary"
+                                    alt="Analysis"
                                     className="w-full h-full object-cover"
                                 />
                             </motion.div>
 
-                            {/* Rating Badge */}
-                            <div className="
-      absolute
-      right-4 bottom-4
-      lg:right-12 lg:bottom-12
-      z-30
-      bg-white
-      px-4 py-3
-      rounded-2xl
-      shadow-xl
-      flex gap-1
-    ">
-                                {[1, 2, 3, 4, 5].map(i => (
-                                    <Star key={i} size={18} className="text-yellow-400 fill-current" />
-                                ))}
-                            </div>
+                            {/* Experience Badge */}
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                whileInView={{ scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                                className="absolute -top-6 right-6 lg:right-10 z-30 bg-white p-4 rounded-2xl shadow-xl flex flex-col items-center justify-center w-28 h-28 border border-gray-50"
+                            >
+                                <span className="text-4xl font-extrabold text-indigo-600">100%</span>
+                                <span className="text-xs font-semibold text-gray-500 text-center leading-tight">Placement<br />Assistance</span>
+                            </motion.div>
 
                         </div>
                     </div>
-
 
                 </div>
             </div>
         </section>
     );
 };
-
 export default AboutSection;

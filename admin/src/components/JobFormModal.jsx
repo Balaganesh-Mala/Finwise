@@ -3,7 +3,7 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const JobFormModal = ({ isOpen, onClose, jobToEdit, fetchJobs }) => {
+const JobFormModal = ({ isOpen, onClose, jobToEdit, fetchJobs, defaultIsStudentOnly }) => {
     const [formData, setFormData] = useState({
         title: '',
         company: '',
@@ -39,7 +39,8 @@ const JobFormModal = ({ isOpen, onClose, jobToEdit, fetchJobs }) => {
                 deadline: jobToEdit.deadline || '',
                 workingHours: jobToEdit.workingHours || '',
                 companyWebsite: jobToEdit.companyWebsite || '',
-                companyLinkedin: jobToEdit.companyLinkedin || ''
+                companyLinkedin: jobToEdit.companyLinkedin || '',
+                isStudentOnly: jobToEdit.isStudentOnly || false
             });
         } else {
             // Reset for new job
@@ -58,15 +59,17 @@ const JobFormModal = ({ isOpen, onClose, jobToEdit, fetchJobs }) => {
                 deadline: '',
                 workingHours: '',
                 companyWebsite: '',
-                companyLinkedin: ''
+                companyLinkedin: '',
+                isStudentOnly: defaultIsStudentOnly !== undefined ? defaultIsStudentOnly : false
             });
         }
-    }, [jobToEdit, isOpen]);
+    }, [jobToEdit, isOpen, defaultIsStudentOnly]);
 
     if (!isOpen) return null;
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        setFormData({ ...formData, [e.target.name]: value });
     };
 
     // Helper to generic list management
@@ -103,6 +106,8 @@ const JobFormModal = ({ isOpen, onClose, jobToEdit, fetchJobs }) => {
             data.append('type', formData.type);
             data.append('description', formData.description);
             data.append('salary', formData.salary);
+            console.log("Appending isStudentOnly:", formData.isStudentOnly, "Type:", typeof formData.isStudentOnly);
+            data.append('isStudentOnly', formData.isStudentOnly);
 
             if (formData.applyLink) data.append('applyLink', formData.applyLink);
             if (formData.deadline) data.append('deadline', formData.deadline);
@@ -201,6 +206,19 @@ const JobFormModal = ({ isOpen, onClose, jobToEdit, fetchJobs }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Company LinkedIn</label>
                             <input name="companyLinkedin" value={formData.companyLinkedin} onChange={handleChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" placeholder="https://linkedin.com/company/..." />
                         </div>
+                        <div className="flex items-center gap-2 mt-6">
+                            <input
+                                type="checkbox"
+                                id="isStudentOnly"
+                                name="isStudentOnly"
+                                checked={formData.isStudentOnly}
+                                onChange={(e) => setFormData({ ...formData, isStudentOnly: e.target.checked })}
+                                className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
+                            />
+                            <label htmlFor="isStudentOnly" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
+                                Student Only Job (Not visible on public website)
+                            </label>
+                        </div>
                     </div>
 
                     <div className="mb-6">
@@ -269,8 +287,8 @@ const JobFormModal = ({ isOpen, onClose, jobToEdit, fetchJobs }) => {
                         {loading ? 'Saving...' : jobToEdit ? 'Update Job' : 'Create Job'}
                     </button>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
