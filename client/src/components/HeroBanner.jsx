@@ -23,11 +23,11 @@ const HeroBanner = () => {
 
     // Default hardcoded banners as fallback
     const defaultBanners = [
-        { fileUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-1.2.1", title: "Alex Johnson", description: "Placed at Google", _id: 'd1' },
-        { fileUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1", title: "Sarah Smith", description: "Works as SDE-II", _id: 'd2' },
-        { fileUrl: "https://images.unsplash.com/photo-1556157382-97eda2d62296?ixlib=rb-1.2.1", title: "Michael Brown", description: "Data Scientist", _id: 'd3' },
-        { fileUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-1.2.1", title: "Emily Davis", description: "Product Manager", _id: 'd4' },
-        { fileUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-1.2.1", title: "James Wilson", description: "Full Stack Dev", _id: 'd5' }
+        { fileUrl: img01, title: "Alex Johnson", description: "Placed at Google", _id: 'd1' },
+        { fileUrl: img02, title: "Sarah Smith", description: "Works as SDE-II", _id: 'd2' },
+        { fileUrl: img03, title: "Michael Brown", description: "Data Scientist", _id: 'd3' },
+        { fileUrl: img04, title: "Emily Davis", description: "Product Manager", _id: 'd4' },
+        { fileUrl: img05, title: "James Wilson", description: "Full Stack Dev", _id: 'd5' }
     ];
 
     const [banners, setBanners] = useState(defaultBanners);

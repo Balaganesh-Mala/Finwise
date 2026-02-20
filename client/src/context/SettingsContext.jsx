@@ -7,13 +7,13 @@ export const useSettings = () => useContext(SettingsContext);
 
 export const SettingsProvider = ({ children }) => {
     const defaultSettings = {
-        siteTitle: 'Skill Up Academy',
+        siteTitle: 'Finwise',
         logoUrl: '',
         contact: {
             phone: '+91 9874563210',
             whatsapp: '1234567890',
-            email: 'info@jobreadyskills.com',
-            address: '123 Skills Ave, Tech City'
+            email: 'info@finwise.com',
+            address: 'Finwise Location'
         },
         socials: {
             facebook: '#',

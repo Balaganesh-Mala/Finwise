@@ -12,6 +12,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@supabase/supabase-js": "^2.90.1",
+    "@vapi-ai/web": "^2.5.2",
     "autoprefixer": "^10.4.15",
     "axios": "^1.13.2",
     "framer-motion": "^12.27.1",

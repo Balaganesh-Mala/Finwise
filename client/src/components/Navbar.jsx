@@ -12,7 +12,7 @@ const Navbar = () => {
   const { settings } = useSettings();
   const location = useLocation();
 
-  const siteTitle = settings?.siteTitle || 'Wonew';
+  const siteTitle = settings?.siteTitle || 'Finwise';
 
   const navLinks = [
     { name: 'Home', path: '/' },

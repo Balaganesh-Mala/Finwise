@@ -193,6 +193,7 @@ const Layout = () => {
         { icon: Code2, label: 'Playground', path: '/playground', accessKey: 'playground' },
         { icon: Keyboard, label: 'Typing Practice', path: '/typing-practice', accessKey: 'typingPractice' },
         { icon: Bot, label: 'AI Mock Interview', path: '/mock-interview', accessKey: 'aiMockInterview' },
+        { icon: Calendar, label: 'History', path: '/my-interview-history', accessKey: 'aiMockInterview' },
         { icon: User, label: 'Profile', path: '/profile', accessKey: 'profile' },
         { icon: Briefcase, label: 'Jobs', path: '/jobs', accessKey: 'dashboard' }, // Accessible to everyone who has dashboard access
         { icon: Settings, label: 'Settings', path: '/settings', accessKey: 'settings' },

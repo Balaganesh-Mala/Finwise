@@ -34,7 +34,9 @@ app.use(cors({
         'https://finwise-64g1.onrender.com',
         'https://jobready-q89p.onrender.com', // Student Portal Deployed
         process.env.CLIENT_URL,
-        process.env.ADMIN_URL
+        process.env.ADMIN_URL,
+        'https://vapi.ai',
+        'https://*.vapi.ai'
     ],
     credentials: true
 }));
@@ -63,6 +65,7 @@ app.use('/api/code', require('./routes/codeRoutes'));
 app.use('/api/qr', require('./routes/qrRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/typing', require('./routes/typingRoutes'));
+app.use('/api/voice', require('./routes/voiceRoutes'));
 app.use('/api/interview', require('./routes/interviewRoutes'));
 app.use('/api/trainer', require('./routes/trainerRoutes'));
 app.use('/api/admin/trainers', require('./routes/adminTrainerRoutes'));
