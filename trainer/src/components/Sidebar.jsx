@@ -3,8 +3,9 @@ import axios from 'axios';
 import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Calendar, BookOpen,
-    MessageSquare, User, TrendingUp, LogOut, QrCode
+    MessageSquare, User, TrendingUp, LogOut, QrCode, ClipboardList
 } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +32,9 @@ const Sidebar = ({ isOpen, onClose }) => {
         { name: 'Students', icon: Users, path: '/students' },
         { name: 'Attendance', icon: Users, path: '/attendance' },
         { name: 'Materials', icon: BookOpen, path: '/materials' },
+        { name: 'Submissions', icon: ClipboardList, path: '/submissions' },
         { name: 'Comments', icon: MessageSquare, path: '/comments' },
+
         { name: 'Analytics', icon: TrendingUp, path: '/analytics' },
         { name: 'My QR', icon: QrCode, path: '/my-qr' },
         { name: 'Profile', icon: User, path: '/profile' },

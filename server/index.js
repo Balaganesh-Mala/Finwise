@@ -73,6 +73,9 @@ app.use('/api/admin/tests', require('./routes/adminTestRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/admin/meetings', require('./routes/adminMeetingRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/batches', require('./routes/batchRoutes'));
+app.use('/api/topic-content', require('./routes/topicContentRoutes'));
+app.use('/api/drip', require('./routes/dripRoutes'));
 
 // Course Module Routes
 app.use('/api', require('./routes/moduleRoutes'));

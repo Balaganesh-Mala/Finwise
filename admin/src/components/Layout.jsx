@@ -18,8 +18,11 @@ import {
   Search,
   ChevronDown,
   QrCode,
-  Calendar
+  Calendar,
+  Layers,
+  ClipboardList
 } from 'lucide-react';
+
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -69,8 +72,9 @@ const Layout = () => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Students', path: '/students', icon: Users },
+    { name: 'Batches', path: '/batches', icon: Layers },
     { name: 'Banners', path: '/banners', icon: Image },
-    { name: 'Courses', path: '/courses', icon: BookOpen }, // Re-verified
+    { name: 'Courses', path: '/courses', icon: BookOpen },
     { name: 'Inquiries', path: '/inquiries', icon: MessageSquare, badge: inquiryCount > 0 ? inquiryCount : null },
     { name: 'Client Jobs', path: '/jobs', icon: Briefcase },
     { name: 'Student Jobs', path: '/student-jobs', icon: Briefcase },
@@ -81,10 +85,12 @@ const Layout = () => {
     { name: 'Reviews', path: '/reviews', icon: Users },
     { name: 'Settings', path: '/settings', icon: Settings },
     { name: 'Trainers', path: '/trainers', icon: Users },
-    { name: 'Meetings', path: '/meetings', icon: Calendar }, // Using Calendar or Video
+    { name: 'Meetings', path: '/meetings', icon: Calendar },
     { name: 'Manage Demos', path: '/demos', icon: MessageSquare },
     { name: 'Test Bank', path: '/tests', icon: FileText },
+    { name: 'Submissions', path: '/submissions', icon: ClipboardList },
   ];
+
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans">

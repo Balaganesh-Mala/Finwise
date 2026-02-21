@@ -18,6 +18,11 @@ const typingProgressSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  errorMap: {
+    type: Map,
+    of: Number,
+    default: {}  // { a: 3, s: 1, k: 12, ... }
+  },
   mode: {
     type: String,
     enum: ['time', 'words', 'quote', 'custom'],

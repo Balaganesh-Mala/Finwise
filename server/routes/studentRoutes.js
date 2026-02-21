@@ -6,7 +6,7 @@ const Setting = require('../models/Setting'); // Import Settings Model
 const { sendEmail } = require('../utils/emailService');
 const { studentRegistrationTemplate, resetPasswordTemplate } = require('../templates/emailTemplates');
 const crypto = require('crypto');
-const { getStudentDashboardStats, getLeaderboard } = require('../controllers/dashboardController');
+const { getStudentDashboardStats, getLeaderboard, getStudentActivity } = require('../controllers/dashboardController');
 const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Topic = require('../models/Topic');
@@ -418,6 +418,11 @@ router.delete('/:id', async (req, res) => {
 // @desc    Get student dashboard stats
 // @access  Student
 router.get('/dashboard/:studentId', getStudentDashboardStats);
+
+// @route   GET /api/students/activity/:studentId?range=week|month|year
+// @desc    Get time-range learning activity for dashboard chart
+// @access  Student
+router.get('/activity/:studentId', getStudentActivity);
 
 // @route   GET /api/students/:id
 // @desc    Get single student by ID

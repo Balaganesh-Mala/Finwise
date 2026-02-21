@@ -27,6 +27,10 @@ import StudentJobs from './pages/StudentJobs';
 import Meetings from './pages/Meetings';
 import ManageDemos from './pages/ManageDemos';
 import ManageReviews from './pages/ManageReviews';
+import ManageBatches from './pages/ManageBatches';
+import BatchStudents from './pages/BatchStudents';
+import StudentSubmissions from './pages/StudentSubmissions';
+
 
 import { Toaster } from 'react-hot-toast';
 
@@ -69,6 +73,10 @@ function App() {
           <Route path="tests" element={<ManageTests />} />
           <Route path="demos" element={<ManageDemos />} />
           <Route path="reviews" element={<ManageReviews />} />
+          <Route path="batches" element={<ManageBatches />} />
+          <Route path="batches/:batchId/students" element={<BatchStudents />} />
+          <Route path="submissions" element={<StudentSubmissions />} />
+
           {/* Add more routes here as we migrate */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

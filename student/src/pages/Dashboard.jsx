@@ -300,10 +300,16 @@ const Dashboard = () => {
     });
     const [recentActivity, setRecentActivity] = useState([]);
     const [weeklyActivity, setWeeklyActivity] = useState([]);
-    const [leaderboard, setLeaderboard] = useState([]); // Leaderboard State
+    const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showRankCard, setShowRankCard] = useState(false);
     const [settings, setSettings] = useState(null);
+
+    // Time-range activity chart state
+    const [activityRange, setActivityRange] = useState('week'); // 'week' | 'month' | 'year'
+    const [activityChartData, setActivityChartData] = useState([]);
+    const [activitySummary, setActivitySummary] = useState({ totalHours: 0, topicCount: 0, activeDays: 0 });
+    const [activityLoading, setActivityLoading] = useState(false);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -364,6 +370,34 @@ const Dashboard = () => {
 
         fetchDashboardData();
     }, []);
+
+    // Fetch activity chart data when range tab changes
+    const fetchActivity = async (range, studentId) => {
+        if (!studentId) return;
+        setActivityLoading(true);
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/students/activity/${studentId}?range=${range}`);
+            if (res.data.success) {
+                setActivityChartData(res.data.chartData);
+                setActivitySummary(res.data.summary);
+            }
+        } catch (err) {
+            console.error('Activity fetch error:', err);
+        } finally {
+            setActivityLoading(false);
+        }
+    };
+
+    // Load activity whenever range changes
+    useEffect(() => {
+        const storedUser = localStorage.getItem('studentUser');
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            if (parsedUser._id) {
+                fetchActivity(activityRange, parsedUser._id);
+            }
+        }
+    }, [activityRange]);
 
     // Mock Data for Charts (Keep until endpoint provides chart data)
     const progressData = [
@@ -437,20 +471,78 @@ const Dashboard = () => {
             {/* Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
 
-                {/* Activity Chart (Restored) */}
+                {/* Activity Chart with Time-Range Tabs */}
                 <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                    <h2 className="text-lg font-bold text-gray-800 mb-6">Weekly Learning Activity</h2>
-                    <div style={{ width: '100%', height: 300 }}>
+                    {/* Header: title + tabs */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <h2 className="text-lg font-bold text-gray-800">Learning Activity</h2>
+                        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+                            {[{ key: 'week', label: 'Week' }, { key: 'month', label: 'Month' }, { key: 'year', label: 'Year' }].map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActivityRange(tab.key)}
+                                    className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-all ${activityRange === tab.key
+                                            ? 'bg-white text-indigo-600 shadow-sm'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Period Summary Row */}
+                    <div className="flex items-center gap-4 mb-4 px-1">
+                        <div className="flex items-center gap-1.5">
+                            <Clock size={13} className="text-indigo-400" />
+                            <span className="text-sm font-semibold text-gray-700">{activitySummary.totalHours}h</span>
+                            <span className="text-xs text-gray-400">learned</span>
+                        </div>
+                        <span className="text-gray-200">|</span>
+                        <div className="flex items-center gap-1.5">
+                            <CheckCircle size={13} className="text-green-400" />
+                            <span className="text-sm font-semibold text-gray-700">{activitySummary.topicCount}</span>
+                            <span className="text-xs text-gray-400">topics</span>
+                        </div>
+                        <span className="text-gray-200">|</span>
+                        <div className="flex items-center gap-1.5">
+                            <Flame size={13} className="text-orange-400" />
+                            <span className="text-sm font-semibold text-gray-700">{activitySummary.activeDays}</span>
+                            <span className="text-xs text-gray-400">active days</span>
+                        </div>
+                    </div>
+
+                    {/* Chart */}
+                    <div style={{ width: '100%', height: 260 }} className="relative">
+                        {activityLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded-lg z-10">
+                                <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                            </div>
+                        )}
                         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                            <BarChart data={weeklyActivity.length > 0 ? weeklyActivity : []}>
+                            <BarChart data={activityChartData.length > 0 ? activityChartData : weeklyActivity}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} dy={10} />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#9CA3AF', fontSize: activityRange === 'month' ? 10 : 12 }}
+                                    dy={10}
+                                    interval={activityRange === 'month' ? 4 : 0}
+                                />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} />
                                 <Tooltip
                                     cursor={{ fill: '#F9FAFB' }}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                    formatter={(val) => [`${val}h`, 'Hours']}
                                 />
-                                <Bar dataKey="hours" fill="#6366F1" radius={[4, 4, 0, 0]} barSize={40} />
+                                <Bar
+                                    dataKey="hours"
+                                    fill="#6366F1"
+                                    radius={[4, 4, 0, 0]}
+                                    barSize={activityRange === 'month' ? 8 : activityRange === 'year' ? 24 : 36}
+                                />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

@@ -33,6 +33,11 @@ const TopicSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  // Global sequential index for drip unlock (1, 2, 3... across all modules in a course)
+  unlockOrder: {
+    type: Number,
+    default: null
+  },
   classDate: {
     type: Date
   },

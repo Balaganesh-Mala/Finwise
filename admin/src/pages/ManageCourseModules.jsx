@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
     Plus, ArrowLeft, Trash2, Edit2, ChevronDown, ChevronRight,
-    Video, FileText, Save, X, Calendar, GripVertical, Check
+    Video, FileText, Save, X, Calendar, Check,
+    BookOpen, Upload, ClipboardList, Layers, Lock, LockOpen, ShieldCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -13,6 +14,10 @@ const ManageCourseModules = () => {
     const [course, setCourse] = useState(null);
     const [modules, setModules] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Drip lock state
+    const [dripEnabled, setDripEnabled] = useState(false); // true if any topic has unlockOrder
+    const [dripLoading, setDripLoading] = useState(false);
 
     // Module Form State
     const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
@@ -42,10 +47,129 @@ const ManageCourseModules = () => {
     const [topicForm, setTopicForm] = useState(initialTopicState);
     const [uploading, setUploading] = useState(false);
 
+    // ─── Topic Content Modal State ───
+    const [contentModalTopic, setContentModalTopic] = useState(null); // topic object
+    const [contentTab, setContentTab] = useState('quiz'); // 'quiz' | 'tasks' | 'assignment'
+    const [topicContent, setTopicContent] = useState(null); // loaded from API
+    const [contentLoading, setContentLoading] = useState(false);
+    // Test bank for MCQ
+    const [testBank, setTestBank] = useState([]);
+    const [selectedTestId, setSelectedTestId] = useState('');
+    const [savingMcq, setSavingMcq] = useState(false);
+    // New task form
+    const [newTask, setNewTask] = useState({ title: '', description: '' });
+    const [newTaskFile, setNewTaskFile] = useState(null);
+    const [savingTask, setSavingTask] = useState(false);
+    // New assignment form
+    const [newAssignment, setNewAssignment] = useState({ title: '' });
+    const [newAssignFile, setNewAssignFile] = useState(null);
+    const [savingAssign, setSavingAssign] = useState(false);
+
     useEffect(() => {
         fetchCourseDetails();
         fetchModules();
     }, [courseId]);
+
+    // ─── Fetch test bank for MCQ assignment ───
+    const fetchTestBank = async () => {
+        if (testBank.length > 0) return;
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/tests?type=mcq`);
+            // ManageTests API returns the array directly
+            setTestBank(Array.isArray(res.data) ? res.data : (res.data.tests || []));
+        } catch (e) { console.error('Test bank fetch failed', e); }
+    };
+
+    // ─── Open content modal for a topic ───
+    const openContentModal = async (topic) => {
+        setContentModalTopic(topic);
+        setContentTab('quiz');
+        setTopicContent(null);
+        setSelectedTestId('');
+        setNewTask({ title: '', description: '' });
+        setNewTaskFile(null);
+        setNewAssignment({ title: '' });
+        setNewAssignFile(null);
+        setContentLoading(true);
+        fetchTestBank();
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/topic-content/${topic._id}`);
+            setTopicContent(res.data.content);
+            setSelectedTestId(res.data.content?.mcqTest?.testId?._id || res.data.content?.mcqTest?.testId || '');
+        } catch (e) { console.error('Topic content fetch failed', e); }
+        finally { setContentLoading(false); }
+    };
+
+    // ─── Save / Remove MCQ Link ───
+    const handleSaveMcq = async () => {
+        if (!selectedTestId) { toast.error('Please select a test'); return; }
+        setSavingMcq(true);
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/mcqs`, { testId: selectedTestId });
+            setTopicContent(res.data.content);
+            toast.success('Quiz linked!');
+        } catch (e) { toast.error('Failed to link quiz'); }
+        finally { setSavingMcq(false); }
+    };
+    const handleRemoveMcq = async () => {
+        setSavingMcq(true);
+        try {
+            const res = await axios.delete(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/mcqs`);
+            setTopicContent(res.data.content);
+            setSelectedTestId('');
+            toast.success('Quiz removed');
+        } catch (e) { toast.error('Failed to remove quiz'); }
+        finally { setSavingMcq(false); }
+    };
+
+    // ─── Add Task ───
+    const handleAddTask = async () => {
+        if (!newTask.title) { toast.error('Task title is required'); return; }
+        setSavingTask(true);
+        const formData = new FormData();
+        formData.append('title', newTask.title);
+        formData.append('description', newTask.description);
+        if (newTaskFile) formData.append('file', newTaskFile);
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/task`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            setTopicContent(res.data.content);
+            setNewTask({ title: '', description: '' });
+            setNewTaskFile(null);
+            toast.success('Task added!');
+        } catch (e) { toast.error('Failed to add task'); }
+        finally { setSavingTask(false); }
+    };
+    const handleDeleteTask = async (taskIndex) => {
+        try {
+            const res = await axios.delete(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/task/${taskIndex}`);
+            setTopicContent(res.data.content);
+            toast.success('Task removed');
+        } catch (e) { toast.error('Failed to remove task'); }
+    };
+
+    // ─── Add Assignment ───
+    const handleAddAssignment = async () => {
+        if (!newAssignment.title) { toast.error('Assignment title is required'); return; }
+        setSavingAssign(true);
+        const formData = new FormData();
+        formData.append('title', newAssignment.title);
+        if (newAssignFile) formData.append('file', newAssignFile);
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/assignment`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            setTopicContent(res.data.content);
+            setNewAssignment({ title: '' });
+            setNewAssignFile(null);
+            toast.success('Assignment added!');
+        } catch (e) { toast.error('Failed to add assignment'); }
+        finally { setSavingAssign(false); }
+    };
+    const handleDeleteAssignment = async (assignmentIndex) => {
+        try {
+            const res = await axios.delete(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/assignment/${assignmentIndex}`);
+            setTopicContent(res.data.content);
+            toast.success('Assignment removed');
+        } catch (e) { toast.error('Failed to remove assignment'); }
+    };
 
     const fetchCourseDetails = async () => {
         try {
@@ -69,6 +193,50 @@ const ManageCourseModules = () => {
         }
     };
 
+    // ─── Drip: check if it's enabled by looking at topics ───
+    // We detect drip status when topics load
+    const checkDripStatus = (topicsArray) => {
+        setDripEnabled(topicsArray.some(t => t.unlockOrder != null));
+    };
+
+    // ─── Enable Drip (sequential unlock order) ───
+    const handleEnableDrip = async () => {
+        if (!window.confirm('Enable drip lock? This will lock all topics and release them day by day based on batch start date.')) return;
+        setDripLoading(true);
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/drip/set-unlock-order/${courseId}`);
+            toast.success('Drip lock enabled! Topics will unlock sequentially based on batch schedule.');
+            setDripEnabled(true);
+            // Refresh all open topics to get updated unlockOrder values
+            setTopics({});
+            setExpandedModules({});
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to enable drip lock');
+        } finally {
+            setDripLoading(false);
+        }
+    };
+
+    // ─── Disable Drip (clear all unlock orders) ───
+    const handleDisableDrip = async () => {
+        if (!window.confirm('Disable drip lock? All topics will become freely accessible immediately.')) return;
+        setDripLoading(true);
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL}/api/drip/unlock-order/${courseId}`);
+            toast.success('Drip lock disabled — all topics are now freely accessible.');
+            setDripEnabled(false);
+            // Refresh all open topics
+            setTopics({});
+            setExpandedModules({});
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to disable drip lock');
+        } finally {
+            setDripLoading(false);
+        }
+    };
+
     const fetchTopics = async (moduleId) => {
         if (topics[moduleId]) return; // Already loaded
 
@@ -76,6 +244,7 @@ const ManageCourseModules = () => {
         try {
             const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/topics/${moduleId}`);
             setTopics(prev => ({ ...prev, [moduleId]: res.data.topics }));
+            checkDripStatus(res.data.topics || []);
         } catch (err) {
             console.error(`Error fetching topics for ${moduleId}:`, err);
             toast.error('Failed to load topics');
@@ -256,13 +425,57 @@ const ManageCourseModules = () => {
     return (
         <div className="p-6 max-w-6xl mx-auto">
             {/* Header */}
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-6">
                 <button onClick={() => navigate('/courses')} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
                     <ArrowLeft size={24} />
                 </button>
-                <div>
+                <div className="flex-1">
                     <h1 className="text-2xl font-bold text-gray-800">{course?.title || 'Manage Course Content'}</h1>
                     <p className="text-gray-500">Manage modules, video lessons, and notes.</p>
+                </div>
+            </div>
+
+            {/* ── Drip Lock Control Banner ── */}
+            <div className={`mb-6 flex items-center justify-between p-4 rounded-xl border ${dripEnabled
+                ? 'bg-amber-50 border-amber-200'
+                : 'bg-gray-50 border-gray-200'
+                }`}>
+                <div className="flex items-center gap-3">
+                    {dripEnabled
+                        ? <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600"><Lock size={18} /></div>
+                        : <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400"><LockOpen size={18} /></div>
+                    }
+                    <div>
+                        <p className="font-semibold text-gray-800 text-sm">
+                            {dripEnabled ? 'Drip Lock is ENABLED' : 'Drip Lock is DISABLED'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            {dripEnabled
+                                ? 'Topics unlock one per working day based on batch start date. Students see 🔒 for locked classes.'
+                                : 'All topics are freely accessible. Enable drip to release classes day by day.'}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-4">
+                    {dripEnabled ? (
+                        <button
+                            onClick={handleDisableDrip}
+                            disabled={dripLoading}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                            {dripLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <LockOpen size={16} />}
+                            Disable Drip Lock
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleEnableDrip}
+                            disabled={dripLoading}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors disabled:opacity-50 shadow-md shadow-amber-100"
+                        >
+                            {dripLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Lock size={16} />}
+                            Enable Drip Lock
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -347,20 +560,34 @@ const ManageCourseModules = () => {
                                                                     <Calendar size={12} /> {new Date(topic.classDate).toLocaleDateString()}
                                                                 </span>
                                                             )}
+                                                            {topic.unlockOrder != null && (
+                                                                <span className="flex items-center gap-1 bg-amber-50 text-amber-600 border border-amber-200 px-2 py-0.5 rounded-full font-semibold">
+                                                                    <Lock size={10} /> Day {topic.unlockOrder}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => openContentModal(topic)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 rounded-lg transition-colors"
+                                                        title="Manage MCQ / Tasks / Assignment"
+                                                    >
+                                                        <Layers size={13} /> Content
+                                                    </button>
                                                     <button
                                                         onClick={() => openTopicModal(module._id, topic)}
-                                                        className="p-1.5 text-gray-400 hover:text-indigo-600 rounded"
+                                                        className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                        title="Edit topic"
                                                     >
                                                         <Edit2 size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteTopic(module._id, topic._id)}
-                                                        className="p-1.5 text-gray-400 hover:text-red-600 rounded"
+                                                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete topic"
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
@@ -574,6 +801,177 @@ const ManageCourseModules = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════════ TOPIC CONTENT MODAL ═══════════════ */}
+            {contentModalTopic && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setContentModalTopic(null)}>
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+
+                        {/* Header */}
+                        <div className="flex justify-between items-start p-6 border-b border-gray-100">
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800">Topic Content</h2>
+                                <p className="text-sm text-gray-500 mt-0.5">{contentModalTopic.title}</p>
+                            </div>
+                            <button onClick={() => setContentModalTopic(null)} className="text-gray-400 hover:text-gray-600"><X size={22} /></button>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex border-b border-gray-100 px-6">
+                            {[{ id: 'quiz', label: 'Quiz (MCQ)', icon: BookOpen }, { id: 'tasks', label: 'Tasks', icon: ClipboardList }, { id: 'assignment', label: 'Assignment', icon: FileText }].map(({ id, label, icon: Icon }) => (
+                                <button key={id} onClick={() => setContentTab(id)}
+                                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${contentTab === id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        }`}>
+                                    <Icon size={15} />{label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {contentLoading ? (
+                                <div className="text-center py-10 text-gray-400 text-sm">Loading...</div>
+                            ) : (
+                                <>
+
+                                    {/* ── Quiz Tab ── */}
+                                    {contentTab === 'quiz' && (
+                                        <div className="space-y-5">
+                                            <p className="text-sm text-gray-600">Link a test from your test bank as the MCQ quiz for this topic. Students get one attempt.</p>
+
+                                            {/* Current quiz */}
+                                            {topicContent?.mcqTest?.enabled && topicContent?.mcqTest?.testId && (
+                                                <div className="flex items-center justify-between p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                                                    <div className="flex items-center gap-3">
+                                                        <BookOpen size={18} className="text-purple-600" />
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-purple-800">
+                                                                {topicContent.mcqTest.testId?.title || 'Linked Test'}
+                                                            </p>
+                                                            <p className="text-xs text-purple-600">Currently linked</p>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={handleRemoveMcq} disabled={savingMcq}
+                                                        className="text-red-500 hover:text-red-700 text-xs font-medium flex items-center gap-1 disabled:opacity-50">
+                                                        <Trash2 size={14} /> Remove
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-3">
+                                                <label className="block text-sm font-medium text-gray-700">Select Test from Bank</label>
+                                                <select
+                                                    value={selectedTestId}
+                                                    onChange={e => setSelectedTestId(e.target.value)}
+                                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-indigo-500 outline-none text-sm"
+                                                >
+                                                    <option value="">-- Choose a test --</option>
+                                                    {testBank.filter(t => t.type === 'mcq').map(t => (
+                                                        <option key={t._id} value={t._id}>{t.title} ({t.questions?.length || 0} questions)</option>
+                                                    ))}
+                                                </select>
+                                                <button onClick={handleSaveMcq} disabled={savingMcq || !selectedTestId}
+                                                    className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                                                    {savingMcq ? 'Saving...' : <><Save size={15} /> Link Quiz</>}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ── Tasks Tab ── */}
+                                    {contentTab === 'tasks' && (
+                                        <div className="space-y-5">
+                                            {/* Existing tasks */}
+                                            {topicContent?.tasks?.length > 0 && (
+                                                <div className="space-y-2">
+                                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Existing Tasks</p>
+                                                    {topicContent.tasks.map((task, idx) => (
+                                                        <div key={idx} className="flex items-start justify-between p-3 border border-gray-200 rounded-lg">
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-800">{task.title}</p>
+                                                                {task.description && <p className="text-xs text-gray-500 mt-0.5">{task.description}</p>}
+                                                                {task.fileUrl && <a href={task.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline">View File</a>}
+                                                            </div>
+                                                            <button onClick={() => handleDeleteTask(idx)} className="text-red-400 hover:text-red-600 ml-3 flex-shrink-0">
+                                                                <Trash2 size={15} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Add new task */}
+                                            <div className="space-y-3 border-t border-gray-100 pt-4">
+                                                <p className="text-sm font-semibold text-gray-700">Add New Task</p>
+                                                <input type="text" placeholder="Task title *" value={newTask.title}
+                                                    onChange={e => setNewTask(p => ({ ...p, title: e.target.value }))}
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 outline-none" />
+                                                <textarea placeholder="Description (optional)" value={newTask.description}
+                                                    onChange={e => setNewTask(p => ({ ...p, description: e.target.value }))}
+                                                    rows="2" className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 outline-none resize-none" />
+                                                <div className="flex items-center gap-3">
+                                                    <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                                                        <Upload size={14} /> Resource File (optional)
+                                                        <input type="file" className="hidden" onChange={e => setNewTaskFile(e.target.files[0])} />
+                                                    </label>
+                                                    {newTaskFile && <span className="text-xs text-gray-500 truncate max-w-[140px]">{newTaskFile.name}</span>}
+                                                </div>
+                                                <button onClick={handleAddTask} disabled={savingTask}
+                                                    className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                                                    {savingTask ? 'Adding...' : <><Plus size={15} /> Add Task</>}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ── Assignment Tab ── */}
+                                    {contentTab === 'assignment' && (
+                                        <div className="space-y-5">
+                                            {/* Existing assignments */}
+                                            {topicContent?.assignments?.length > 0 && (
+                                                <div className="space-y-2">
+                                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Existing Assignments</p>
+                                                    {topicContent.assignments.map((assign, idx) => (
+                                                        <div key={idx} className="flex items-start justify-between p-3 border border-gray-200 rounded-lg">
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-800">{assign.title}</p>
+                                                                {assign.questionUrl && <a href={assign.questionUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline">Download Question Paper</a>}
+                                                            </div>
+                                                            <button onClick={() => handleDeleteAssignment(idx)} className="text-red-400 hover:text-red-600 ml-3 flex-shrink-0">
+                                                                <Trash2 size={15} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Add new assignment */}
+                                            <div className="space-y-3 border-t border-gray-100 pt-4">
+                                                <p className="text-sm font-semibold text-gray-700">Add New Assignment</p>
+                                                <input type="text" placeholder="Assignment title *" value={newAssignment.title}
+                                                    onChange={e => setNewAssignment(p => ({ ...p, title: e.target.value }))}
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 outline-none" />
+                                                <div className="flex items-center gap-3">
+                                                    <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                                                        <Upload size={14} /> Question Paper (PDF, optional)
+                                                        <input type="file" accept="application/pdf,image/*" className="hidden" onChange={e => setNewAssignFile(e.target.files[0])} />
+                                                    </label>
+                                                    {newAssignFile && <span className="text-xs text-gray-500 truncate max-w-[140px]">{newAssignFile.name}</span>}
+                                                </div>
+                                                <button onClick={handleAddAssignment} disabled={savingAssign}
+                                                    className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                                                    {savingAssign ? 'Adding...' : <><Plus size={15} /> Add Assignment</>}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
