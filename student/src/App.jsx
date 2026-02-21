@@ -9,6 +9,7 @@ import Playground from './pages/Playground';
 import MyQR from './pages/MyQR';
 import AttendanceHistory from './pages/AttendanceHistory';
 import TypingPractice from './pages/TypingPractice';
+import TypingTrainer from './pages/TypingTrainer';
 import MockInterview from './pages/MockInterview';
 import InterviewHistory from './pages/InterviewHistory';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -37,6 +38,7 @@ function App() {
           <Route path="/my-attendance" element={<AttendanceHistory />} />
           <Route path="/playground" element={<Playground />} />
           <Route path="/typing-practice" element={<TypingPractice />} />
+          <Route path="/typing-trainer" element={<TypingTrainer />} />
           <Route path="/mock-interview" element={<MockInterview />} />
           <Route path="/my-interview-history" element={<InterviewHistory />} />
           <Route path="/jobs" element={<JobPortal />} />

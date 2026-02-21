@@ -17,25 +17,42 @@ import {
     Timer,
     History,
     TrendingUp,
-    Hand
 } from 'lucide-react';
+
+// Inline hand icon — avoids lucide-react's Hand conflicting with browser XRHand API
+const HandGuideIcon = ({ size = 20 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+        <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v10" />
+        <path d="M10 10.5a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2V18a6 6 0 0 0 6 6v0a8 8 0 0 0 8-8V11a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2" />
+    </svg>
+);
 import { typingLessons } from '../data/typingLessons';
+import TypingKeyboard from '../components/Keyboard/TypingKeyboard';
 import VirtualKeyboard from '../components/VirtualKeyboard';
-import HandAnimation from '../components/HandAnimation';
 import TypingHeatmap from '../components/TypingHeatmap';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast, { Toaster } from 'react-hot-toast';
 
 // --- Sound Effects (Web Audio API) ---
-let audioCtx;
-try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-} catch (e) {
-    audioCtx = null;
-}
+// Lazy singleton: AudioContext is created on first use after a user gesture.
+let _audioCtx = null;
+const getAudioCtx = () => {
+    if (!_audioCtx) {
+        try {
+            _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('AudioContext not available:', e);
+            return null;
+        }
+    }
+    return _audioCtx;
+};
 
 const playKeyClick = (type = 'click') => {
+    const audioCtx = getAudioCtx();
     if (!audioCtx) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
@@ -132,7 +149,10 @@ const TypingPractice = () => {
 
     // --- Audio init ---
     useEffect(() => {
-        const initAudio = () => { if (audioCtx?.state === 'suspended') audioCtx.resume(); };
+        const initAudio = () => {
+            const ctx = getAudioCtx();
+            if (ctx?.state === 'suspended') ctx.resume();
+        };
         window.addEventListener('click', initAudio);
         window.addEventListener('keydown', initAudio);
         return () => { window.removeEventListener('click', initAudio); window.removeEventListener('keydown', initAudio); };
@@ -348,7 +368,7 @@ const TypingPractice = () => {
                         className={`p-2 rounded-lg transition-colors ${showHands ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:bg-gray-100'}`}
                         title="Toggle Hand Guide"
                     >
-                        <Hand size={20} />
+                        <HandGuideIcon size={20} />
                     </button>
                     <button onClick={() => setShowHistory(!showHistory)} className={`p-2 rounded-lg transition-colors ${showHistory ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:bg-gray-100'}`} title="History">
                         <History size={20} />
@@ -439,10 +459,14 @@ const TypingPractice = () => {
                         <StatCard label="Time Left" value={mode === 'time' ? `${timeLeft}s` : '∞'} icon={Clock} color="text-blue-500" />
                     </div>
 
-                    {/* ── Hand Animation (Beginner only) ─────────────── */}
-                    {handsVisible && !isFinished && (
-                        <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
-                            <HandAnimation nextKey={nextChar} />
+                    {/* ── Unified Keyboard + Hands Overlay ──────────────── */}
+                    {keyboardVisible && !isFinished && (
+                        <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mt-2">
+                            <TypingKeyboard
+                                nextKey={nextChar}
+                                errorKey={lastErrorKey}
+                                showHands={handsVisible}
+                            />
                         </div>
                     )}
 

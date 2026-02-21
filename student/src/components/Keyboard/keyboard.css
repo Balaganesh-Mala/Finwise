@@ -1,0 +1,48 @@
+/* keyboard.css — Typing keyboard animations */
+
+/* ── Key highlight glow ─────────────────────────────────────── */
+.key-next {
+    filter: drop-shadow(0 0 8px rgba(44, 158, 255, 0.85));
+}
+
+.key-error {
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9));
+    animation: keyShake 0.25s ease-in-out;
+}
+
+@keyframes keyShake {
+    0%, 100% { transform: translateX(0); }
+    25%       { transform: translateX(-3px); }
+    75%       { transform: translateX(3px); }
+}
+
+/* ── Finger pulse animation ─────────────────────────────────── */
+@keyframes fingerPulse {
+    0%, 100% {
+        opacity: 0.82;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.06);
+    }
+}
+
+.finger-active {
+    animation: fingerPulse 1.3s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center bottom;
+}
+
+/* ── Error finger pulse ─────────────────────────────────────── */
+@keyframes fingerError {
+    0%, 100% { opacity: 0.85; }
+    33%       { opacity: 0.3;  }
+    66%       { opacity: 0.9;  }
+}
+
+.finger-error {
+    animation: fingerError 0.35s ease-out;
+    transform-box: fill-box;
+    transform-origin: center bottom;
+}

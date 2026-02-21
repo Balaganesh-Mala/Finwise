@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, IndianRupee, CheckCircle, ArrowRight, Globe, Linkedin, Clock, Calendar } from 'lucide-react';
+import { X, MapPin, IndianRupee, CheckCircle, ArrowRight, Globe, Linkedin, Clock, Calendar, Lock, AlertTriangle } from 'lucide-react';
 
-const JobDetailsModal = ({ job, isOpen, onClose }) => {
+const JobDetailsModal = ({ job, isOpen, onClose, eligible = true, completion = 0 }) => {
     if (!isOpen || !job) return null;
 
     return (
@@ -24,7 +24,7 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                 >
                     {/* Header */}
                     <div className="bg-gray-900 text-white p-6 md:p-8 relative overflow-hidden flex-shrink-0">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF7F50] rounded-full blur-[80px] opacity-20 -mr-16 -mt-16"></div>
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF7F50] rounded-full blur-[80px] opacity-20 -mr-16 -mt-16" />
 
                         <button
                             onClick={onClose}
@@ -40,9 +40,12 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                             <h2 className="text-2xl md:text-3xl font-bold mb-2 pr-8">{job.title}</h2>
                             <div className="flex items-center gap-3">
                                 {job.companyLogo && (
-                                    <img src={job.companyLogo} alt={job.company} className="w-12 h-12 object-contain bg-white rounded-lg p-1" />
+                                    <img src={job.companyLogo} alt="Company" className="w-12 h-12 object-contain bg-white rounded-lg p-1" />
                                 )}
-                                <p className="text-gray-300 text-lg">{job.company}</p>
+                                <p className={`text-lg ${eligible ? 'text-gray-300' : 'text-amber-300 flex items-center gap-2'}`}>
+                                    {!eligible && <Lock size={16} />}
+                                    {job.company}
+                                </p>
                             </div>
 
                             <div className="flex flex-wrap gap-4 mt-6 text-sm font-medium text-gray-300">
@@ -65,34 +68,50 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                                 )}
                             </div>
 
-                            <div className="flex gap-3 mt-4">
-                                {job.companyWebsite && (
-                                    <a href={job.companyWebsite} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
-                                        <Globe size={18} />
-                                    </a>
-                                )}
-                                {job.companyLinkedin && (
-                                    <a href={job.companyLinkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
-                                        <Linkedin size={18} />
-                                    </a>
-                                )}
-                            </div>
+                            {eligible && (
+                                <div className="flex gap-3 mt-4">
+                                    {job.companyWebsite && (
+                                        <a href={job.companyWebsite} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
+                                            <Globe size={18} />
+                                        </a>
+                                    )}
+                                    {job.companyLinkedin && (
+                                        <a href={job.companyLinkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white">
+                                            <Linkedin size={18} />
+                                        </a>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Body */}
                     <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1">
+
+                        {/* ⚠ Eligibility Warning Banner */}
+                        {!eligible && (
+                            <div className="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-5 py-4">
+                                <AlertTriangle size={20} className="flex-shrink-0 mt-0.5 text-amber-500" />
+                                <div>
+                                    <p className="font-bold text-sm">Application Locked</p>
+                                    <p className="text-sm mt-0.5">
+                                        You must complete at least <span className="font-bold">75%</span> of your course to unlock job applications.
+                                        You are currently at <span className="font-bold">{completion}%</span> —
+                                        {' '}<span className="font-bold">{75 - completion}%</span> more to go!
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="mb-8">
                             <h3 className="text-xl font-bold text-gray-900 mb-3">About the Role</h3>
-                            <p className="text-gray-600 leading-relaxed">
-                                {job.description}
-                            </p>
+                            <p className="text-gray-600 leading-relaxed">{job.description}</p>
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-8 mb-8">
                             <div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <div className="w-1 h-6 bg-primary-500 rounded-full"></div>
+                                    <div className="w-1 h-6 bg-primary-500 rounded-full" />
                                     Key Responsibilities
                                 </h3>
                                 <ul className="space-y-3">
@@ -104,16 +123,15 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                                     )) || <p className="text-gray-500 italic">Detailed responsibilities available upon application.</p>}
                                 </ul>
                             </div>
-
                             <div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <div className="w-1 h-6 bg-primary-500 rounded-full"></div>
+                                    <div className="w-1 h-6 bg-primary-500 rounded-full" />
                                     Requirements
                                 </h3>
                                 <ul className="space-y-3">
                                     {job.requirements?.map((item, index) => (
                                         <li key={index} className="flex items-start gap-3 text-gray-600 text-sm">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2 flex-shrink-0"></div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2 flex-shrink-0" />
                                             <span>{item}</span>
                                         </li>
                                     )) || <p className="text-gray-500 italic">Detailed requirements available upon application.</p>}
@@ -133,7 +151,7 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                         </div>
                     </div>
 
-                    {/* Footer - Fixed Action Area */}
+                    {/* Footer */}
                     <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-4 flex-shrink-0">
                         <button
                             onClick={onClose}
@@ -141,12 +159,23 @@ const JobDetailsModal = ({ job, isOpen, onClose }) => {
                         >
                             Close
                         </button>
-                        <button
-                            onClick={() => onClose('apply')} // Pass a signal that we want to apply
-                            className="px-8 py-3 rounded-xl bg-[#FF7F50] text-white font-bold hover:bg-[#e64a19] transition-colors shadow-lg shadow-orange-500/20 flex items-center gap-2"
-                        >
-                            Apply for this Job <ArrowRight size={18} />
-                        </button>
+
+                        {eligible ? (
+                            <button
+                                onClick={() => onClose('apply')}
+                                className="px-8 py-3 rounded-xl bg-[#FF7F50] text-white font-bold hover:bg-[#e64a19] transition-colors shadow-lg shadow-orange-500/20 flex items-center gap-2"
+                            >
+                                Apply for this Job <ArrowRight size={18} />
+                            </button>
+                        ) : (
+                            <button
+                                disabled
+                                className="px-8 py-3 rounded-xl bg-gray-100 text-gray-400 font-bold cursor-not-allowed flex items-center gap-2 border border-gray-200"
+                                title="Complete 75% of your course to apply"
+                            >
+                                <Lock size={16} /> Apply Locked ({completion}% / 75%)
+                            </button>
+                        )}
                     </div>
                 </motion.div>
             </motion.div>

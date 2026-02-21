@@ -431,8 +431,9 @@ const CoursePlayer = () => {
         <div className="flex h-screen bg-gray-50 flex-col md:flex-row overflow-hidden">
             {/* Sidebar Code */}
             <div className={`
-                ${sidebarOpen ? 'w-full md:w-80' : 'w-0'} 
-                bg-white border-r border-gray-200 flex-shrink-0 transition-all duration-300 flex flex-col z-20 absolute md:static h-full
+                w-full md:w-80
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                bg-white border-r border-gray-200 flex-shrink-0 transition-transform duration-300 flex flex-col z-20 absolute md:static h-full overflow-hidden
             `}>
                 <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white">
                     <h2 className="font-bold text-gray-800 line-clamp-1">{course?.title}</h2>

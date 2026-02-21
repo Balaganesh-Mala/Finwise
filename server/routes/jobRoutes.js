@@ -47,20 +47,73 @@ router.get('/', async (req, res) => {
     }
 });
 
-// @desc    Get STRICT Student Jobs
-// @route   GET /api/jobs/fetch/student
+// @desc    Get STRICT Student Jobs (with optional eligibility masking)
+// @route   GET /api/jobs/fetch/student?studentId=xxx
 // @access  Public
 router.get('/fetch/student', async (req, res) => {
     try {
         console.log("API: Fetching STRICT Student Jobs");
         const jobs = await Job.find({ isActive: true, isStudentOnly: true }).sort({ postedAt: -1 });
         console.log(`API: Found ${jobs.length} student jobs`);
-        res.json(jobs);
+
+        const { studentId } = req.query;
+
+        // If no student context, return jobs as-is (admin preview etc.)
+        if (!studentId) {
+            return res.json(jobs);
+        }
+
+        // Check eligibility via progress — derive courseId from Progress records directly
+        let eligible = false;
+        try {
+            const Progress = require('../models/Progress');
+            const Module = require('../models/Module');
+            const Topic = require('../models/Topic');
+
+            // Find the courseId from the student's own progress records
+            const latestProgress = await Progress.findOne({ studentId })
+                .sort({ updatedAt: -1 })
+                .select('courseId');
+
+            if (latestProgress) {
+                const courseId = latestProgress.courseId;
+                const modules = await Module.find({ courseId });
+                const moduleIds = modules.map(m => m._id);
+                const totalTopics = await Topic.countDocuments({ moduleId: { $in: moduleIds } });
+                const completedTopics = await Progress.countDocuments({
+                    studentId,
+                    courseId,
+                    completed: true
+                });
+                const completion = totalTopics === 0 ? 0 : Math.round((completedTopics / totalTopics) * 100);
+                eligible = completion >= 75;
+            }
+        } catch (eligErr) {
+            console.error('Eligibility check failed, defaulting to masked:', eligErr);
+            eligible = false;
+        }
+
+        // Mask sensitive company fields for ineligible students
+        const maskedJobs = jobs.map(job => {
+            const j = job.toObject();
+            if (!eligible) {
+                // Use last 4 chars of ObjectId as a short identifier
+                const shortId = String(j._id).slice(-4).toUpperCase();
+                j.company = `Company ID: ${shortId}`;
+                j.companyLogo = '';
+                j.companyWebsite = '';
+                j.companyLinkedin = '';
+            }
+            return j;
+        });
+
+        res.json(maskedJobs);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
     }
 });
+
 
 // @desc    Get STRICT Client Jobs
 // @route   GET /api/jobs/fetch/client

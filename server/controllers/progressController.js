@@ -96,55 +96,43 @@ exports.getStudentCompletionStats = async (req, res) => {
     try {
         const { studentId } = req.params;
 
-        // 1. Get Student to find enrolled course
-        const student = await Student.findById(studentId);
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
+        // 1. Find the most recent courseId this student has progress records for
+        //    (CoursePlayer always stores the real courseId ObjectId from the URL)
+        const latestProgress = await Progress.findOne({ studentId })
+            .sort({ updatedAt: -1 })
+            .select('courseId');
 
-        if (!student.courseName) {
-             return res.json({ 
-                success: true, 
-                stats: { 
+        if (!latestProgress) {
+            return res.json({
+                success: true,
+                stats: {
                     completionPercentage: 0,
                     completedTopics: 0,
                     totalTopics: 0,
                     enrolled: false
-                } 
+                }
             });
         }
 
-        // 2. Find Course by Name (assuming courseName matches title roughly, or use ID if available in future)
-        // Ideally Student model should have courseId. checks below
-        const course = await Course.findOne({ title: { $regex: student.courseName, $options: 'i' } });
-        
-        if (!course) {
-             return res.json({ 
-                success: true, 
-                stats: { 
-                     completionPercentage: 0,
-                     completedTopics: 0,
-                     totalTopics: 0,
-                     message: "Course not found"
-                } 
-            });
-        }
+        const courseId = latestProgress.courseId;
 
-        // 3. Count Total Topics in the Course
-        // Course -> Modules -> Topics
-        const modules = await Module.find({ courseId: course._id });
+        // 2. Count total topics in the course
+        const modules = await Module.find({ courseId });
         const moduleIds = modules.map(m => m._id);
         const totalTopics = await Topic.countDocuments({ moduleId: { $in: moduleIds } });
 
-        // 4. Count Completed Topics for the Student in this Course
-        const completedTopics = await Progress.countDocuments({ 
-            studentId, 
-            courseId: course._id, 
-            completed: true 
+        // 3. Count completed topics for this student in this course
+        const completedTopics = await Progress.countDocuments({
+            studentId,
+            courseId,
+            completed: true
         });
 
-        // 5. Calculate Percentage
+        // 4. Calculate percentage
         const percentage = totalTopics === 0 ? 0 : Math.round((completedTopics / totalTopics) * 100);
+
+        // 5. Get course name for display
+        const course = await Course.findById(courseId).select('title');
 
         res.json({
             success: true,
@@ -153,12 +141,50 @@ exports.getStudentCompletionStats = async (req, res) => {
                 completedTopics,
                 totalTopics,
                 enrolled: true,
-                courseName: course.title
+                courseName: course?.title || ''
             }
         });
 
     } catch (err) {
         console.error('Error calculating completion stats:', err);
+        res.status(500).json({ message: 'Server Error', error: err.message });
+    }
+};
+
+// @desc    Check if student is eligible to apply for jobs (>= 75% completion)
+// @route   GET /api/students/:studentId/eligibility
+// @access  Student
+exports.getEligibility = async (req, res) => {
+    try {
+        const { studentId } = req.params;
+
+        // Derive courseId from the student's own Progress records
+        const latestProgress = await Progress.findOne({ studentId })
+            .sort({ updatedAt: -1 })
+            .select('courseId');
+
+        if (!latestProgress) {
+            return res.json({ eligible: false, completion: 0 });
+        }
+
+        const courseId = latestProgress.courseId;
+
+        const modules = await Module.find({ courseId });
+        const moduleIds = modules.map(m => m._id);
+        const totalTopics = await Topic.countDocuments({ moduleId: { $in: moduleIds } });
+
+        const completedTopics = await Progress.countDocuments({
+            studentId,
+            courseId,
+            completed: true
+        });
+
+        const completion = totalTopics === 0 ? 0 : Math.round((completedTopics / totalTopics) * 100);
+        const eligible = completion >= 75;
+
+        res.json({ eligible, completion });
+    } catch (err) {
+        console.error('Error checking eligibility:', err);
         res.status(500).json({ message: 'Server Error', error: err.message });
     }
 };
