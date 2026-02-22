@@ -523,7 +523,7 @@ const TypingPractice = () => {
                     )}
 
                     {/* ── Virtual Keyboard ────────────────────────────── */}
-                    {keyboardVisible && !isFinished && (
+                    {/*keyboardVisible && !isFinished && (
                         <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mt-2">
                             <div className="flex items-center gap-2 mb-2">
                                 <Keyboard size={14} className="text-gray-400" />
@@ -540,7 +540,7 @@ const TypingPractice = () => {
                                 errorKey={lastErrorKey}
                             />
                         </div>
-                    )}
+                    )*/}
                 </>
             )}
 
