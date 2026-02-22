@@ -24,15 +24,8 @@ app.use(cors({
         'http://127.0.0.1:5173', 
         'http://127.0.0.1:5174',
         'http://localhost:5000',
-        'http://wonew.in', // Also allow HTTP
-        'http://student.wonew.in',
-        'http://admin.wonew.in',
-        'https://wonew.in', // Production HTTPS
-        'https://student.wonew.in',
-        'https://admin.wonew.in',
-        'https://trainer.wonew.in',
         'https://finwise-64g1.onrender.com',
-        'https://jobready-q89p.onrender.com', // Student Portal Deployed
+        'https://finwise-student.vercel.app', // Student Portal Deployed
         process.env.CLIENT_URL,
         process.env.ADMIN_URL,
         'https://vapi.ai',
