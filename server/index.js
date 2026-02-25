@@ -28,6 +28,7 @@ app.use(cors({
         'https://finwise-student.vercel.app', // Student Portal Deployed
         process.env.CLIENT_URL,
         process.env.ADMIN_URL,
+        'https://finwise-3tlb.vercel.app',
         'https://vapi.ai',
         'https://*.vapi.ai'
     ],
