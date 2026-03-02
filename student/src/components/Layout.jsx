@@ -23,7 +23,8 @@ import {
     Sparkles,
     Shield,
     ExternalLink,
-    Briefcase
+    Briefcase,
+    AlertCircle
 } from 'lucide-react';
 
 
@@ -39,6 +40,10 @@ const Layout = () => {
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [isMobileQROpen, setIsMobileQROpen] = useState(false);
+    const [mobileQRData, setMobileQRData] = useState(null);
+    const [mobileQRLoading, setMobileQRLoading] = useState(false);
+
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -187,27 +192,91 @@ const Layout = () => {
 
     const allNavItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/', accessKey: 'dashboard', end: true },
-        { icon: BookOpen, label: 'My Courses', path: '/courses', accessKey: 'myCourses' },
-        { icon: QrCode, label: 'My QR', path: '/my-qr', accessKey: 'myQR' },
-        { icon: Calendar, label: 'My Attendance', path: '/my-attendance', accessKey: 'attendance' },
-        { icon: Code2, label: 'Playground', path: '/playground', accessKey: 'playground' },
-        { icon: Keyboard, label: 'Typing Practice', path: '/typing-practice', accessKey: 'typingPractice' },
-        { icon: Bot, label: 'AI Mock Interview', path: '/mock-interview', accessKey: 'aiMockInterview' },
-        { icon: Calendar, label: 'History', path: '/my-interview-history', accessKey: 'aiMockInterview' },
-        { icon: User, label: 'Profile', path: '/profile', accessKey: 'profile' },
+        {
+            icon: BookOpen,
+            label: 'Learning',
+            children: [
+                { label: 'My Courses', path: '/courses', accessKey: 'myCourses' },
+                { label: 'Typing Practice', path: '/typing-practice', accessKey: 'typingPractice' }
+            ]
+        },
+        {
+            icon: Calendar,
+            label: 'Attendance',
+            children: [
+                { label: 'My Attendance', path: '/my-attendance', accessKey: 'attendance' },
+                { label: 'My QR', path: '/my-qr', accessKey: 'myQR' }
+            ]
+        },
+        {
+            icon: Bot,
+            label: 'Interview',
+            children: [
+                { label: 'AI Mock Interview', path: '/mock-interview', accessKey: 'aiMockInterview' },
+                { label: 'History', path: '/my-interview-history', accessKey: 'aiMockInterview' }
+            ]
+        },
         { icon: Briefcase, label: 'Jobs', path: '/jobs', accessKey: 'dashboard' }, // Accessible to everyone who has dashboard access
+        { icon: User, label: 'Profile', path: '/profile', accessKey: 'profile' },
         { icon: Settings, label: 'Settings', path: '/settings', accessKey: 'settings' },
     ];
 
     // Filter items based on user access
-    const navItems = allNavItems.filter(item => {
-        if (!user || !user.access) return false; // Safety check
-        // If accessKey is present, check user.access[accessKey]
-        // If not present (default), assume true or handle otherwise. Here we added accessKey to all.
+    const navItems = allNavItems.map(item => {
+        if (item.children) {
+            return {
+                ...item,
+                children: item.children.filter(child => user?.access?.[child.accessKey])
+            };
+        }
+        return item;
+    }).filter(item => {
+        if (!user || !user.access) return false;
+        if (item.children) {
+            return item.children.length > 0;
+        }
         return user.access[item.accessKey];
     });
 
+    const flatNavItems = allNavItems.flatMap(item => item.children ? item.children : [item]);
+
     const [collapsed, setCollapsed] = useState(false);
+    const [openMenus, setOpenMenus] = useState({});
+
+    const toggleMenu = (label) => {
+        setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
+    };
+
+    const fetchMobileQR = async () => {
+        if (!user?._id || mobileQRData) return;
+        try {
+            setMobileQRLoading(true);
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await axios.get(`${API_URL}/api/qr/${user._id}`);
+            setMobileQRData(res.data.qrImageURL);
+        } catch (error) {
+            console.error("Failed to fetch mobile QR:", error);
+            // If not found, attempt generation
+            if (error.response?.status === 404) {
+                try {
+                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                    const genRes = await axios.post(`${API_URL}/api/qr/generate/${user._id}`);
+                    if (genRes.data.success) {
+                        setMobileQRData(genRes.data.qrImageURL);
+                    }
+                } catch (genErr) {
+                    console.error("Failed to generate mobile QR:", genErr);
+                }
+            }
+        } finally {
+            setMobileQRLoading(false);
+        }
+    };
+
+    const handleOpenMobileQR = () => {
+        setIsMobileQROpen(true);
+        fetchMobileQR();
+    };
 
     // ... (existing hooks)
 
@@ -271,26 +340,81 @@ const Layout = () => {
                 {/* Navigation Links */}
                 <nav className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                     {navItems.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            end={item.end}
-                            onClick={() => setSidebarOpen(false)}
-                            className={({ isActive }) =>
-                                `flex items-center ${collapsed ? 'justify-center px-2' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all duration-200 group relative ${isActive
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                                }`
-                            }
-                            title={collapsed ? item.label : ''}
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    <item.icon size={22} className={`shrink-0 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-indigo-600'}`} />
-                                    {!collapsed && <span className="font-medium whitespace-nowrap">{item.label}</span>}
-                                </>
-                            )}
-                        </NavLink>
+                        item.children ? (
+                            <div
+                                key={item.label}
+                                className="space-y-1"
+                                onMouseEnter={() => {
+                                    if (!collapsed) {
+                                        setOpenMenus(prev => ({ ...prev, [item.label]: true }));
+                                    }
+                                }}
+                                onMouseLeave={() => {
+                                    if (!collapsed) {
+                                        setOpenMenus(prev => ({ ...prev, [item.label]: false }));
+                                    }
+                                }}
+                            >
+                                <button
+                                    onClick={() => {
+                                        if (collapsed) setCollapsed(false);
+                                        else toggleMenu(item.label);
+                                    }}
+                                    className={`w-full flex items-center justify-between ${collapsed ? 'px-2' : 'px-4'} py-3.5 rounded-xl transition-all duration-200 group relative text-gray-500 hover:bg-gray-50 hover:text-gray-900 border border-transparent`}
+                                    title={collapsed ? item.label : ''}
+                                >
+                                    <div className={`flex items-center ${collapsed ? 'justify-center w-full' : 'gap-4'}`}>
+                                        <item.icon size={22} className="shrink-0 text-gray-400 group-hover:text-indigo-600" />
+                                        {!collapsed && <span className="font-medium whitespace-nowrap">{item.label}</span>}
+                                    </div>
+                                    {!collapsed && (
+                                        <ChevronDown size={18} className={`transition-transform duration-200 ${openMenus[item.label] ? 'rotate-180' : ''}`} />
+                                    )}
+                                </button>
+
+                                {!collapsed && openMenus[item.label] && (
+                                    <div className="pl-11 space-y-1 my-1">
+                                        {item.children.map(child => (
+                                            <NavLink
+                                                key={child.path}
+                                                to={child.path}
+                                                end={child.end}
+                                                onClick={() => setSidebarOpen(false)}
+                                                className={({ isActive }) =>
+                                                    `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group relative ${isActive
+                                                        ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                                                    }`
+                                                }
+                                            >
+                                                {child.label}
+                                            </NavLink>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                end={item.end}
+                                onClick={() => setSidebarOpen(false)}
+                                className={({ isActive }) =>
+                                    `flex items-center ${collapsed ? 'justify-center px-2' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all duration-200 group relative ${isActive
+                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                                    }`
+                                }
+                                title={collapsed ? item.label : ''}
+                            >
+                                {({ isActive }) => (
+                                    <>
+                                        <item.icon size={22} className={`shrink-0 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-indigo-600'}`} />
+                                        {!collapsed && <span className="font-medium whitespace-nowrap">{item.label}</span>}
+                                    </>
+                                )}
+                            </NavLink>
+                        )
                     ))}
                 </nav>
 
@@ -322,7 +446,7 @@ const Layout = () => {
                             <Menu size={24} />
                         </button>
                         <h2 className="hidden md:block text-xl font-semibold text-gray-800">
-                            {navItems.find(i => i.path === location.pathname)?.label || 'Dashboard'}
+                            {flatNavItems.find(i => i.path === location.pathname)?.label || 'Dashboard'}
                         </h2>
                     </div>
 
@@ -495,6 +619,68 @@ const Layout = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Mobile QR Floating Action Button */}
+            <button
+                onClick={handleOpenMobileQR}
+                className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center p-4 bg-indigo-600 text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-indigo-500/50 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all z-40 border-4 border-white"
+            >
+                <QrCode size={28} />
+            </button>
+
+            {/* Mobile QR Modal */}
+            {isMobileQROpen && (
+                <div className="fixed inset-0 z-50 flex flex-col justify-end">
+                    {/* Dark/Blur Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-gray-900/60 backdrop-blur-md transition-opacity"
+                        onClick={() => setIsMobileQROpen(false)}
+                    ></div>
+
+                    {/* Bottom Sheet Container */}
+                    <div className="relative w-full bg-white rounded-t-[2.5rem] pt-32 pb-8 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] animate-in slide-in-from-bottom duration-300">
+
+                        {/* The QR Code container floating above the edge */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                            {mobileQRLoading ? (
+                                <div className="w-56 h-56 md:w-64 md:h-64 bg-white rounded-3xl shadow-2xl border-4 border-indigo-100 flex flex-col items-center justify-center">
+                                    <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                                    <p className="text-sm text-gray-400 font-medium">Scanning...</p>
+                                </div>
+                            ) : mobileQRData ? (
+                                <div className="bg-white p-3 rounded-3xl shadow-2xl border-4 border-indigo-50 relative group">
+                                    <img
+                                        src={mobileQRData}
+                                        alt="My QR Code"
+                                        className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-xl"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-56 h-56 md:w-64 md:h-64 bg-white rounded-3xl shadow-2xl border-4 border-rose-50 flex flex-col items-center justify-center p-4 text-center text-rose-500">
+                                    <AlertCircle size={40} className="mb-2 opacity-80" />
+                                    <p className="font-bold">QR Not Found</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Content inside the white sheet */}
+                        <div className="text-center mt-[-20px]">
+                            <h3 className="text-gray-900 text-2xl font-bold tracking-tight">My Attendance</h3>
+                            <p className="text-gray-500 text-sm mt-3 mb-8 max-w-[280px] mx-auto leading-relaxed">
+                                Show this code at the scanner to mark your attendance for today.
+                            </p>
+
+                            {/* Close Button at the bottom */}
+                            <button
+                                onClick={() => setIsMobileQROpen(false)}
+                                className="mx-auto flex flex-col gap-1 items-center justify-center w-12 h-12 bg-gray-100 text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-full transition-all active:scale-95"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

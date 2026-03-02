@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const InterviewSession = require('../models/InterviewSession');
 const aiService = require('../services/aiService');
+const { getQuestions, createQuestion, deleteQuestion, getAnalyticsSummary } = require('../controllers/interviewController');
 
 // Start Interview
 router.post('/start', async (req, res) => {
@@ -186,5 +187,16 @@ router.get('/session/:sessionId', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+// --- NEW ROUTES FOR QUESTION BANK & ANALYTICS ---
+router.route('/questions')
+  .get(getQuestions)
+  .post(createQuestion);
+
+router.route('/questions/:id')
+  .delete(deleteQuestion);
+
+router.route('/analytics')
+  .get(getAnalyticsSummary);
 
 module.exports = router;

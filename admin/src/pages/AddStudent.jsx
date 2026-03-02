@@ -9,6 +9,7 @@ const AddStudent = () => {
     const { id } = useParams();
     const isEditMode = !!id;
     const [loading, setLoading] = useState(false);
+    const [courses, setCourses] = useState([]);
 
     // Initial State
     const [formData, setFormData] = useState({
@@ -19,8 +20,8 @@ const AddStudent = () => {
         dob: '',
         address: '',
         city: '',
-        courseName: 'MS Office',
-        courseCategory: 'IT Skills',
+        courseName: '', // will be set dynamically or left empty initially
+        courseCategory: '',
         batchTiming: 'Morning',
         startDate: new Date().toISOString().split('T')[0],
         access: {
@@ -64,12 +65,39 @@ const AddStudent = () => {
         }
     }, [id, isEditMode]);
 
-    const courses = [
-        { name: 'Computer Fundamentals', category: 'Basic' },
-        { name: 'Typing', category: 'Skill' },
-        { name: 'MS Office', category: 'IT Skills' },
-        { name: 'Web Development', category: 'Professional' }
-    ];
+    // Fetch Courses
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const res = await axios.get(`${API_URL}/api/courses`);
+                const mappedCourses = res.data.map(c => ({
+                    name: c.title,
+                    category: c.skillLevel || 'General',
+                    title: c.title
+                }));
+                setCourses(mappedCourses);
+
+                // Set default course if creating a new student and we have courses
+                if (!isEditMode && mappedCourses.length > 0) {
+                    setFormData(prev => {
+                        if (prev.courseName === '') {
+                            return {
+                                ...prev,
+                                courseName: mappedCourses[0].name,
+                                courseCategory: mappedCourses[0].category
+                            };
+                        }
+                        return prev;
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to fetch courses:', err);
+                toast.error('Failed to load courses');
+            }
+        };
+        fetchCourses();
+    }, [isEditMode]);
 
     // Handle Course Change & Auto-set Access
     const handleCourseChange = (e) => {
@@ -186,6 +214,7 @@ const AddStudent = () => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Course Name</label>
                                 <select value={formData.courseName} onChange={handleCourseChange} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                    {courses.length === 0 && <option value="">Loading courses...</option>}
                                     {courses.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                                 </select>
                             </div>

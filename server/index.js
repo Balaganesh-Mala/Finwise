@@ -11,6 +11,10 @@ dotenv.config();
 // Connect to database
 connectDB();
 
+// Init Cron Jobs
+const { startCronJobs } = require('./services/cronJobs');
+startCronJobs();
+
 const app = express();
 
 // Middleware
@@ -70,6 +74,8 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/batches', require('./routes/batchRoutes'));
 app.use('/api/topic-content', require('./routes/topicContentRoutes'));
 app.use('/api/drip', require('./routes/dripRoutes'));
+app.use('/api/finance', require('./routes/financeRoutes'));
+app.use('/api/expenses', require('./routes/expenseRoutes'));
 
 // Course Module Routes
 app.use('/api', require('./routes/moduleRoutes'));

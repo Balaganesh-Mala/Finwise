@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import axios from 'axios';
+import MobileScannerModal from './MobileScannerModal';
 import {
   LayoutDashboard,
   Image,
@@ -20,17 +21,127 @@ import {
   QrCode,
   Calendar,
   Layers,
-  ClipboardList
+  ClipboardList,
+  CreditCard,
+  Receipt,
+  Globe,
+  MonitorPlay,
+  Video,
+  TrendingUp,
+  HelpCircle,
+  Mic
 } from 'lucide-react';
 
+
+const navCategories = [
+  {
+    title: 'Dashboard',
+    links: [
+      { name: 'Dashboard', path: '/', icon: LayoutDashboard }
+    ]
+  },
+  {
+    title: 'Students Management',
+    icon: Users,
+    links: [
+      { name: 'Students', path: '/students', icon: Users },
+      { name: 'Batches', path: '/batches', icon: Layers },
+      { name: 'Attendance Scanner', path: '/attendance/qr-scanner', icon: QrCode },
+      { name: 'Att. History', path: '/attendance/history', icon: Calendar },
+      { name: 'Submissions', path: '/submissions', icon: ClipboardList },
+      { name: 'Manage Demos', path: '/demos', icon: MessageSquare },
+      { name: 'Test Bank', path: '/tests', icon: FileText }
+    ]
+  },
+  {
+    title: 'Courses & Learning',
+    icon: BookOpen,
+    links: [
+      { name: 'Courses', path: '/courses', icon: BookOpen },
+      { name: 'Trainers', path: '/trainers', icon: Users },
+      { name: 'Meetings', path: '/meetings', icon: Calendar }
+    ]
+  },
+  {
+    title: 'Interviews Preparation',
+    icon: MonitorPlay,
+    links: [
+      { name: 'AI Mock Management', path: '/interviews/ai-mock', icon: Video },
+      { name: 'Mock History', path: '/interviews/history', icon: ClipboardList },
+      { name: 'Question Bank', path: '/interviews/questions', icon: HelpCircle },
+      { name: 'Analytics', path: '/interviews/analytics', icon: TrendingUp }
+    ]
+  },
+  {
+    title: 'Finance',
+    icon: CreditCard,
+    links: [
+      { name: 'Fee Management', path: '/fees', icon: CreditCard },
+      { name: 'Expenses', path: '/expenses', icon: Receipt }
+    ]
+  },
+  {
+    title: 'Jobs & Placement Cell',
+    icon: Briefcase,
+    links: [
+      { name: 'Client Jobs', path: '/jobs', icon: Briefcase },
+      { name: 'Student Jobs', path: '/student-jobs', icon: Briefcase },
+      { name: 'Applications', path: '/applications', icon: FileText }
+    ]
+  },
+  {
+    title: 'Marketing & Website',
+    icon: Globe,
+    links: [
+      { name: 'Banners', path: '/banners', icon: Image },
+      { name: 'Blogs', path: '/blogs', icon: FileText },
+      { name: 'Reviews', path: '/reviews', icon: Users }
+    ]
+  },
+  {
+    title: 'Communication',
+    icon: MessageSquare,
+    links: [
+      { name: 'Inquiries', path: '/inquiries', icon: MessageSquare }
+    ]
+  },
+  {
+    title: 'Settings',
+    links: [
+      { name: 'Settings', path: '/settings', icon: Settings }
+    ]
+  }
+];
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [inquiryCount, setInquiryCount] = useState(0);
+  const [inquiries, setInquiries] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [settings, setSettings] = useState({ siteTitle: 'JobReady', logoUrl: '' });
   const [user, setUser] = useState(null);
+
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Determine initial open category based on current path
+  const getInitialCategory = () => {
+    for (let i = 0; i < navCategories.length; i++) {
+      if (navCategories[i].links.some(link => link.path === location.pathname)) {
+        return navCategories[i].title;
+      }
+    }
+    return 'Dashboard';
+  };
+
+  const [activeCategory, setActiveCategory] = useState(getInitialCategory());
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+
+  // Update active category when route changes
+  useEffect(() => {
+    setActiveCategory(getInitialCategory());
+  }, [location.pathname]);
 
   // Fetch settings, inquiry count, and current user
   useEffect(() => {
@@ -49,7 +160,9 @@ const Layout = () => {
           setSettings(prev => ({ ...prev, ...settingsRes.data }));
         }
 
-        const newCount = inquiriesRes.data.filter(i => i.status === 'new').length;
+        const allInquiries = inquiriesRes.data || [];
+        setInquiries(allInquiries.slice(0, 5)); // Keep top 5 latest for dropdown
+        const newCount = allInquiries.filter(i => i.status === 'new').length;
         setInquiryCount(newCount);
 
         if (authRes.data.user) {
@@ -69,123 +182,194 @@ const Layout = () => {
     navigate('/login');
   };
 
-  const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Students', path: '/students', icon: Users },
-    { name: 'Batches', path: '/batches', icon: Layers },
-    { name: 'Banners', path: '/banners', icon: Image },
-    { name: 'Courses', path: '/courses', icon: BookOpen },
-    { name: 'Inquiries', path: '/inquiries', icon: MessageSquare, badge: inquiryCount > 0 ? inquiryCount : null },
-    { name: 'Client Jobs', path: '/jobs', icon: Briefcase },
-    { name: 'Student Jobs', path: '/student-jobs', icon: Briefcase },
-    { name: 'Applications', path: '/applications', icon: FileText },
-    { name: 'Attendance Scanner', path: '/attendance/qr-scanner', icon: QrCode },
-    { name: 'Att. History', path: '/attendance/history', icon: Calendar },
-    { name: 'Blogs', path: '/blogs', icon: FileText },
-    { name: 'Reviews', path: '/reviews', icon: Users },
-    { name: 'Settings', path: '/settings', icon: Settings },
-    { name: 'Trainers', path: '/trainers', icon: Users },
-    { name: 'Meetings', path: '/meetings', icon: Calendar },
-    { name: 'Manage Demos', path: '/demos', icon: MessageSquare },
-    { name: 'Test Bank', path: '/tests', icon: FileText },
-    { name: 'Submissions', path: '/submissions', icon: ClipboardList },
-  ];
 
+  const userName = user?.user_metadata?.full_name || 'Administrator';
+  const userEmail = user?.email || 'admin@finwisecs.com';
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-slate-900/40 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0F172A] text-white transform transition-transform duration-300 ease-out border-r border-[#1E293B] ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 flex flex-col shadow-2xl`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/80 backdrop-blur-xl text-slate-800 transform transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] border-r border-slate-200/60 ${sidebarOpen ? 'translate-x-0 shadow-2xl shadow-indigo-500/10' : '-translate-x-full'} md:relative md:translate-x-0 flex flex-col`}
       >
         {/* Sidebar Header */}
-        <div className="h-20 flex items-center px-6 border-b border-[#1E293B]">
+        <div className="h-20 flex items-center px-6 border-b border-slate-100 flex-shrink-0">
           <div className="flex items-center gap-3">
             {settings.logoUrl ? (
-              <img src={settings.logoUrl} alt="Logo" className="h-10 w-10 object-contain" />
+              <img src={settings.logoUrl} alt="Logo" className="h-10 w-10 object-contain drop-shadow-sm" />
             ) : (
-              <div className="h-10 w-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20">
+              <div className="h-10 w-10 bg-gradient-to-tr from-indigo-500 to-violet-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30 ring-2 ring-white/50">
                 {settings.siteTitle.charAt(0)}
               </div>
             )}
             <div>
-              <span className="block text-lg font-bold tracking-tight text-white leading-none">
+              <span className="block text-lg font-extrabold tracking-tight text-slate-800 leading-none bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
                 {settings.siteTitle}
               </span>
-              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+              <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.2em] mt-0.5 block">
                 Admin Portal
               </span>
             </div>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden ml-auto text-slate-400 hover:text-white">
-            <X size={24} />
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden ml-auto p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all">
+            <X size={20} />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 no-scrollbar">
-          <div className="px-4 mb-4 text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-            <span className="w-8 h-[1px] bg-slate-700"></span>
-            Menu
-          </div>
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {navCategories.map((category, catIndex) => {
+            const isCategoryOpen = activeCategory === category.title || hoveredCategory === category.title;
 
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            // Top level links without categories
+            if (category.title === 'Dashboard' || category.title === 'Settings') {
+              const item = category.links[0];
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
 
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`group flex items-center justify-between px-3.5 py-3 rounded-xl transition-all duration-300 relative overflow-hidden ${isActive
+                    ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-sm ring-1 ring-indigo-100/50'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 font-medium'
+                    }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full shadow-[0_0_8px_rgba(79,70,229,0.5)]"></span>
+                  )}
+
+                  <div className="flex items-center gap-3.5 relative z-10 w-full">
+                    <div className={`p-1.5 rounded-lg transition-all duration-300 ${isActive ? 'bg-indigo-100 text-indigo-600 shadow-inner' : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-indigo-500 group-hover:shadow-sm group-hover:ring-1 group-hover:ring-slate-200/50'}`}>
+                      <Icon
+                        size={18}
+                        strokeWidth={isActive ? 2.5 : 2}
+                        className="transition-transform duration-300 group-hover:scale-110"
+                      />
+                    </div>
+                    <span className="text-sm tracking-wide flex-1">{item.name}</span>
+                    {item.badge && (
+                      <span className={`relative z-10 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm transition-all duration-300 ${isActive ? 'bg-indigo-600 text-white shadow-indigo-500/30' : 'bg-rose-50 text-rose-500 ring-1 ring-rose-100 group-hover:bg-rose-500 group-hover:text-white group-hover:shadow-rose-500/30 group-hover:ring-rose-500'}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 to-transparent opacity-50"></div>
+                  )}
+                </Link>
+              )
+            }
+
+            // Categories with dropdowns
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`group flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200 border border-transparent ${isActive
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20'
-                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-                  }`}
+              <div
+                key={catIndex}
+                className={`space-y-1 ${category.title === 'Communication' && inquiryCount > 0 ? 'animate-[pulse_2s_ease-in-out_infinite]' : ''}`}
+                onMouseEnter={() => setHoveredCategory(category.title)}
+                onMouseLeave={() => setHoveredCategory(null)}
               >
-                <div className="flex items-center gap-3.5">
-                  <Icon
-                    size={20}
-                    strokeWidth={isActive ? 2 : 1.5}
-                    className={`transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}
-                  />
-                  <span className="text-sm font-medium tracking-wide">{item.name}</span>
+                <button
+                  onClick={() => setActiveCategory(activeCategory === category.title ? '' : category.title)}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl transition-all duration-300 relative overflow-hidden group/catBtn ${isCategoryOpen ? 'bg-indigo-50/50 shadow-sm ring-1 ring-indigo-100/30' : 'hover:bg-slate-50'}`}
+                >
+                  {isCategoryOpen && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-xl"></span>
+                  )}
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className={`p-1.5 rounded-lg transition-all duration-300 ${isCategoryOpen ? 'bg-indigo-100/80 text-indigo-600 shadow-inner' : 'bg-slate-100/50 text-slate-400 group-hover/catBtn:bg-white group-hover/catBtn:text-indigo-500 group-hover/catBtn:shadow-sm group-hover/catBtn:ring-1 group-hover/catBtn:ring-slate-200/50'}`}>
+                      {category.icon && <category.icon size={18} strokeWidth={isCategoryOpen ? 2.5 : 2} className="transition-transform duration-300 group-hover/catBtn:scale-110" />}
+                    </div>
+                    <div className="relative">
+                      <span className={`text-[13px] font-bold tracking-wide transition-colors ${isCategoryOpen ? 'text-indigo-700' : 'text-slate-600 group-hover/catBtn:text-slate-900'}`}>{category.title}</span>
+                      {category.title === 'Communication' && inquiryCount > 0 && (
+                        <span className="absolute -top-1 -right-2.5 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                      )}
+                      {category.title === 'Communication' && inquiryCount > 0 && (
+                        <span className="absolute -top-1 -right-2.5 w-2 h-2 bg-red-500 rounded-full shadow-sm shadow-red-500/50 border border-white"></span>
+                      )}
+                    </div>
+                  </div>
+                  <div className={`p-1 rounded-md transition-colors ${isCategoryOpen ? 'bg-indigo-100 text-indigo-600' : 'bg-transparent text-slate-400 group-hover/catBtn:bg-slate-100'}`}>
+                    <ChevronDown size={14} className={`transition-transform duration-300 ${isCategoryOpen ? 'rotate-180' : ''}`} />
+                  </div>
+                </button>
+
+                <div className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isCategoryOpen ? 'max-h-96 opacity-100 mt-1.5' : 'max-h-0 opacity-0'}`}>
+                  <div className="flex flex-col gap-0.5 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100 before:-z-10 pl-2 pr-1 pb-1">
+                    {category.links.map((item) => {
+                      const isActive = location.pathname === item.path;
+                      const hasBadge = item.badge || (item.name === 'Inquiries' && inquiryCount > 0);
+                      const badgeValue = item.name === 'Inquiries' && inquiryCount > 0 ? inquiryCount : item.badge;
+
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`group flex items-center justify-between pl-8 pr-4 py-2.5 rounded-xl transition-all duration-200 relative w-full ${isActive
+                            ? 'bg-indigo-50/80 text-indigo-700 font-semibold shadow-sm ring-1 ring-indigo-500/10'
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 font-medium'
+                            }`}
+                        >
+                          {/* Connecting Line effect active */}
+                          <div className={`absolute left-[17px] w-3 h-[2px] rounded-r-full transition-colors ${isActive ? 'bg-indigo-500' : 'bg-transparent group-hover:bg-slate-300'}`}></div>
+
+                          <div className="flex items-center gap-3 relative w-full z-10">
+                            <span className={`text-[13px] tracking-wide flex-1 transition-transform ${isActive ? 'translate-x-1' : 'group-hover:translate-x-1'}`}>{item.name}</span>
+                            {hasBadge && (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transition-all duration-300 ${isActive ? 'bg-indigo-600 text-white' : 'bg-rose-50 text-rose-600 ring-1 ring-rose-200 group-hover:bg-rose-500 group-hover:text-white'}`}>
+                                {badgeValue}
+                              </span>
+                            )}
+                          </div>
+
+                          {isActive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-indigo-50/50 opacity-50 rounded-xl" />
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-                {item.badge && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-blue-500/10 text-blue-400'}`}>
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
+              </div>
+            )
           })}
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 mx-4 mb-4 bg-slate-800/30 rounded-2xl border border-slate-700/30 backdrop-blur-sm">
-          <div className="flex items-center gap-3 mb-3 px-1">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold border-2 border-[#0F172A] shadow-sm">
-              A
+        <div className="p-4 mx-4 mb-6 mt-2 bg-gradient-to-b from-white to-slate-50 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all duration-500 group-hover:bg-indigo-500/10 group-hover:scale-150"></div>
+
+          <div className="flex items-center gap-3 mb-4 relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20 ring-2 ring-white/80">
+              <span className="drop-shadow-sm">{userInitial}</span>
             </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-bold text-white truncate">Administrator</p>
-              <p className="text-xs text-slate-400 truncate">admin@jobready.com</p>
+            <div className="overflow-hidden flex-1">
+              <p className="text-sm font-bold text-slate-800 truncate">{userName}</p>
+              <p className="text-[11px] font-medium text-slate-500 truncate">{userEmail}</p>
             </div>
           </div>
+
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#0F172A] text-slate-400 border border-slate-700 hover:border-red-500/30 hover:text-red-400 hover:bg-red-500/5 transition-all text-sm font-medium"
+            className="w-full relative z-10 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-transparent hover:text-white hover:shadow-md hover:shadow-rose-500/20 transition-all duration-300 text-sm font-bold group/btn overflow-hidden"
           >
-            <LogOut size={16} />
-            <span>Sign Out</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-red-500 translate-y-[100%] group-hover/btn:translate-y-[0%] transition-transform duration-300 ease-out z-0"></div>
+            <LogOut size={16} className="relative z-10 transition-colors duration-300 group-hover/btn:text-white" />
+            <span className="relative z-10 transition-colors duration-300 group-hover/btn:text-white">Sign Out</span>
           </button>
         </div>
       </aside>
@@ -203,7 +387,7 @@ const Layout = () => {
             {/* Breadcrumb / Title */}
             <div>
               <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
-                {navItems.find(i => i.path === location.pathname)?.name || 'Dashboard'}
+                {navCategories.flatMap(c => c.links).find(i => i.path === location.pathname)?.name || 'Dashboard'}
               </h2>
             </div>
           </div>
@@ -219,21 +403,63 @@ const Layout = () => {
               />
             </div>
 
-            <div className="flex items-center gap-3">
-              <button className="relative p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors border border-transparent hover:border-blue-100">
-                <Bell size={20} />
+            <div className="flex items-center gap-3 relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors border border-transparent hover:border-blue-100 group"
+              >
+                <Bell size={20} className={inquiryCount > 0 ? 'group-hover:animate-ping' : ''} />
                 {inquiryCount > 0 && (
-                  <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 bg-gradient-to-tr from-rose-500 to-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white flex items-center justify-center shadow-md animate-bounce shadow-red-500/30">
+                    {inquiryCount > 99 ? '99+' : inquiryCount}
+                  </span>
                 )}
               </button>
+
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden z-50 transform origin-top-right transition-all animate-in fade-in slide-in-from-top-4 duration-200">
+                  <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <h3 className="font-bold text-slate-800">Notifications</h3>
+                    <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">{inquiryCount} New</span>
+                  </div>
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {inquiries.length > 0 ? (
+                      <div className="divide-y divide-slate-100">
+                        {inquiries.map((inq, idx) => (
+                          <div key={idx} className={`p-4 hover:bg-slate-50 transition-colors cursor-pointer ${inq.status === 'new' ? 'bg-indigo-50/30' : ''}`} onClick={() => { setShowNotifications(false); navigate('/inquiries'); }}>
+                            <div className="flex justify-between items-start mb-1">
+                              <p className="text-sm font-semibold text-slate-800 truncate pr-2">{inq.name || 'Anonymous'}</p>
+                              <span className="text-[10px] text-slate-400 whitespace-nowrap">{new Date(inq.createdAt || Date.now()).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 line-clamp-2">{inq.message || inq.phone || 'New inquiry received'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center flex flex-col items-center justify-center text-slate-400">
+                        <Bell size={32} className="mb-2 text-slate-200" />
+                        <p className="text-sm">No new notifications</p>
+                      </div>
+                    )}
+                  </div>
+                  {inquiries.length > 0 && (
+                    <div className="p-3 border-t border-slate-100 bg-slate-50/50 text-center">
+                      <button onClick={() => { setShowNotifications(false); navigate('/inquiries'); }} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
+                        View All Inquiries
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="h-8 w-[1px] bg-gray-200 mx-1"></div>
 
               <button className="flex items-center gap-2 p-1.5 pr-3 text-gray-600 hover:bg-gray-50 rounded-full transition-colors border border-transparent hover:border-gray-200">
                 <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                  A
+                  {userInitial}
                 </div>
-                <span className="text-sm font-medium hidden sm:block">Admin</span>
+                <span className="text-sm font-medium hidden sm:block">{userName}</span>
               </button>
             </div>
           </div>
@@ -246,6 +472,18 @@ const Layout = () => {
           </div>
         </main>
       </div>
+
+      {/* Mobile Scanner FAB */}
+      <button
+        onClick={() => setShowScanner(true)}
+        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] bg-indigo-600 text-white p-4 rounded-full shadow-xl shadow-indigo-600/40 ring-4 ring-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition-all group"
+      >
+        <QrCode size={24} className="relative z-10 transition-transform group-hover:scale-110" />
+        <div className="absolute inset-0 bg-indigo-400 rounded-full blur opacity-30 animate-pulse -z-10"></div>
+      </button>
+
+      {/* Mobile Scanner Modal Overlay */}
+      {showScanner && <MobileScannerModal onClose={() => setShowScanner(false)} />}
     </div>
   );
 };

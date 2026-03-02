@@ -159,19 +159,7 @@ const Settings = () => {
                     </div>
                 </div>
 
-                {/* Hiring Process Configuration - MOVED TO ADD TRAINER PAGE */}
-                <div className="bg-blue-50 rounded-xl border border-blue-100 p-6 flex items-start gap-4">
-                    <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
-                        <Briefcase size={20} />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-blue-800">Hiring Process Configuration</h3>
-                        <p className="text-sm text-blue-600 mt-1">
-                            Hiring rounds are now configured individually for each trainer during registration.
-                            Please go to the <strong>"Register Trainer"</strong> page to set up interview questions and enable rounds.
-                        </p>
-                    </div>
-                </div>
+
 
                 {/* Contact Information */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">

@@ -8,6 +8,8 @@ import ManageTests from './pages/ManageTests';
 import Dashboard from './pages/Dashboard';
 import Banners from './pages/Banners';
 import Layout from './components/Layout';
+import FeeManagement from './pages/FeeManagement';
+import ExpenseManagement from './pages/ExpenseManagement';
 import Students from './pages/Students';
 import AddStudent from './pages/AddStudent';
 import Settings from './pages/Settings';
@@ -31,6 +33,11 @@ import ManageBatches from './pages/ManageBatches';
 import BatchStudents from './pages/BatchStudents';
 import StudentSubmissions from './pages/StudentSubmissions';
 
+// Interviews
+import AIMockInterviews from './pages/Interviews/AIMockInterviews';
+import MockInterviewHistory from './pages/Interviews/MockInterviewHistory';
+import QuestionBank from './pages/Interviews/QuestionBank';
+import PerformanceAnalytics from './pages/Interviews/PerformanceAnalytics';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -61,6 +68,8 @@ function App() {
           <Route path="jobs" element={<Jobs />} />
           <Route path="student-jobs" element={<StudentJobs />} />
           <Route path="applications" element={<Applications />} />
+          <Route path="fees" element={<FeeManagement />} />
+          <Route path="expenses" element={<ExpenseManagement />} />
           <Route path="blogs" element={<Blogs />} />
           <Route path="inquiries" element={<Inquiries />} />
           <Route path="attendance/qr-scanner" element={<QRScanner />} />
@@ -76,6 +85,12 @@ function App() {
           <Route path="batches" element={<ManageBatches />} />
           <Route path="batches/:batchId/students" element={<BatchStudents />} />
           <Route path="submissions" element={<StudentSubmissions />} />
+
+          {/* Interviews & Assessments */}
+          <Route path="interviews/ai-mock" element={<AIMockInterviews />} />
+          <Route path="interviews/history" element={<MockInterviewHistory />} />
+          <Route path="interviews/questions" element={<QuestionBank />} />
+          <Route path="interviews/analytics" element={<PerformanceAnalytics />} />
 
           {/* Add more routes here as we migrate */}
           <Route path="*" element={<Navigate to="/" replace />} />
