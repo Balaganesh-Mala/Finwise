@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
     PlayCircle, CheckCircle, FileText, MessageSquare, Star,
     ChevronDown, ChevronRight, Download, Menu, ArrowLeft, Clock,
     Edit2, Trash2, Lock, AlertCircle, Upload, BookOpen,
-    Trophy, XCircle, SkipForward, RotateCcw, Award
+    Trophy, XCircle, SkipForward, RotateCcw, Award,
+    Play, Pause, Volume2, VolumeX, Maximize2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -51,6 +52,17 @@ const CoursePlayer = () => {
     // Progress State
     const [progress, setProgress] = useState({});
     const videoRef = useRef(null);
+
+    // ─── YouTube Custom Player State ─────────────────────────────
+    const [ytReady, setYtReady] = useState(false);
+    const [ytPlaying, setYtPlaying] = useState(false);
+    const [ytCurrentTime, setYtCurrentTime] = useState(0);
+    const [ytDuration, setYtDuration] = useState(0);
+    const [ytVolume, setYtVolume] = useState(80);
+    const [ytMuted, setYtMuted] = useState(false);
+    const ytPlayerRef = useRef(null);
+    const ytPollRef = useRef(null);
+    const playerWrapRef = useRef(null);
 
     // ─── Quiz Timer ───────────────────────────────────────────────
     useEffect(() => {
@@ -232,6 +244,141 @@ const CoursePlayer = () => {
         };
         loadContent();
     }, [activeTopic?._id]);
+
+    // ─── Load YouTube IFrame API script once ──────────────────────────
+    useEffect(() => {
+        if (document.getElementById('yt-api-script')) return;
+        const s = document.createElement('script');
+        s.id = 'yt-api-script';
+        s.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(s);
+    }, []);
+
+    // ─── Init YouTube Player when activeTopic changes ─────────────────
+    const destroyYtPlayer = useCallback(() => {
+        clearInterval(ytPollRef.current);
+        if (ytPlayerRef.current) {
+            try { ytPlayerRef.current.destroy(); } catch (_) { }
+            ytPlayerRef.current = null;
+        }
+        setYtReady(false);
+        setYtPlaying(false);
+        setYtCurrentTime(0);
+        setYtDuration(0);
+    }, []);
+
+    useEffect(() => {
+        if (!activeTopic?.videoUrl) return;
+        const isYT = activeTopic.videoUrl.includes('youtube.com') || activeTopic.videoUrl.includes('youtu.be');
+        if (!isYT) return;
+
+        destroyYtPlayer();
+
+        let cancelled = false;
+        let attempts = 0;
+
+        const tryInit = () => {
+            if (cancelled) return;
+            const container = document.getElementById('yt-player-container');
+            if (!container || !window.YT?.Player) {
+                if (attempts++ < 30) setTimeout(tryInit, 300);
+                return;
+            }
+            const videoId = getYouTubeVideoId(activeTopic.videoUrl);
+            if (!videoId) return;
+            ytPlayerRef.current = new window.YT.Player('yt-player-container', {
+                width: '100%',
+                height: '100%',
+                videoId,
+                playerVars: {
+                    controls: 0,
+                    modestbranding: 1,
+                    rel: 0,
+                    playsinline: 1,
+                    iv_load_policy: 3,
+                    origin: window.location.origin,
+                },
+                events: {
+                    onReady: (e) => {
+                        if (cancelled) return;
+                        setYtReady(true);
+                        setYtDuration(e.target.getDuration());
+                        e.target.setVolume(80);
+                    },
+                    onStateChange: (e) => {
+                        if (cancelled) return;
+                        const playing = e.data === window.YT?.PlayerState?.PLAYING;
+                        setYtPlaying(playing);
+                        const d = e.target.getDuration?.() || 0;
+                        if (d > 0) setYtDuration(d);
+                    },
+                },
+            });
+        };
+
+        // Give iframe a frame to render, then try
+        const t = setTimeout(tryInit, 400);
+        return () => {
+            cancelled = true;
+            clearTimeout(t);
+            destroyYtPlayer();
+        };
+    }, [activeTopic?._id, destroyYtPlayer]);
+
+    // ─── Poll current time while playing ────────────────────────────
+    useEffect(() => {
+        if (ytPlaying) {
+            ytPollRef.current = setInterval(() => {
+                const ct = ytPlayerRef.current?.getCurrentTime?.();
+                if (ct !== undefined) setYtCurrentTime(ct);
+            }, 500);
+        } else {
+            clearInterval(ytPollRef.current);
+        }
+        return () => clearInterval(ytPollRef.current);
+    }, [ytPlaying]);
+
+    // ─── YouTube player helpers ─────────────────────────────────
+    const ytFormatTime = (s) => {
+        if (!s || isNaN(s)) return '0:00';
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return `${m}:${sec.toString().padStart(2, '0')}`;
+    };
+    const ytTogglePlay = () => {
+        if (!ytPlayerRef.current) return;
+        if (ytPlaying) ytPlayerRef.current.pauseVideo();
+        else ytPlayerRef.current.playVideo();
+    };
+    const ytSeek = (e) => {
+        const v = parseFloat(e.target.value);
+        setYtCurrentTime(v);
+        ytPlayerRef.current?.seekTo(v, true);
+    };
+    const ytHandleVolume = (e) => {
+        const v = parseInt(e.target.value);
+        setYtVolume(v);
+        setYtMuted(v === 0);
+        ytPlayerRef.current?.setVolume(v);
+        if (v === 0) ytPlayerRef.current?.mute();
+        else ytPlayerRef.current?.unMute();
+    };
+    const ytToggleMute = () => {
+        if (ytMuted) {
+            ytPlayerRef.current?.unMute();
+            ytPlayerRef.current?.setVolume(ytVolume || 80);
+            setYtMuted(false);
+        } else {
+            ytPlayerRef.current?.mute();
+            setYtMuted(true);
+        }
+    };
+    const ytFullscreen = () => {
+        const el = playerWrapRef.current;
+        if (!el) return;
+        if (document.fullscreenElement) document.exitFullscreen();
+        else el.requestFullscreen?.();
+    };
 
     const isTopicUnlocked = (topic) => {
         if (unlockedTopicIds === null) return true; // No drip configured or not yet loaded
@@ -524,42 +671,134 @@ const CoursePlayer = () => {
                     {activeTopic ? (
                         <div className="max-w-4xl mx-auto space-y-6">
 
-                            {/* Video Player Container */}
-                            <div className="bg-black aspect-video w-full rounded-none md:rounded-xl overflow-hidden shadow-lg sticky top-0 md:static z-10 relative group">
-                                {activeTopic.videoUrl ? (
-                                    (activeTopic.videoUrl.includes('youtube.com') || activeTopic.videoUrl.includes('youtu.be')) ? (
-                                        <div className="w-full h-full">
-                                            <iframe
-                                                className="w-full h-full"
-                                                src={`https://www.youtube.com/embed/${getYouTubeVideoId(activeTopic.videoUrl)}?enablejsapi=1`}
-                                                title={activeTopic.title}
-                                                frameBorder="0"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowFullScreen
-                                            ></iframe>
-                                            {/* Manual Complete Button for YouTube */}
-                                            {/* Manual Complete Button Moved */}
-                                        </div>
-                                    ) : (
-                                        <video
-                                            ref={videoRef}
-                                            src={activeTopic.videoUrl}
-                                            controls
-                                            controlsList="nodownload" // Disable download button
-                                            onContextMenu={(e) => e.preventDefault()} // Disable right-click
-                                            className="w-full h-full"
-                                            onTimeUpdate={handleVideoProgress}
-                                            onEnded={() => updateProgress(true, videoRef.current.duration)}
-                                        >
-                                            Your browser does not support the video tag.
-                                        </video>
-                                    )
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">
-                                        <p>No video available for this lesson.</p>
+                            {/* ── YouTube Player + Custom Controls ── */}
+                            {(activeTopic.videoUrl?.includes('youtube.com') || activeTopic.videoUrl?.includes('youtu.be')) ? (
+                                <div ref={playerWrapRef} className="rounded-none md:rounded-xl overflow-hidden shadow-xl sticky top-0 md:static z-10 bg-black">
+                                    {/* Video area — div placeholder: YT API creates the iframe here */}
+                                    <div className="relative w-full aspect-video bg-black overflow-hidden">
+                                        <div
+                                            id="yt-player-container"
+                                            className="absolute inset-0 w-full h-full"
+                                        />
+                                        {/* Top mask — covers YouTube channel name & icon, blocks clicks to prevent YouTube navigation */}
+                                        <div className="absolute top-0 left-0 right-0 h-14 bg-black z-10" />
+                                        {/* Bottom mask — covers YouTube logo & share icons, blocks clicks */}
+                                        <div className="absolute bottom-0 left-0 right-0 h-14 bg-black z-50" />
+                                        {/* Branded play icon — covers YouTube's red play button until video starts */}
+                                        {!ytPlaying && (
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+
+                                                {/* Floating Glow Ring */}
+                                                <div className="absolute w-24 h-24 rounded-full bg-orange-500/30 animate-ping"></div>
+
+                                                {/* Floating Play Button */}
+                                                <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.35)] animate-[float_3s_ease-in-out_infinite]">
+                                                    <Play size={30} className="text-white ml-1" fill="white" />
+                                                </div>
+
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
+
+                                    {/* Custom Control Bar */}
+                                    <div className="bg-gray-950 px-4 pt-2 pb-3 space-y-2">
+                                        {/* Seek bar */}
+                                        <div className="relative group/seek">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max={ytDuration || 100}
+                                                step="0.5"
+                                                value={ytCurrentTime}
+                                                onChange={ytSeek}
+                                                disabled={!ytReady}
+                                                className="w-full h-1 rounded-full appearance-none cursor-pointer bg-gray-700 accent-indigo-500"
+                                                style={{
+                                                    background: ytDuration
+                                                        ? `linear-gradient(to right, #6366f1 ${(ytCurrentTime / ytDuration) * 100}%, #374151 ${(ytCurrentTime / ytDuration) * 100}%)`
+                                                        : '#374151'
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Controls row */}
+                                        <div className="flex items-center justify-between">
+                                            {/* Left: play, volume, time */}
+                                            <div className="flex items-center gap-3">
+                                                {/* Play / Pause */}
+                                                <button
+                                                    onClick={ytTogglePlay}
+                                                    disabled={!ytReady}
+                                                    className="text-white hover:text-indigo-400 transition-colors disabled:opacity-40"
+                                                    title={ytPlaying ? 'Pause' : 'Play'}
+                                                >
+                                                    {ytPlaying
+                                                        ? <Pause size={20} />
+                                                        : <Play size={20} />}
+                                                </button>
+
+                                                {/* Mute toggle */}
+                                                <button
+                                                    onClick={ytToggleMute}
+                                                    disabled={!ytReady}
+                                                    className="text-white hover:text-indigo-400 transition-colors disabled:opacity-40"
+                                                    title={ytMuted ? 'Unmute' : 'Mute'}
+                                                >
+                                                    {ytMuted || ytVolume === 0
+                                                        ? <VolumeX size={18} />
+                                                        : <Volume2 size={18} />}
+                                                </button>
+
+                                                {/* Volume slider */}
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="100"
+                                                    value={ytMuted ? 0 : ytVolume}
+                                                    onChange={ytHandleVolume}
+                                                    disabled={!ytReady}
+                                                    className="w-20 h-1 rounded-full appearance-none cursor-pointer accent-indigo-500 hidden sm:block disabled:opacity-40"
+                                                />
+
+                                                {/* Time display */}
+                                                <span className="text-xs text-gray-400 tabular-nums select-none">
+                                                    {ytFormatTime(ytCurrentTime)}
+                                                    <span className="text-gray-600 mx-1">/</span>
+                                                    {ytFormatTime(ytDuration)}
+                                                </span>
+                                            </div>
+
+                                            {/* Right: fullscreen */}
+                                            <button
+                                                onClick={ytFullscreen}
+                                                className="text-white hover:text-indigo-400 transition-colors"
+                                                title="Fullscreen"
+                                            >
+                                                <Maximize2 size={17} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : activeTopic.videoUrl ? (
+                                <div className="bg-black aspect-video w-full rounded-none md:rounded-xl overflow-hidden shadow-lg sticky top-0 md:static z-10">
+                                    <video
+                                        ref={videoRef}
+                                        src={activeTopic.videoUrl}
+                                        controls
+                                        controlsList="nodownload"
+                                        onContextMenu={(e) => e.preventDefault()}
+                                        className="w-full h-full"
+                                        onTimeUpdate={handleVideoProgress}
+                                        onEnded={() => updateProgress(true, videoRef.current.duration)}
+                                    >
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            ) : (
+                                <div className="bg-black aspect-video w-full rounded-none md:rounded-xl overflow-hidden shadow-lg flex items-center justify-center text-gray-500">
+                                    <p>No video available for this lesson.</p>
+                                </div>
+                            )}
 
                             {/* Lesson Controls Toolbar */}
                             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">

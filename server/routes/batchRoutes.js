@@ -4,6 +4,8 @@ const Batch = require('../models/Batch');
 const BatchStudent = require('../models/BatchStudent');
 const Student = require('../models/Student');
 const Course = require('../models/Course');
+const FeeStructure = require('../models/FeeStructure');
+const Installment = require('../models/Installment');
 
 // @route   POST /api/batches
 // @desc    Create a new batch
@@ -181,7 +183,7 @@ router.put('/student/change-batch', async (req, res) => {
 });
 
 // @route   GET /api/batches/:id/students
-// @desc    List all students in a batch
+// @desc    List all students in a batch (with fee summary)
 // @access  Admin
 router.get('/:id/students', async (req, res) => {
     try {
@@ -189,7 +191,38 @@ router.get('/:id/students', async (req, res) => {
             .populate('studentId', 'name email phone status courseName profilePicture')
             .sort({ enrollmentDate: -1 });
 
-        res.json({ success: true, students: enrollments });
+        // Attach fee summary for each student
+        const enriched = await Promise.all(
+            enrollments.map(async (enrollment) => {
+                const studentId = enrollment.studentId?._id;
+                if (!studentId) return enrollment.toObject();
+
+                const feeStructure = await FeeStructure.findOne({ student_id: studentId });
+                if (!feeStructure) {
+                    return { ...enrollment.toObject(), feeSummary: null };
+                }
+
+                const installments = await Installment.find({ fee_structure_id: feeStructure._id });
+                const paidInstallments = installments.filter(i => i.status === 'Paid');
+                const overdueInstallments = installments.filter(i => i.status === 'Overdue');
+                const paidAmount = paidInstallments.reduce((sum, i) => sum + i.amount, 0);
+                const pendingAmount = feeStructure.total_fee - paidAmount;
+
+                return {
+                    ...enrollment.toObject(),
+                    feeSummary: {
+                        totalFee: feeStructure.total_fee,
+                        totalInstallments: feeStructure.total_installments,
+                        paidInstallments: paidInstallments.length,
+                        overdueInstallments: overdueInstallments.length,
+                        paidAmount,
+                        pendingAmount
+                    }
+                };
+            })
+        );
+
+        res.json({ success: true, students: enriched });
     } catch (err) {
         console.error('Batch Students Error:', err);
         res.status(500).json({ message: 'Server Error' });
