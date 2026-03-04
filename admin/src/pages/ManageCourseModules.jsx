@@ -153,7 +153,8 @@ const ManageCourseModules = () => {
         setSavingAssign(true);
         const formData = new FormData();
         formData.append('title', newAssignment.title);
-        if (newAssignFile) formData.append('file', newAssignFile);
+        // The backend `topicContentRoutes.js` expects the field name to be 'questionFile'
+        if (newAssignFile) formData.append('questionFile', newAssignFile);
         try {
             const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/assignment`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
             setTopicContent(res.data.content);

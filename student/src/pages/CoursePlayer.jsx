@@ -400,9 +400,51 @@ const CoursePlayer = () => {
         }
     };
 
+    const checkTopicCompletionRequirements = () => {
+        // Prevent bypassing checks if content is still loading or hasn't loaded
+        if (contentLoading || !topicContent) return { allowed: false, message: 'Please wait for lesson content to load before marking as complete.' };
+
+        const subs = mySubmissions || { tasks: [], assignments: [], mcq: null };
+
+        // 1. Check MCQ Test
+        const hasMcq = topicContent.mcqTest && topicContent.mcqTest.enabled && topicContent.mcqTest.testId;
+        if (hasMcq) {
+            const attempt = quizResult || subs.mcq;
+            if (!attempt) return { allowed: false, message: 'You must pass the quiz (75% score) to mark this lesson as completed.' };
+            const scorePct = Math.round((attempt.score / (attempt.total || 1)) * 100);
+            if (scorePct < 75) return { allowed: false, message: 'You must pass the quiz (75% score) to mark this lesson as completed.' };
+        }
+
+        // 2. Check Tasks
+        if (topicContent.tasks && topicContent.tasks.length > 0) {
+            if (!subs.tasks || subs.tasks.length < topicContent.tasks.length) {
+                return { allowed: false, message: 'Please submit all tasks to finish this lesson.' };
+            }
+        }
+
+        // 3. Check Assignments
+        if (topicContent.assignments && topicContent.assignments.length > 0) {
+            if (!subs.assignments || subs.assignments.length < topicContent.assignments.length) {
+                return { allowed: false, message: 'Please submit all assignments to finish this lesson.' };
+            }
+        }
+
+        return { allowed: true };
+    };
+
     const updateProgress = async (completed, watchedDuration) => {
         const storedUser = JSON.parse(localStorage.getItem('studentUser'));
         if (!storedUser || !activeTopic) return;
+
+        // Ensure we only block when transitioning from uncompleted -> completed
+        if (completed && !progress[activeTopic._id]?.completed) {
+            const req = checkTopicCompletionRequirements();
+            if (!req.allowed) {
+                toast.error(req.message);
+                return;
+            }
+        }
+
         try {
             await axios.post(`${import.meta.env.VITE_API_URL}/api/student/progress/update`, {
                 studentId: storedUser._id,
@@ -412,7 +454,9 @@ const CoursePlayer = () => {
                 watchedDuration: watchedDuration
             });
             setProgress(prev => ({ ...prev, [activeTopic._id]: { ...prev[activeTopic._id], completed, watchedDuration } }));
-            if (completed) toast.success('Lesson Completed!');
+            if (completed && !progress[activeTopic._id]?.completed) {
+                toast.success('Lesson Completed!');
+            }
         } catch (err) {
             console.error('Progress sync failed', err);
         }
