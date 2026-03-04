@@ -19,6 +19,7 @@ const CoursePlayer = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('description');
+    const [expandedModules, setExpandedModules] = useState({});
 
     // Drip Unlock State
     // null = no restriction (before API loads, or drip not configured)
@@ -174,6 +175,9 @@ const CoursePlayer = () => {
                     return { ...mod, topics: topicsRes.data.topics };
                 }));
                 setModules(modulesWithTopics);
+                if (modulesWithTopics.length > 0) {
+                    setExpandedModules({ [modulesWithTopics[0]._id]: true });
+                }
 
                 const storedUser = JSON.parse(localStorage.getItem('studentUser'));
                 if (storedUser) {
@@ -580,71 +584,96 @@ const CoursePlayer = () => {
             <div className={`
                 w-full md:w-80
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                bg-white border-r border-gray-200 flex-shrink-0 transition-transform duration-300 flex flex-col z-20 absolute md:static h-full overflow-hidden
+                bg-[#0f172a] border-r border-slate-800 flex-shrink-0 transition-transform duration-300 flex flex-col z-20 absolute md:static h-full overflow-hidden shadow-2xl
             `}>
-                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white">
-                    <h2 className="font-bold text-gray-800 line-clamp-1">{course?.title}</h2>
-                    <button onClick={() => setSidebarOpen(false)} className="p-1 md:hidden">
-                        <ArrowLeft size={20} />
+                {/* Sidebar Header */}
+                <div className="p-5 border-b border-slate-800/60 flex items-center justify-between bg-[#0f172a]">
+                    <h2 className="font-bold text-slate-100 tracking-wide line-clamp-1">{course?.title}</h2>
+                    <button onClick={() => setSidebarOpen(false)} className="p-1.5 md:hidden bg-slate-800 rounded-lg text-slate-300 hover:text-white transition-colors">
+                        <ArrowLeft size={18} />
                     </button>
                 </div>
 
-                <div className="overflow-y-auto flex-1 p-2 space-y-2">
+                <div className="overflow-y-auto flex-1 space-y-4 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {modules.length === 0 && (
                         <div className="p-4 text-center text-gray-500 text-sm">
                             <p>No modules found for this course.</p>
                         </div>
                     )}
-                    {modules.map((module, mIdx) => (
-                        <div key={module._id} className="mb-2">
-                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider px-3 py-2 mb-1">
-                                Module {mIdx + 1}: {module.title}
-                            </h3>
-                            <div className="space-y-1">
-                                {module.topics.map((topic, tIdx) => {
-                                    const unlocked = isTopicUnlocked(topic);
-                                    return (
-                                        <button
-                                            key={topic._id}
-                                            onClick={() => {
-                                                if (!unlocked) { toast.error('This lesson is not unlocked yet'); return; }
-                                                setActiveTopic(topic);
-                                                setActiveTab('description');
-                                                if (window.innerWidth < 768) setSidebarOpen(false);
-                                            }}
-                                            className={`w-full text-left p-3 rounded-lg flex items-start gap-3 transition-colors ${!unlocked
-                                                ? 'opacity-50 cursor-not-allowed bg-gray-50'
-                                                : activeTopic?._id === topic._id
-                                                    ? 'bg-indigo-50 border-indigo-200'
-                                                    : 'hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            <div className="mt-0.5">
-                                                {!unlocked ? (
-                                                    <Lock size={16} className="text-gray-400" />
-                                                ) : progress[topic._id]?.completed ? (
-                                                    <CheckCircle size={16} className="text-green-500 fill-green-50" />
-                                                ) : (
-                                                    <PlayCircle size={16} className={activeTopic?._id === topic._id ? 'text-indigo-600' : 'text-gray-400'} />
-                                                )}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className={`text-sm font-medium truncate ${!unlocked ? 'text-gray-400' : activeTopic?._id === topic._id ? 'text-indigo-700' : 'text-gray-700'}`}>
-                                                    {tIdx + 1}. {topic.title}
-                                                </p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-gray-400 flex items-center gap-1">
-                                                        <Clock size={10} /> {topic.duration}m
-                                                    </span>
-                                                    {!unlocked && <span className="text-[10px] text-orange-500 font-medium">Locked</span>}
-                                                </div>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
+                    {modules.map((module, mIdx) => {
+                        const isExpanded = expandedModules[module._id];
+                        return (
+                            <div key={module._id} className="mx-3 mb-2 bg-slate-800/40 border border-slate-700/60 rounded-[5px] overflow-hidden shadow-sm">
+                                {/* Accordion Header */}
+                                <button
+                                    onClick={() => setExpandedModules(prev => ({ ...prev, [module._id]: !prev[module._id] }))}
+                                    className="w-full flex items-center justify-between bg-transparent hover:bg-slate-700/30 px-4 py-3.5 transition-colors focus:outline-none group"
+                                >
+                                    <h3 className="text-[13px] font-semibold text-slate-200 tracking-wide text-left flex items-center gap-3">
+                                        {/*<span className="text-[10px] text-slate-300 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded shadow-sm group-hover:text-amber-400 group-hover:border-slate-600 transition-colors">
+                                            MOD {mIdx + 1}
+                                        </span>*/}
+                                        {module.title}
+                                    </h3>
+                                    <div className={`text-slate-500 transition-transform duration-300 ease-in-out ${isExpanded ? 'rotate-180 text-amber-500' : 'group-hover:text-slate-300'}`}>
+                                        <ChevronDown size={16} strokeWidth={2.5} />
+                                    </div>
+                                </button>
+
+                                {/* Accordion Content */}
+                                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                                    <div className="flex flex-col pb-2">
+                                        {module.topics.map((topic, tIdx) => {
+                                            const unlocked = isTopicUnlocked(topic);
+                                            const isActive = activeTopic?._id === topic._id;
+
+                                            return (
+                                                <button
+                                                    key={topic._id}
+                                                    onClick={() => {
+                                                        if (!unlocked) { toast.error('This lesson is not unlocked yet'); return; }
+                                                        setActiveTopic(topic);
+                                                        setActiveTab('description');
+                                                        if (window.innerWidth < 768) setSidebarOpen(false);
+                                                    }}
+                                                    className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors group relative ${!unlocked
+                                                        ? 'opacity-50 cursor-not-allowed bg-transparent'
+                                                        : isActive
+                                                            ? 'bg-gradient-to-r from-amber-500/10 to-transparent'
+                                                            : 'hover:bg-slate-700/20'
+                                                        }`}
+                                                >
+                                                    {/* Active Indicator Line */}
+                                                    {isActive && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-amber-500 shadow-[2px_0_8px_0_rgba(245,158,11,0.5)]"></div>}
+
+                                                    <div className="mt-0.5 shrink-0 z-10">
+                                                        {!unlocked ? (
+                                                            <Lock size={15} className="text-slate-600" />
+                                                        ) : progress[topic._id]?.completed ? (
+                                                            <CheckCircle size={15} className={isActive ? 'text-amber-400' : 'text-emerald-500'} />
+                                                        ) : (
+                                                            <PlayCircle size={15} className={isActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'} />
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1 z-10">
+                                                        <p className={`text-[13px] font-medium leading-[1.3] ${!unlocked ? 'text-slate-600' : isActive ? 'text-amber-200 font-semibold' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                                            {tIdx + 1}. {topic.title}
+                                                        </p>
+                                                        <div className="flex items-center gap-3 mt-1.5">
+                                                            <span className={`text-[11px] font-medium flex items-center gap-1.5 ${isActive ? 'text-amber-400/80' : 'text-slate-500'}`}>
+                                                                <Clock size={11} /> {topic.duration}m
+                                                            </span>
+                                                            {!unlocked && <span className="text-[9px] text-orange-400 font-bold uppercase tracking-wider bg-orange-900/30 px-1.5 py-0.5 rounded">Locked</span>}
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             </div>
 
@@ -675,16 +704,23 @@ const CoursePlayer = () => {
                             {(activeTopic.videoUrl?.includes('youtube.com') || activeTopic.videoUrl?.includes('youtu.be')) ? (
                                 <div ref={playerWrapRef} className="rounded-none md:rounded-xl overflow-hidden shadow-xl sticky top-0 md:static z-10 bg-black">
                                     {/* Video area — div placeholder: YT API creates the iframe here */}
-                                    <div className="relative w-full aspect-video bg-black overflow-hidden">
+                                    <div className="relative w-full aspect-video bg-black overflow-hidden group">
+
+                                        {/* Scale iframe vertically to push YouTube UI into hidden overflow area */}
+                                        <div className="absolute top-1/2 left-0 w-full h-[300%] -translate-y-1/2 pointer-events-none z-0">
+                                            <div
+                                                id="yt-player-container"
+                                                className="w-full h-full"
+                                            />
+                                        </div>
+
+                                        {/* Transparent overlay to catch clicks for play/pause */}
                                         <div
-                                            id="yt-player-container"
-                                            className="absolute inset-0 w-full h-full"
+                                            className="absolute inset-0 z-10 cursor-pointer"
+                                            onClick={ytTogglePlay}
                                         />
-                                        {/* Top mask — covers YouTube channel name & icon, blocks clicks to prevent YouTube navigation */}
-                                        <div className="absolute top-0 left-0 right-0 h-14 bg-black z-10" />
-                                        {/* Bottom mask — covers YouTube logo & share icons, blocks clicks */}
-                                        <div className="absolute bottom-0 left-0 right-0 h-14 bg-black z-50" />
-                                        {/* Branded play icon — covers YouTube's red play button until video starts */}
+
+                                        {/* Branded play icon — covers everything before video starts / when paused */}
                                         {!ytPlaying && (
                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
 
