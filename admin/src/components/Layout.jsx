@@ -49,7 +49,6 @@ const navCategories = [
       { name: 'Attendance Scanner', path: '/attendance/qr-scanner', icon: QrCode },
       { name: 'Att. History', path: '/attendance/history', icon: Calendar },
       { name: 'Submissions', path: '/submissions', icon: ClipboardList },
-      { name: 'Manage Demos', path: '/demos', icon: MessageSquare },
       { name: 'Test Bank', path: '/tests', icon: FileText }
     ]
   },
@@ -102,7 +101,8 @@ const navCategories = [
     title: 'Communication',
     icon: MessageSquare,
     links: [
-      { name: 'Inquiries', path: '/inquiries', icon: MessageSquare }
+      { name: 'Inquiries', path: '/inquiries', icon: MessageSquare },
+      { name: 'Manage Demos', path: '/demos', icon: MessageSquare }
     ]
   },
   {
