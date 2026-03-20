@@ -36,7 +36,7 @@ const CoursePlayer = () => {
     const [mcqSubmitting, setMcqSubmitting] = useState(false);
     const [quizPhase, setQuizPhase] = useState('idle');      // idle | active | submitted
     const [currentQIdx, setCurrentQIdx] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(60);
+    const [timeLeft, setTimeLeft] = useState(30);
     const [quizResult, setQuizResult] = useState(null);
     const [shuffledQuestions, setShuffledQuestions] = useState([]); // questions with shuffled options
     const timerRef = useRef(null);
@@ -68,21 +68,24 @@ const CoursePlayer = () => {
     // ─── Quiz Timer ───────────────────────────────────────────────
     useEffect(() => {
         if (quizPhase !== 'active') return;
-        setTimeLeft(60);
-        clearInterval(timerRef.current);
-        timerRef.current = setInterval(() => {
+        
+        // Timer countdown
+        const timer = setInterval(() => {
             setTimeLeft(prev => {
-                if (prev <= 1) {
-                    // Auto-advance: mark as skipped (no answer) and move on
-                    handleNextQuestion();
-                    return 60;
-                }
+                if (prev <= 1) return 0;
                 return prev - 1;
             });
         }, 1000);
-        return () => clearInterval(timerRef.current);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
+        return () => clearInterval(timer);
     }, [currentQIdx, quizPhase]);
+
+    // Handle auto-advance when time reaches zero
+    useEffect(() => {
+        if (quizPhase === 'active' && timeLeft === 0) {
+            handleNextQuestion();
+        }
+    }, [timeLeft, quizPhase]);
 
     // Fisher-Yates shuffle
     const shuffle = (arr) => {
@@ -102,7 +105,7 @@ const CoursePlayer = () => {
         setShuffledQuestions(buildShuffledQuestions(qs));
         setMcqAnswers({});
         setCurrentQIdx(0);
-        setTimeLeft(60);
+        setTimeLeft(30);
         setQuizPhase('active');
     };
 
@@ -114,33 +117,40 @@ const CoursePlayer = () => {
     };
 
     const handleNextQuestion = () => {
-        clearInterval(timerRef.current);
-        if (currentQIdx < shuffledQuestions.length - 1) {
-            setCurrentQIdx(prev => prev + 1);
-        } else {
+        if (quizPhase !== 'active') return;
+        
+        const isLastQuestion = currentQIdx >= shuffledQuestions.length - 1;
+        if (isLastQuestion) {
             submitQuiz();
+        } else {
+            setCurrentQIdx(prev => prev + 1);
+            setTimeLeft(30); // Reset timer for next question
         }
     };
 
     const submitQuiz = async () => {
-        clearInterval(timerRef.current);
+        if (quizPhase === 'submitted' || mcqSubmitting) return;
+
         setQuizPhase('submitted');
         const storedUser = JSON.parse(localStorage.getItem('studentUser'));
         if (!storedUser || !topicContent?.mcqTest?.testId) return;
+        
         setMcqSubmitting(true);
         try {
             const answers = Object.entries(mcqAnswers).map(([questionId, selected]) => ({
                 questionId,
                 selected: Array.isArray(selected) ? selected : [selected]
             }));
+            
             const res = await axios.post(
                 `${import.meta.env.VITE_API_URL}/api/topic-content/${activeTopic._id}/attempt-mcq`,
                 { studentId: storedUser._id, testId: topicContent.mcqTest.testId._id, answers }
             );
+            
             setQuizResult(res.data.attempt);
             setMySubmissions(prev => ({ ...prev, mcq: res.data.attempt }));
         } catch (err) {
-            // Already attempted
+            // Already attempted or failed
             if (err.response?.data?.attempt) {
                 setQuizResult(err.response.data.attempt);
                 setMySubmissions(prev => ({ ...prev, mcq: err.response.data.attempt }));
@@ -1011,96 +1021,157 @@ const CoursePlayer = () => {
                                             });
 
                                             return (
-                                                <div className="space-y-5">
-                                                    {/* Score card */}
-                                                    <div className={`rounded-2xl p-8 text-center ${isPerfect ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                                                        : isPass ? 'bg-gradient-to-br from-green-400 to-emerald-600'
-                                                            : 'bg-gradient-to-br from-red-400 to-rose-600'
-                                                        } text-white shadow-lg`}>
-                                                        <div className="flex justify-center mb-3">
-                                                            {isPerfect
-                                                                ? <Trophy size={48} className="text-white drop-shadow" />
-                                                                : isPass
-                                                                    ? <Award size={48} className="text-white drop-shadow" />
-                                                                    : <XCircle size={48} className="text-white drop-shadow" />}
-                                                        </div>
-                                                        <div className="text-6xl font-black mb-1">{scorePct}%</div>
-                                                        <div className="text-xl font-bold mb-1">
-                                                            {isPerfect ? 'Perfect Score!' : isPass ? 'Passed!' : 'Below 75% — Retake Required'}
-                                                        </div>
-                                                        <div className="text-white/90 text-sm">
-                                                            {score} / {total} correct &nbsp;·&nbsp; Pass mark: 75%
-                                                        </div>
-                                                    </div>
+                                                <div className="space-y-6">
+                                                    {/* Premium Score card */}
+                                                    <div className={`relative overflow-hidden rounded-[2rem] p-8 text-center shadow-2xl transition-all duration-500 ${isPerfect ? 'bg-slate-900 border border-amber-500/30'
+                                                        : isPass ? 'bg-slate-900 border border-emerald-500/30'
+                                                            : 'bg-slate-900 border border-rose-500/30'
+                                                        }`}>
 
-                                                    {/* Score bar */}
-                                                    <div className="bg-white border border-gray-200 rounded-xl p-4">
-                                                        <div className="flex justify-between text-sm font-medium text-gray-600 mb-2">
-                                                            <span>Your Score</span>
-                                                            <span className={isPass ? 'text-green-600' : 'text-red-500'}>{score}/{total}</span>
+                                                        {/* Animated background elements */}
+                                                        <div className={`absolute -top-24 -right-24 w-64 h-64 rounded-full blur-[80px] opacity-20 ${isPerfect ? 'bg-amber-400' : isPass ? 'bg-emerald-400' : 'bg-rose-400'}`}></div>
+                                                        <div className={`absolute -bottom-24 -left-24 w-64 h-64 rounded-full blur-[80px] opacity-20 ${isPerfect ? 'bg-orange-500' : isPass ? 'bg-teal-500' : 'bg-red-500'}`}></div>
+
+                                                        <div className="relative z-10">
+                                                            <div className="flex justify-center mb-6">
+                                                                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transform rotate-6 shadow-xl ${isPerfect ? 'bg-gradient-to-br from-amber-400 to-orange-500'
+                                                                    : isPass ? 'bg-gradient-to-br from-emerald-400 to-teal-600'
+                                                                        : 'bg-gradient-to-br from-rose-400 to-red-600'
+                                                                    }`}>
+                                                                    {isPerfect
+                                                                        ? <Trophy size={40} className="text-white drop-shadow" />
+                                                                        : isPass
+                                                                            ? <Award size={40} className="text-white drop-shadow" />
+                                                                            : <XCircle size={40} className="text-white drop-shadow" />}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex flex-col items-center">
+                                                                <div className={`text-7xl font-black mb-1 tracking-tighter ${isPerfect ? 'text-amber-400' : isPass ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                                    {scorePct}<span className="text-3xl opacity-60">%</span>
+                                                                </div>
+                                                                <div className="text-2xl font-bold text-white mb-2 tracking-tight">
+                                                                    {isPerfect ? 'Absolutely Perfect!' : isPass ? 'Great Job, Passed!' : 'Requires Attention'}
+                                                                </div>
+                                                                <p className="text-slate-400 text-sm font-medium tracking-wide">
+                                                                    You answered <span className="text-white font-bold">{score}</span> out of <span className="text-white font-bold">{total}</span> questions correctly.
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Enhanced Score bar */}
+                                                            <div className="mt-8 max-w-sm mx-auto">
+                                                                <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase tracking-[0.1em] mb-2 px-1">
+                                                                    <span>Proficiency Level</span>
+                                                                    <span className={isPerfect ? 'text-amber-500' : isPass ? 'text-emerald-500' : 'text-rose-500'}>{scorePct}% COMPLETED</span>
+                                                                </div>
+                                                                <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden relative border border-slate-700/50 p-0.5">
+                                                                    <div
+                                                                        className={`h-full rounded-full transition-all duration-[1.5s] ease-out shadow-[0_0_15px_rgba(0,0,0,0.5)] ${isPerfect ? 'bg-gradient-to-r from-amber-300 to-orange-500' : isPass ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-rose-400 to-red-500'}`}
+                                                                        style={{ width: `${scorePct}%` }}
+                                                                    />
+                                                                    {/* 75% marker */}
+                                                                    <div className="absolute top-0 bottom-0 w-[3px] bg-white/20 blur-[1px]" style={{ left: '75%' }} title="Required: 75%" />
+                                                                </div>
+                                                                <div className="flex justify-between mt-1.5 px-1">
+                                                                    <span className="text-[9px] text-slate-500 font-bold uppercase">Beginner</span>
+                                                                    <span className="text-[9px] text-white/40 font-bold uppercase">Target: 75%</span>
+                                                                    <span className="text-[9px] text-slate-500 font-bold uppercase">Expert</span>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="h-3 bg-gray-100 rounded-full overflow-hidden relative">
-                                                            <div
-                                                                className={`h-full rounded-full transition-all duration-700 ${isPerfect ? 'bg-orange-400' : isPass ? 'bg-emerald-500' : 'bg-red-500'}`}
-                                                                style={{ width: `${scorePct}%` }}
-                                                            />
-                                                            {/* 75% marker */}
-                                                            <div className="absolute top-0 bottom-0 w-0.5 bg-gray-400" style={{ left: '75%' }} />
-                                                        </div>
-                                                        <p className="text-xs text-gray-400 mt-1 text-right">75% pass mark</p>
                                                     </div>
 
                                                     {/* Retake button (only if failed) */}
                                                     {!isPass && (
                                                         <button onClick={retakeQuiz}
-                                                            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow shadow-indigo-200 flex items-center justify-center gap-2">
-                                                            <RotateCcw size={18} />
-                                                            Retake Quiz
+                                                            className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-[0_4px_20px_-5px_rgba(79,70,229,0.4)] flex items-center justify-center gap-3 group">
+                                                            <RotateCcw size={20} className="group-hover:rotate-[-180deg] transition-transform duration-500" />
+                                                            <span>Try Again to Pass</span>
                                                         </button>
                                                     )}
 
-                                                    {/* Per-question breakdown */}
-                                                    <div className="space-y-3">
-                                                        <h4 className="font-semibold text-gray-700 text-sm">Question Breakdown</h4>
-                                                        {rawQuestions.map((qs, idx) => {
-                                                            const ansArr = answerLookup[String(idx)] || [];
-                                                            const correct = qs.correctAnswers || [];
-                                                            const correctSet = new Set(correct);
-                                                            const isCorrect = ansArr.length > 0 &&
-                                                                ansArr.length === correct.length &&
-                                                                ansArr.every(a => correctSet.has(a));
-                                                            const skipped = ansArr.length === 0;
-                                                            return (
-                                                                <div key={idx} className={`flex items-start gap-3 p-3 rounded-xl border text-sm ${skipped ? 'border-gray-200 bg-gray-50'
-                                                                    : isCorrect ? 'border-green-200 bg-green-50'
-                                                                        : 'border-red-200 bg-red-50'
-                                                                    }`}>
-                                                                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${skipped ? 'bg-gray-200 text-gray-500'
-                                                                        : isCorrect ? 'bg-green-500 text-white'
-                                                                            : 'bg-red-500 text-white'
-                                                                        }`}>{idx + 1}</span>
-                                                                    <div className="min-w-0 flex-1">
-                                                                        <p className="font-medium text-gray-800 leading-snug">{qs.questionText || qs.question}</p>
-                                                                        <div className={`flex items-center gap-1 text-xs mt-1.5 font-medium ${skipped ? 'text-gray-400'
-                                                                            : isCorrect ? 'text-green-600'
-                                                                                : 'text-red-500'
-                                                                            }`}>
-                                                                            {skipped
-                                                                                ? <><SkipForward size={13} /> <span>Not answered</span></>
-                                                                                : isCorrect
-                                                                                    ? <><CheckCircle size={13} /> <span>Correct</span></>
-                                                                                    : <><XCircle size={13} /> <span>Wrong</span></>}
-                                                                        </div>
-                                                                        {/* Show what student selected (only for wrong answers) */}
-                                                                        {!skipped && !isCorrect && (
-                                                                            <div className="mt-1.5">
-                                                                                <p className="text-xs text-red-400">Your answer: <span className="font-medium">{ansArr.join(', ')}</span></p>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
+                                                    {/* Question Breakdown Section */}
+                                                    <div className="pt-4">
+                                                        <div className="flex items-center justify-between mb-5 px-1">
+                                                            <h4 className="font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                                                                Detailed Breakdown
+                                                                <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md font-medium">{rawQuestions.length} Items</span>
+                                                            </h4>
+                                                            <div className="flex gap-4">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Correct</span>
                                                                 </div>
-                                                            );
-                                                        })}
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Incorrect</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="overflow-x-auto -mx-1">
+                                                            <table className="w-full border-separate border-spacing-y-3">
+                                                                <thead>
+                                                                    <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-left">
+                                                                        <th className="px-5 py-2 w-16">No.</th>
+                                                                        <th className="px-5 py-2">Question Description</th>
+                                                                        <th className="px-5 py-2 w-32 text-center">Status</th>
+                                                                        <th className="px-5 py-2 text-right">Your Choice</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {rawQuestions.map((qs, idx) => {
+                                                                        const ansArr = answerLookup[String(idx)] || [];
+                                                                        const correct = qs.correctAnswers || [];
+                                                                        const correctSet = new Set(correct);
+                                                                        const isCorrect = ansArr.length > 0 &&
+                                                                            ansArr.length === correct.length &&
+                                                                            ansArr.every(a => correctSet.has(a));
+                                                                        const skipped = ansArr.length === 0;
+
+                                                                        return (
+                                                                            <tr key={idx} className={`group transition-all duration-300 hover:scale-[1.01] ${skipped ? 'opacity-70' : ''}`}>
+                                                                                <td className="px-5 py-4 bg-white border-y border-l border-gray-100 rounded-l-2xl text-xs font-black text-gray-400">
+                                                                                    {String(idx + 1).padStart(2, '0')}
+                                                                                </td>
+                                                                                <td className="px-5 py-4 bg-white border-y border-gray-100 text-sm font-bold text-gray-800">
+                                                                                    <span className="line-clamp-2 leading-relaxed">{qs.questionText || qs.question}</span>
+                                                                                </td>
+                                                                                <td className="px-5 py-4 bg-white border-y border-gray-100 text-center">
+                                                                                    {skipped ? (
+                                                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                                                                            <SkipForward size={12} strokeWidth={3} /> Skipped
+                                                                                        </span>
+                                                                                    ) : isCorrect ? (
+                                                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                                                                            <CheckCircle size={12} strokeWidth={3} /> Perfect
+                                                                                        </span>
+                                                                                    ) : (
+                                                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                                                                            <XCircle size={12} strokeWidth={3} /> Incorrect
+                                                                                        </span>
+                                                                                    )}
+                                                                                </td>
+                                                                                <td className="px-5 py-4 bg-white border-y border-r border-gray-100 rounded-r-2xl text-right">
+                                                                                    {(!skipped && !isCorrect) ? (
+                                                                                        <div className="flex flex-col items-end gap-1">
+                                                                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">You Selected</span>
+                                                                                            <span className="text-[11px] font-black text-rose-500 bg-rose-50 px-2.5 py-1 rounded-lg inline-block max-w-[150px] truncate border border-rose-100">
+                                                                                                {ansArr.join(', ')}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    ) : isCorrect ? (
+                                                                                        <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">Matched Correct</span>
+                                                                                    ) : (
+                                                                                        <span className="text-[10px] text-gray-400 font-bold italic">No response</span>
+                                                                                    )}
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             );
@@ -1108,22 +1179,52 @@ const CoursePlayer = () => {
 
                                         // ── Idle: show start screen ──
                                         if (quizPhase === 'idle') return (
-                                            <div className="text-center py-10 space-y-4">
-                                                <BookOpen size={52} className="mx-auto text-indigo-500" />
-                                                <h3 className="text-xl font-bold text-gray-800">{test.title}</h3>
-                                                <p className="text-gray-500 text-sm">{rawQuestions.length} questions &nbsp;·&nbsp; 1 min per question &nbsp;·&nbsp; Pass: 75%</p>
+                                            <div className="text-center py-12 px-4 space-y-8 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                                                <div className="space-y-4">
+                                                    <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                                                        <BookOpen size={40} className="text-indigo-600" />
+                                                    </div>
+                                                    <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">{test.title}</h3>
+
+                                                    {/* Pill badges row */}
+                                                    <div className="flex flex-wrap justify-center gap-3 mt-6">
+                                                        <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-100 rounded-full">
+                                                            <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                                            <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">{rawQuestions.length} Questions</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-100 rounded-full">
+                                                            <Clock size={14} className="text-amber-500" />
+                                                            <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">30s / Question</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-100 rounded-full">
+                                                            <Award size={14} className="text-emerald-500" />
+                                                            <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">75% Passing Score</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 {test.instructions && (
-                                                    <p className="text-sm text-gray-600 bg-indigo-50 rounded-xl p-3 text-left">{test.instructions}</p>
+                                                    <div className="max-w-md mx-auto">
+                                                        <p className="text-sm text-gray-500 italic leading-relaxed">
+                                                            "{test.instructions}"
+                                                        </p>
+                                                    </div>
                                                 )}
-                                                <button onClick={startQuiz}
-                                                    className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">
-                                                    Start Quiz →
-                                                </button>
+
+                                                <div className="pt-4">
+                                                    <button onClick={startQuiz}
+                                                        className="group relative inline-flex items-center justify-center px-10 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] shadow-[0_10px_30px_-10px_rgba(79,70,229,0.5)] transition-all duration-300">
+                                                        <span className="mr-2">Start Quiz</span>
+                                                        <ArrowLeft className="rotate-180 group-hover:translate-x-1 transition-transform" size={20} />
+                                                        <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                    </button>
+                                                    <p className="text-[11px] text-gray-400 mt-4 font-medium uppercase tracking-[0.2em]">Ready to test your knowledge?</p>
+                                                </div>
                                             </div>
                                         );
 
                                         // ── Active: one question at a time ──
-                                        const timerPct = (timeLeft / 60) * 100;
+                                        const timerPct = (timeLeft / 30) * 100;
                                         const timerColor = timeLeft > 20 ? '#6366f1' : timeLeft > 10 ? '#f59e0b' : '#ef4444';
                                         const isMultiple = q?.isMultiple;
                                         const currentAnswers = mcqAnswers[String(currentQIdx)];

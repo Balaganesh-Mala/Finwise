@@ -4,8 +4,8 @@ const { updateProgress, getCourseProgress, getStudentCompletionStats, getEligibi
 
 // Standard routes for student
 router.post('/student/progress/update', updateProgress);
-router.get('/student/progress/:courseId/:studentId', getCourseProgress);
 router.get('/student/progress/stats/:studentId', getStudentCompletionStats);
+router.get('/student/progress/:courseId/:studentId', getCourseProgress);
 router.get('/students/:studentId/eligibility', getEligibility);
 
 module.exports = router;

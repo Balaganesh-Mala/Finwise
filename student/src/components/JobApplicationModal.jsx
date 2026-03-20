@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Check, ChevronRight, AlertCircle, FileText, CheckCircle } from 'lucide-react';
+import { X, Upload, Check, ChevronRight, AlertCircle, FileText, CheckCircle, Link } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const JobApplicationModal = ({ job, isOpen, onClose }) => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [resumeMode, setResumeMode] = useState('file'); // 'file' or 'url'
 
-    // Initial State matches the previous one but we will use better names for consent
     const [formData, setFormData] = useState({
         fullName: '',
         phone: '',
         email: '',
-        resume: null
+        resume: null,
+        resumeUrl: ''
     });
 
     const [consents, setConsents] = useState({
@@ -58,10 +59,13 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
             data.append('fullName', formData.fullName);
             data.append('email', formData.email);
             data.append('phone', formData.phone);
-            data.append('resume', formData.resume);
 
-            // Convert consents to the structure expected by backend schema if needed
-            // Or just stringify the object
+            if (resumeMode === 'file' && formData.resume) {
+                data.append('resume', formData.resume);
+            } else if (resumeMode === 'url' && formData.resumeUrl) {
+                data.append('resumeUrl', formData.resumeUrl);
+            }
+
             data.append('consent', JSON.stringify({
                 salary: consents.salary === 'yes',
                 hiringProcess: consents.hiringProcess === 'yes',
@@ -111,7 +115,8 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
             setTimeout(() => {
                 onClose();
                 setStep(1);
-                setFormData({ fullName: '', phone: '', email: '', resume: null });
+                setResumeMode('file');
+                setFormData({ fullName: '', phone: '', email: '', resume: null, resumeUrl: '' });
                 setConsents({ salary: null, hiringProcess: null, interview: null, joining: null, terms: false });
             }, 2000);
 
@@ -124,7 +129,8 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
         }
     };
 
-    const isStep1Valid = formData.fullName && formData.email && formData.phone.length >= 10 && formData.resume;
+    const hasResume = resumeMode === 'file' ? !!formData.resume : formData.resumeUrl.trim().length > 5;
+    const isStep1Valid = formData.fullName && formData.email && formData.phone.length >= 10 && hasResume;
     const isStep2Valid = consents.salary === 'yes' &&
         consents.hiringProcess === 'yes' &&
         consents.interview === 'yes' &&
@@ -228,33 +234,76 @@ const JobApplicationModal = ({ job, isOpen, onClose }) => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Upload your Resume
-                                            <span className="block text-xs font-normal text-gray-500 mt-0.5">Make your resume stronger by adding unique projects with a focus on React.</span>
+                                            Your Resume
+                                            <span className="block text-xs font-normal text-gray-500 mt-0.5">Upload a file or paste a direct link to your resume.</span>
                                         </label>
-                                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary-400 transition-colors bg-gray-50 group cursor-pointer relative">
-                                            <input
-                                                type="file"
-                                                accept=".pdf,.doc,.docx,.jpg,.png"
-                                                onChange={handleFileUpload}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                            />
-                                            {formData.resume ? (
-                                                <div className="flex flex-col items-center text-primary-600">
-                                                    <FileText size={40} className="mb-2" />
-                                                    <span className="font-medium text-sm">{formData.resume.name}</span>
-                                                    <span className="text-xs text-green-600 mt-1">File Selected</span>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <Upload size={32} className="mx-auto text-gray-400 mb-3 group-hover:text-primary-500 transition-colors" />
-                                                    <p className="text-sm text-gray-600 font-medium">
-                                                        <span className="text-primary-600">Click to upload</span> or drag and drop
-                                                    </p>
-                                                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, PDF up to 5 MB</p>
-                                                </>
-                                            )}
+
+                                        {/* Toggle */}
+                                        <div className="flex gap-2 mb-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setResumeMode('file'); setFormData(p => ({ ...p, resumeUrl: '' })); }}
+                                                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${resumeMode === 'file' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'}`}
+                                            >
+                                                <Upload size={14} /> Upload File
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setResumeMode('url'); setFormData(p => ({ ...p, resume: null })); }}
+                                                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${resumeMode === 'url' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'}`}
+                                            >
+                                                <Link size={14} /> Paste URL
+                                            </button>
                                         </div>
+
+                                        {resumeMode === 'file' ? (
+                                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary-400 transition-colors bg-gray-50 group cursor-pointer relative">
+                                                <input
+                                                    type="file"
+                                                    accept=".pdf,.doc,.docx,.jpg,.png"
+                                                    onChange={handleFileUpload}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                />
+                                                {formData.resume ? (
+                                                    <div className="flex flex-col items-center text-primary-600">
+                                                        <FileText size={40} className="mb-2" />
+                                                        <span className="font-medium text-sm">{formData.resume.name}</span>
+                                                        <span className="text-xs text-green-600 mt-1">✓ File Selected</span>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <Upload size={32} className="mx-auto text-gray-400 mb-3 group-hover:text-primary-500 transition-colors" />
+                                                        <p className="text-sm text-gray-600 font-medium">
+                                                            <span className="text-primary-600">Click to upload</span> or drag and drop
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX up to 5 MB</p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <div className={`flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all ${formData.resumeUrl ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 focus-within:border-primary-400'}`}>
+                                                    <Link size={18} className="text-gray-400 flex-shrink-0" />
+                                                    <input
+                                                        type="url"
+                                                        name="resumeUrl"
+                                                        value={formData.resumeUrl}
+                                                        onChange={handleInputChange}
+                                                        placeholder="https://drive.google.com/file/... or dropbox.com/..."
+                                                        className="flex-1 bg-transparent outline-none text-sm text-gray-800 placeholder-gray-400"
+                                                    />
+                                                    {formData.resumeUrl.trim().length > 5 && (
+                                                        <span className="text-green-600 text-xs font-semibold flex-shrink-0">✓ Ready</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-gray-400 mt-2">
+                                                    💡 Tip: Use a Google Drive, Dropbox, or any publicly accessible direct PDF link.
+                                                    Make sure sharing is set to <strong>"Anyone with the link"</strong>.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
+
                                 </div>
                             ) : (
                                 <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">

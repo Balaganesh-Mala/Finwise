@@ -8,6 +8,7 @@ const MyCourses = () => {
     const [courses, setCourses] = useState([]);
     const [studentData, setStudentData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [realProgress, setRealProgress] = useState(0);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -29,6 +30,15 @@ const MyCourses = () => {
                     setStudentData(user);
                 } catch (e) {
                     console.warn("Could not fetch fresh student details, using local storage", e);
+                }
+                
+                try {
+                    const dashRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/students/dashboard/${user._id}`);
+                    if (dashRes.data?.stats?.batchProgress) {
+                        setRealProgress(dashRes.data.stats.batchProgress);
+                    }
+                } catch (e) {
+                    console.warn("Could not fetch dashboard stats", e);
                 }
             }
 
@@ -93,13 +103,11 @@ const MyCourses = () => {
         }
 
         // Cap at 100%
-        let percent = Math.round((daysPassed / totalDays) * 100);
-        if (percent > 100) percent = 100;
-        if (percent < 0) percent = 0; // Future start date
+        let percent = realProgress || 0;
 
         return {
             percent,
-            text: `Day ${daysPassed} of ${totalDays}`,
+            text: `${percent}% Completed`,
             daysPassed
         };
     };

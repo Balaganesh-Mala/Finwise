@@ -44,6 +44,7 @@ const Layout = () => {
     const [isMobileQROpen, setIsMobileQROpen] = useState(false);
     const [mobileQRData, setMobileQRData] = useState(null);
     const [mobileQRLoading, setMobileQRLoading] = useState(false);
+    const [newJobsCount, setNewJobsCount] = useState(0);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -185,6 +186,25 @@ const Layout = () => {
 
         fetchStats();
     }, [user?._id, user?.courseName]);
+
+    // NEW JOB DETECTION
+    useEffect(() => {
+        const checkNewJobs = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const { data } = await axios.get(`${API_URL}/api/student-jobs`);
+                if (Array.isArray(data)) {
+                    const twoDaysAgo = new Date();
+                    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+                    const recentCount = data.filter(j => new Date(j.postedAt) > twoDaysAgo).length;
+                    setNewJobsCount(recentCount);
+                }
+            } catch (err) { console.error(err); }
+        };
+        checkNewJobs();
+        const interval = setInterval(checkNewJobs, 60000 * 5); // Check every 5 mins
+        return () => clearInterval(interval);
+    }, []);
 
     const handleLogout = async () => {
         localStorage.removeItem('studentUser'); // Clear local session
@@ -438,11 +458,21 @@ const Layout = () => {
                                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0 h-8 bg-indigo-600 rounded-r-full shadow-[0_0_8px_rgba(79,70,229,0.5)] opacity-0 group-[.active-nav]:w-1 group-[.active-nav]:opacity-100 transition-all duration-300" />
 
                                 <div className={`flex items-center ${collapsed ? 'justify-center w-full' : 'gap-3.5'} relative z-10 w-full`}>
-                                    <div className="p-1.5 rounded-lg transition-all duration-300 bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-indigo-500 group-hover:shadow-sm group-[.active-nav]:bg-indigo-100 group-[.active-nav]:text-indigo-600 group-[.active-nav]:shadow-inner">
+                                    <div className="p-1.5 rounded-lg transition-all duration-300 bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-indigo-500 group-hover:shadow-sm group-[.active-nav]:bg-indigo-100 group-[.active-nav]:text-indigo-600 group-[.active-nav]:shadow-inner relative">
                                         <item.icon size={18} className="transition-transform duration-300 group-hover:scale-110" />
+                                        {item.label === 'Jobs' && newJobsCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse shadow-sm shadow-red-200"></span>
+                                        )}
                                     </div>
                                     {!collapsed && (
-                                        <span className="text-sm tracking-wide flex-1">{item.label}</span>
+                                        <div className="flex-1 flex items-center justify-between">
+                                            <span className="text-sm tracking-wide">{item.label}</span>
+                                            {item.label === 'Jobs' && newJobsCount > 0 && (
+                                                <span className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] bg-red-500 text-white font-black px-1 rounded-full animate-pulse shadow-sm shadow-red-100">
+                                                    {newJobsCount}
+                                                </span>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
 
@@ -453,37 +483,7 @@ const Layout = () => {
                     ))}
                 </nav>
 
-                {/* Sidebar Footer — user card + sign out */}
-                <div className="p-4 mx-3 mb-5 mt-2 bg-gradient-to-b from-white to-slate-50 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden group shrink-0">
-                    {/* Decorative blur orb */}
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all duration-500 group-hover:bg-indigo-500/10 group-hover:scale-150" />
-
-                    {!collapsed && (
-                        <div className="flex items-center gap-3 mb-4 relative z-10">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20 ring-2 ring-white/80 overflow-hidden shrink-0">
-                                {user?.profilePicture ? (
-                                    <img src={user.profilePicture} alt="avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="drop-shadow-sm">{user?.name?.charAt(0)?.toUpperCase() || 'S'}</span>
-                                )}
-                            </div>
-                            <div className="overflow-hidden flex-1">
-                                <p className="text-sm font-bold text-slate-800 truncate">{user?.name || 'Student'}</p>
-                                <p className="text-[11px] font-medium text-slate-500 truncate">{user?.email}</p>
-                            </div>
-                        </div>
-                    )}
-
-                    <button
-                        onClick={handleLogout}
-                        title={collapsed ? 'Sign Out' : ''}
-                        className="w-full relative z-10 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-transparent hover:text-white hover:shadow-md hover:shadow-rose-500/20 transition-all duration-300 text-sm font-bold group/btn overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-red-500 translate-y-[100%] group-hover/btn:translate-y-[0%] transition-transform duration-300 ease-out z-0" />
-                        <LogOut size={16} className="relative z-10 transition-colors duration-300 group-hover/btn:text-white" />
-                        {!collapsed && <span className="relative z-10 transition-colors duration-300 group-hover/btn:text-white">Sign Out</span>}
-                    </button>
-                </div>
+                {/* Sidebar Footer — REMOVED AS REQUESTED */}
             </aside>
 
             {/* Main Content Wrapper */}

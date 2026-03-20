@@ -27,10 +27,9 @@ const uploadToCloudinary = (buffer, originalName, mimeType) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             { 
                 folder: 'job_applications',
-                resource_type: 'raw', // Go back to raw, we will handle access via signing
+                resource_type: 'image', // 'image' type supports PDFs and serves them publicly
                 use_filename: true,
                 unique_filename: true,
-                format: 'pdf' 
             },
             (error, result) => {
                 if (error) return reject(error);
@@ -45,86 +44,43 @@ const uploadToCloudinary = (buffer, originalName, mimeType) => {
 
 // ... (routes) ...
 
-// @desc    Preview Resume Proxy (Streams PDF to bypass CORS/Raw issues)
-// @route   GET /api/applications/:id/preview
-// @access  Private (Admin)
-router.get('/:id/preview', async (req, res) => {
-    try {
-        const application = await Application.findById(req.params.id);
-        if (!application || !application.resumeUrl) {
-            return res.status(404).json({ msg: 'File not found' });
-        }
+// NOTE: Duplicate streaming route REMOVED. Now handled by the route below.
 
-        // Generate a SIGNED URL to fetch the private raw file
-        // For 'raw' resources, we construct the signed URL manually or use utils
-        // Actually, if it's 'upload' type (public) but raw, strange it gave 401. 
-        // Assuming it's effectively restricted. 
-        // Let's use cloudinary.url with sign_url: true based on public_id.
-        
-        let fetchUrl = application.resumeUrl;
-        
-        if (application.resumePublicId) {
-             fetchUrl = cloudinary.url(application.resumePublicId, {
-                resource_type: 'raw',
-                type: 'upload', // or 'authenticated' if it was uploaded as such, but default is upload
-                sign_url: true, // IMPORTANT: Sign the URL to allow server to fetch it
-                secure: true,
-                format: 'pdf'
-             });
-        }
-
-        console.log('Proxying Signed URL:', fetchUrl);
-
-        // Fetch the file from Cloudinary as a stream
-        const response = await axios({
-            url: fetchUrl,
-            method: 'GET',
-            responseType: 'stream'
-        });
-
-        // Set headers to force PDF preview
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline; filename="resume.pdf"');
-
-        // Pipe the Cloudinary stream to the Response
-        response.data.pipe(res);
-
-    } catch (err) {
-        console.error('Preview Proxy Error:', err.message);
-        if (err.response) {
-            // console.error('Proxy Upstream Status:', err.response.status); 
-        }
-        res.status(500).json({ msg: 'Failed to fuzzy stream PDF' });
-    }
-});
-
-// @desc    Submit new application with resume (Server-Side Upload)
+// @desc    Submit new application with resume file OR resume URL
 // @route   POST /api/applications
 // @access  Public
 router.post('/', upload.single('resume'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ msg: 'No resume file uploaded' });
+        const hasFile = !!req.file;
+        const hasUrl = !!req.body.resumeUrl && req.body.resumeUrl.trim().length > 5;
+
+        if (!hasFile && !hasUrl) {
+            return res.status(400).json({ msg: 'Please upload a resume file or provide a resume URL' });
         }
 
-        // 🔐 EXTRA SAFETY: Allow ONLY PDF as per user request
-        if (req.file.mimetype !== 'application/pdf') {
-            return res.status(400).json({ msg: 'Only PDF files are allowed' });
-        }
-
-        console.log('File received:', req.file.originalname, 'Size:', req.file.size);
-
-        // Upload to Cloudinary using Stream
-        const result = await uploadToCloudinary(req.file.buffer, req.file.originalname, req.file.mimetype);
-
-        console.log('Cloudinary Upload Result:', result);
-
-        // Parse consent (it comes as stringified JSON from FormData)
+        // Parse consent
         let consentData = {};
         try {
             consentData = JSON.parse(req.body.consent);
         } catch (e) {
-            consentData = req.body.consent; 
+            consentData = req.body.consent;
+        }
+
+        let resumeUrl = null;
+        let resumePublicId = null;
+
+        if (hasFile) {
+            if (req.file.mimetype !== 'application/pdf') {
+                return res.status(400).json({ msg: 'Only PDF files are allowed' });
+            }
+            console.log('File received:', req.file.originalname, 'Size:', req.file.size);
+            const result = await uploadToCloudinary(req.file.buffer, req.file.originalname, req.file.mimetype);
+            console.log('Cloudinary Upload Result:', result);
+            resumeUrl = result.secure_url;
+            resumePublicId = result.public_id;
+        } else {
+            resumeUrl = req.body.resumeUrl.trim();
+            console.log('Resume URL provided:', resumeUrl);
         }
 
         const newApplication = new Application({
@@ -132,8 +88,8 @@ router.post('/', upload.single('resume'), async (req, res) => {
             fullName: req.body.fullName,
             email: req.body.email,
             phone: req.body.phone,
-            resumeUrl: result.secure_url,
-            resumePublicId: result.public_id,
+            resumeUrl,
+            resumePublicId,
             consent: consentData
         });
 
@@ -145,6 +101,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
         res.status(500).send('Server Error: ' + err.message);
     }
 });
+
 
 // @desc    Get all applications
 // @route   GET /api/applications
@@ -174,7 +131,7 @@ router.delete('/:id', async (req, res) => {
 
         // Deleting file from Cloudinary (Optional but good practice)
         if (application.resumePublicId) {
-             await cloudinary.uploader.destroy(application.resumePublicId);
+             await cloudinary.uploader.destroy(application.resumePublicId, { resource_type: 'image' });
         }
 
         await application.deleteOne();
@@ -233,7 +190,7 @@ router.get('/:id/download', async (req, res) => {
     }
 });
 
-// @desc    Preview Resume Proxy (Returns Secure URL)
+// @desc    Preview Resume (Server-side proxy, streams PDF with correct headers)
 // @route   GET /api/applications/:id/preview
 // @access  Private (Admin)
 router.get('/:id/preview', async (req, res) => {
@@ -243,29 +200,53 @@ router.get('/:id/preview', async (req, res) => {
             return res.status(404).json({ msg: 'File not found' });
         }
 
-        let fetchUrl = application.resumeUrl;
-        
-        if (application.resumePublicId) {
-             // We need to guess the resource type. If the URL contains '/raw/', it's raw.
-             const resourceType = application.resumeUrl.includes('/raw/') ? 'raw' : 'image';
-             
-             // Use private_download_url to generate a properly signed URL for raw/restricted files
-             fetchUrl = cloudinary.utils.private_download_url(application.resumePublicId, 'pdf', {
-                resource_type: resourceType,
-                type: 'upload', 
-                attachment: false
-             });
+        // If there's no Cloudinary publicId, this was submitted as a direct URL (Google Drive, etc.)
+        // We can't proxy it as PDF — return the URL so the frontend can open it
+        if (!application.resumePublicId) {
+            return res.json({ directUrl: application.resumeUrl });
         }
 
-        console.log('Returning Signed URL:', fetchUrl);
-        // Direct Return of Signed URL (Cleaner/Faster than proxying)
-        // Cloudinary handles auth via signature and sets Content-Type: application/pdf
-        res.json({ url: fetchUrl });
+        const resumeUrl = application.resumeUrl;
+        const isOldRawUrl = resumeUrl.includes('/raw/');
+
+        let fetchUrl = resumeUrl;
+
+        // For old raw-type uploads, generate a signed URL so Cloudinary allows fetching
+        if (isOldRawUrl && application.resumePublicId) {
+            fetchUrl = cloudinary.url(application.resumePublicId, {
+                resource_type: 'raw',
+                sign_url: true,
+                secure: true,
+            });
+        }
+
+        let fileResponse;
+        try {
+            fileResponse = await axios({
+                url: fetchUrl,
+                method: 'GET',
+                responseType: 'stream',
+                timeout: 20000
+            });
+        } catch (upstreamErr) {
+            console.error('Cloudinary fetch failed:', upstreamErr.message);
+            return res.status(422).json({
+                msg: 'This resume was uploaded in an older format and cannot be previewed directly. Please ask the applicant to resubmit.',
+                code: 'OLD_FORMAT'
+            });
+        }
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="resume.pdf"');
+        res.setHeader('Cache-Control', 'no-cache');
+
+        fileResponse.data.pipe(res);
 
     } catch (err) {
-        console.error('Preview Proxy Error:', err.message);
-        res.status(500).json({ msg: 'Failed to generate preview URL' });
+        console.error('Preview Error:', err.message);
+        res.status(500).json({ msg: 'Failed to preview resume', error: err.message });
     }
 });
+
 
 module.exports = router;

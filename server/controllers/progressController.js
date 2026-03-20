@@ -19,6 +19,7 @@ exports.updateProgress = async (req, res) => {
         let progress = await Progress.findOne({ studentId, topicId });
 
         if (progress) {
+            if (courseId) progress.courseId = courseId; // Fix for orphaned progress records
             if (completed !== undefined) progress.completed = completed;
             if (watchedDuration !== undefined) progress.watchedDuration = watchedDuration;
             if (completed && !progress.completedAt) progress.completedAt = Date.now();
@@ -98,11 +99,11 @@ exports.getStudentCompletionStats = async (req, res) => {
 
         // 1. Find the most recent courseId this student has progress records for
         //    (CoursePlayer always stores the real courseId ObjectId from the URL)
-        const latestProgress = await Progress.findOne({ studentId })
+        const latestProgress = await Progress.findOne({ studentId, courseId: { $ne: null } })
             .sort({ updatedAt: -1 })
             .select('courseId');
 
-        if (!latestProgress) {
+        if (!latestProgress || !latestProgress.courseId) {
             return res.json({
                 success: true,
                 stats: {
@@ -159,11 +160,11 @@ exports.getEligibility = async (req, res) => {
         const { studentId } = req.params;
 
         // Derive courseId from the student's own Progress records
-        const latestProgress = await Progress.findOne({ studentId })
+        const latestProgress = await Progress.findOne({ studentId, courseId: { $ne: null } })
             .sort({ updatedAt: -1 })
             .select('courseId');
 
-        if (!latestProgress) {
+        if (!latestProgress || !latestProgress.courseId) {
             return res.json({ eligible: false, completion: 0 });
         }
 

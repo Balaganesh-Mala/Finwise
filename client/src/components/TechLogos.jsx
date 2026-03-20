@@ -1,31 +1,53 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+import {
+    FiBriefcase,
+    FiTrendingUp,
+    FiPieChart,
+    FiCreditCard,
+    FiFileText,
+    FiCheckSquare,
+    FiBookOpen,
+    FiDatabase,
+    FiMonitor,
+    FiBarChart2,
+    FiActivity,
+    FiShield,
+    FiGrid
+} from 'react-icons/fi';
+import { SiSap } from 'react-icons/si';
+
 const technologies = [
-    // Row 1: Core Accounting & ERP
-    { name: "Tally Prime", logo: "https://upload.wikimedia.org/wikipedia/en/9/9d/Tally_Prime_Logo.png" },
-    { name: "QuickBooks", logo: "https://upload.wikimedia.org/wikipedia/commons/1/1a/QuickBooks.svg" },
-    { name: "Zoho Books", logo: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Zoho_Books_logo.svg" },
-    { name: "Xero", logo: "https://upload.wikimedia.org/wikipedia/commons/7/70/Xero_software_logo.svg" },
-    { name: "SAP FICO", logo: "https://upload.wikimedia.org/wikipedia/commons/5/58/SAP_2011_logo.svg" },
-    { name: "Oracle NetSuite", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b3/Oracle_NetSuite_logo.svg" },
-    { name: "Microsoft Dynamics", logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Microsoft_Dynamics_365_Logo.svg" },
+    // Row 1: Finance Domains & Operations
+    { name: "Private Equity", icon: <FiBriefcase className="w-5 h-5 mr-3 text-blue-600" /> },
+    { name: "Hedge Fund", icon: <FiTrendingUp className="w-5 h-5 mr-3 text-blue-600" /> },
+    { name: "Mutual Fund", icon: <FiPieChart className="w-5 h-5 mr-3 text-blue-600" /> },
+    { name: "Accounts Payable", icon: <FiCreditCard className="w-5 h-5 mr-3 text-emerald-600" /> },
+    { name: "Accounts Receivable", icon: <FiFileText className="w-5 h-5 mr-3 text-emerald-600" /> },
+    { name: "Reconciliation", icon: <FiCheckSquare className="w-5 h-5 mr-3 text-emerald-600" /> },
+    { name: "Record to Report (R2R)", icon: <FiBookOpen className="w-5 h-5 mr-3 text-emerald-600" /> },
+    { name: "Order to Cash (O2C)", icon: <FiActivity className="w-5 h-5 mr-3 text-emerald-600" /> },
 
-    // Row 2: Analytics & Visualization
-    { name: "Advanced Excel", logo: "https://upload.wikimedia.org/wikipedia/commons/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg" },
-    { name: "Power BI", logo: "https://upload.wikimedia.org/wikipedia/commons/c/cf/New_Power_BI_Logo.svg" },
-    { name: "Tableau", logo: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Tableau_Logo.png" },
-    { name: "Alteryx", logo: "https://upload.wikimedia.org/wikipedia/commons/3/36/Alteryx_Logo_2023.svg" },
-    { name: "Python", logo: "https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" },
-    { name: "SQL", logo: "https://upload.wikimedia.org/wikipedia/commons/8/87/Sql_data_base_with_logo.png" },
+    // Row 2: Finance Roles & Profiles
+    { name: "NA Analyst", icon: <FiMonitor className="w-5 h-5 mr-3 text-indigo-600" /> },
+    { name: "Financial Analyst", icon: <FiBarChart2 className="w-5 h-5 mr-3 text-indigo-600" /> },
+    { name: "Financial Reporting Analyst", icon: <FiFileText className="w-5 h-5 mr-3 text-indigo-600" /> },
+    { name: "Research Analyst", icon: <FiTrendingUp className="w-5 h-5 mr-3 text-indigo-600" /> },
+    { name: "Loan Syndication", icon: <FiBriefcase className="w-5 h-5 mr-3 text-indigo-600" /> },
+    { name: "Tax Associate", icon: <FiCheckSquare className="w-5 h-5 mr-3 text-indigo-600" /> },
+    { name: "Accounts Executive", icon: <FiCreditCard className="w-5 h-5 mr-3 text-indigo-600" /> },
+    { name: "Risk Analyst", icon: <FiShield className="w-5 h-5 mr-3 text-indigo-600" /> },
 
-    // Row 3: Financial Markets & Taxation
-    { name: "Bloomberg", logo: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Bloomberg_logo.svg" },
-    { name: "Reuters", logo: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Thomson_Reuters_logo.svg" },
-    { name: "GST Portal", logo: "https://cdn-icons-png.flaticon.com/512/2620/2620582.png" }, // Using generic document icon for GST/Tax
-    { name: "Income Tax", logo: "https://upload.wikimedia.org/wikipedia/en/4/46/Income_Tax_Department_logo.png" },
-    { name: "MS Word", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg" },
-    { name: "MS PowerPoint", logo: "https://upload.wikimedia.org/wikipedia/commons/0/0d/Microsoft_Office_PowerPoint_%282019%E2%80%93present%29.svg" },
+    // Row 3: Tools & Software
+    { name: "Advanced Excel", icon: <FiGrid className="w-5 h-5 mr-3 text-green-600" /> },
+    { name: "MS Word", icon: <FiFileText className="w-5 h-5 mr-3 text-blue-700" /> },
+    { name: "MS PowerPoint", icon: <FiMonitor className="w-5 h-5 mr-3 text-orange-600" /> },
+    { name: "Tally Prime", icon: <FiDatabase className="w-5 h-5 mr-3 text-purple-600" /> },
+    { name: "SAP FICO", icon: <SiSap className="w-5 h-5 mr-3 text-blue-500" /> },
+    { name: "QuickBooks", icon: <FiDatabase className="w-5 h-5 mr-3 text-green-500" /> },
+    { name: "Power BI", icon: <FiPieChart className="w-5 h-5 mr-3 text-yellow-600" /> },
+    { name: "SQL", icon: <FiDatabase className="w-5 h-5 mr-3 text-blue-400" /> }
 ];
 
 const Marquee = ({ children, direction = "left", speed = 50 }) => {
@@ -60,14 +82,14 @@ const Marquee = ({ children, direction = "left", speed = 50 }) => {
 };
 
 const TechLogos = () => {
-    const row1 = technologies.slice(0, 7);
-    const row2 = technologies.slice(7, 13);
-    const row3 = technologies.slice(13);
+    const row1 = technologies.slice(0, 8);
+    const row2 = technologies.slice(8, 16);
+    const row3 = technologies.slice(16, 24);
 
     // Duplicate rows to ensure enough width for seamless looping on large screens
-    const extendedRow1 = [...row1, ...row1, ...row1, ...row1];
-    const extendedRow2 = [...row2, ...row2, ...row2, ...row2];
-    const extendedRow3 = [...row3, ...row3, ...row3, ...row3];
+    const extendedRow1 = [...row1, ...row1, ...row1];
+    const extendedRow2 = [...row2, ...row2, ...row2];
+    const extendedRow3 = [...row3, ...row3, ...row3];
 
     return (
         <section className="py-10 bg-gray-50 overflow-hidden border-b border-gray-200">
@@ -76,7 +98,7 @@ const TechLogos = () => {
                     Tools & Technologies
                 </span>
                 <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-                    Master In-Demand Skills
+                    Roles, Profiles & Tools
                 </h2>
                 <div className="w-16 h-1 bg-indigo-600 mx-auto rounded-full"></div>
             </div>
@@ -85,14 +107,10 @@ const TechLogos = () => {
                 {/* Row 1: Office/Design */}
                 <Marquee direction="left" speed={100}>
                     {extendedRow1.map((tech, index) => (
-                        <div key={`row1-${index}`} className="mx-4 flex items-center justify-center min-w-[50px] md:min-w-[80px] cursor-pointer group">
-                            <div className="p-2 rounded-lg bg-white group-hover:shadow-md transition-all duration-300 border border-gray-100">
-                                <img
-                                    src={tech.logo}
-                                    alt={tech.name}
-                                    title={tech.name}
-                                    className="h-4 md:h-6 w-auto object-contain grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100 transition-all duration-300"
-                                />
+                        <div key={`row1-${index}`} className="mx-4 flex items-center justify-center cursor-default">
+                            <div className="px-6 py-3 rounded-full bg-white shadow-sm border border-gray-100 text-gray-700 font-medium hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all duration-300 whitespace-nowrap flex items-center group">
+                                {tech.icon}
+                                <span>{tech.name}</span>
                             </div>
                         </div>
                     ))}
@@ -101,14 +119,10 @@ const TechLogos = () => {
                 {/* Row 2: Frontend */}
                 <Marquee direction="right" speed={105}>
                     {extendedRow2.map((tech, index) => (
-                        <div key={`row2-${index}`} className="mx-4 flex items-center justify-center min-w-[50px] md:min-w-[80px] cursor-pointer group">
-                            <div className="p-2 rounded-lg bg-white group-hover:shadow-md transition-all duration-300 border border-gray-100">
-                                <img
-                                    src={tech.logo}
-                                    alt={tech.name}
-                                    title={tech.name}
-                                    className="h-4 md:h-6 w-auto object-contain grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100 transition-all duration-300"
-                                />
+                        <div key={`row2-${index}`} className="mx-4 flex items-center justify-center cursor-default">
+                            <div className="px-6 py-3 rounded-full bg-white shadow-sm border border-gray-100 text-gray-700 font-medium hover:text-emerald-600 hover:border-emerald-100 hover:bg-emerald-50 transition-all duration-300 whitespace-nowrap flex items-center group">
+                                {tech.icon}
+                                <span>{tech.name}</span>
                             </div>
                         </div>
                     ))}
@@ -117,14 +131,10 @@ const TechLogos = () => {
                 {/* Row 3: Backend/Tools */}
                 <Marquee direction="left" speed={95}>
                     {extendedRow3.map((tech, index) => (
-                        <div key={`row3-${index}`} className="mx-4 flex items-center justify-center min-w-[50px] md:min-w-[80px] cursor-pointer group">
-                            <div className="p-2 rounded-lg bg-white group-hover:shadow-md transition-all duration-300 border border-gray-100">
-                                <img
-                                    src={tech.logo}
-                                    alt={tech.name}
-                                    title={tech.name}
-                                    className="h-4 md:h-6 w-auto object-contain grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100 transition-all duration-300"
-                                />
+                        <div key={`row3-${index}`} className="mx-4 flex items-center justify-center cursor-default">
+                            <div className="px-6 py-3 rounded-full bg-white shadow-sm border border-gray-100 text-gray-700 font-medium hover:text-purple-600 hover:border-purple-100 hover:bg-purple-50 transition-all duration-300 whitespace-nowrap flex items-center group">
+                                {tech.icon}
+                                <span>{tech.name}</span>
                             </div>
                         </div>
                     ))}

@@ -24,7 +24,7 @@ const ApplicationSchema = new mongoose.Schema({
     },
     resumePublicId: {
         type: String,
-        required: true // Needed to delete from Cloudinary if needed
+        // Optional — only set when a file is uploaded to Cloudinary (not when URL is provided)
     },
     consent: {
         salary: Boolean,

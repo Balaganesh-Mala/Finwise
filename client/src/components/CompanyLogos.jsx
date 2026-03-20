@@ -2,41 +2,30 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const companies = [
-    { name: "Google", logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" },
-    { name: "Microsoft", logo: "https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" },
-    { name: "Amazon", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" },
-    { name: "Netflix", logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" },
-    { name: "Meta", logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg" },
-    { name: "Apple", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" },
-    { name: "Tesla", logo: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png" },
+    { name: "Wells Fargo", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b3/Wells_Fargo_Bank.svg" },
+    { name: "FactSet", logo: "https://upload.wikimedia.org/wikipedia/commons/8/87/FactSet_logo.svg" },
+    { name: "Deloitte", logo: "https://upload.wikimedia.org/wikipedia/commons/5/56/Deloitte.svg" },
+    { name: "EY", logo: "https://upload.wikimedia.org/wikipedia/commons/f/f8/EY_logo_2019.svg" },
+    { name: "KPMG", logo: "https://upload.wikimedia.org/wikipedia/commons/1/18/KPMG_logo.svg" },
+    { name: "PwC", logo: "https://upload.wikimedia.org/wikipedia/commons/0/05/PricewaterhouseCoopers_Logo.svg" },
+    { name: "Broadridge", logo: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Broadridge_Financial_Solutions_Logo.svg" },
+    { name: "Accenture", logo: "https://upload.wikimedia.org/wikipedia/commons/c/cd/Accenture_2017_logo.svg" },
+    { name: "Ascensus", logo: "https://logo.clearbit.com/ascensus.com" },
+    { name: "Alter Domus", logo: "https://logo.clearbit.com/alterdomus.com" },
+    { name: "Genpact", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b2/Genpact_logo.svg" },
+    { name: "M2N Labs", logo: "https://logo.clearbit.com/m2nlabs.com" },
+    { name: "Experian", logo: "https://upload.wikimedia.org/wikipedia/commons/1/1b/Experian_logo.svg" },
     { name: "IBM", logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" },
-    { name: "Intel", logo: "https://upload.wikimedia.org/wikipedia/commons/c/c9/Intel-logo.svg" },
-    { name: "Adobe", logo: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Adobe_Corporate_Logo.png" },
-    { name: "Oracle", logo: "https://upload.wikimedia.org/wikipedia/commons/5/50/Oracle_logo.svg" },
-    { name: "Salesforce", logo: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg" },
-    { name: "Cisco", logo: "https://upload.wikimedia.org/wikipedia/commons/6/64/Cisco_logo.svg" },
-    { name: "Uber", logo: "https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png" },
-    { name: "Airbnb", logo: "https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg" },
-    { name: "Spotify", logo: "https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" },
-    { name: "Slack", logo: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg" },
-    { name: "Dropbox", logo: "https://upload.wikimedia.org/wikipedia/commons/c/cb/Dropbox_logo_2017.svg" },
-    { name: "HP", logo: "https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg" },
-    { name: "Dell", logo: "https://upload.wikimedia.org/wikipedia/commons/4/48/Dell_Logo.svg" },
-    { name: "Samsung", logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" },
-    { name: "Sony", logo: "https://upload.wikimedia.org/wikipedia/commons/c/ca/Sony_logo.svg" },
-    // "Low level" / Startups / Other companies for 3rd row
-    { name: "Zoho", logo: "https://upload.wikimedia.org/wikipedia/commons/6/66/Zoho_Corporation_logo.png" },
-    { name: "Freshworks", logo: "https://upload.wikimedia.org/wikipedia/commons/0/07/Freshworks-Logo.svg" },
-    { name: "Swiggy", logo: "https://upload.wikimedia.org/wikipedia/en/1/12/Swiggy_logo.svg" },
-    { name: "Zomato", logo: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Zomato_Logo.svg" },
-    { name: "Paytm", logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" },
-    { name: "Flipkart", logo: "https://upload.wikimedia.org/wikipedia/en/7/7a/Flipkart_logo.svg" },
-    { name: "Myntra", logo: "https://upload.wikimedia.org/wikipedia/commons/b/bc/Myntra_Logo.png" },
-    { name: "Ola", logo: "https://upload.wikimedia.org/wikipedia/commons/0/03/Ola_Cabs_logo.svg" },
-    { name: "Razorpay", logo: "https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" },
-    { name: "Zerodha", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Zerodha_logo.svg" },
-    { name: "Byjus", logo: "https://upload.wikimedia.org/wikipedia/commons/0/0c/Byju%27s_logo.png" },
-    { name: "Unacademy", logo: "https://upload.wikimedia.org/wikipedia/commons/1/10/Unacademy_Logo.png" }
+    { name: "Clear Harbor", logo: "https://logo.clearbit.com/clearharbor.com" },
+    { name: "Computershare", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Computershare_logo.svg" },
+    { name: "Capgemini", logo: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Capgemini_2017_logo.svg" },
+    { name: "Wipro", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a0/Wipro_Primary_Logo_Color_RGB.svg" },
+    { name: "Infosys", logo: "https://upload.wikimedia.org/wikipedia/commons/9/95/Infosys_logo.svg" },
+    { name: "Invesco", logo: "https://upload.wikimedia.org/wikipedia/commons/f/f5/Invesco_logo.svg" },
+    { name: "Raymond James", logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Raymond_James_logo.svg" },
+    { name: "R1 RCM", logo: "https://logo.clearbit.com/r1rcm.com" },
+    { name: "Goldman Sachs", logo: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Goldman_Sachs.svg" },
+    { name: "JPMorgan Chase", logo: "https://upload.wikimedia.org/wikipedia/commons/0/06/JPMorgan_Chase_Logo_2008_1.svg" }
 ];
 
 // Internal Marquee Component using Framer Motion
@@ -72,10 +61,15 @@ const Marquee = ({ children, direction = "left", speed = 25 }) => {
 };
 
 const CompanyLogos = () => {
-    // Split companies into 3 rows
-    const row1 = companies.slice(0, 11);
-    const row2 = companies.slice(11, 22);
-    const row3 = companies.slice(22);
+    // Split companies evenly into 3 rows of 8
+    const row1 = companies.slice(0, 8);
+    const row2 = companies.slice(8, 16);
+    const row3 = companies.slice(16, 24);
+
+    // Duplicate arrays to ensure seamless infinite scrolling on large screens
+    const extendedRow1 = [...row1, ...row1, ...row1];
+    const extendedRow2 = [...row2, ...row2, ...row2];
+    const extendedRow3 = [...row3, ...row3, ...row3];
 
     return (
         <section className="py-10 bg-white overflow-hidden border-b border-gray-100">
@@ -91,13 +85,14 @@ const CompanyLogos = () => {
 
             <div className="flex flex-col gap-6">
                 {/* Row 1: Left to Right */}
-                <Marquee direction="left" speed={40}>
-                    {row1.map((company, index) => (
+                <Marquee direction="left" speed={70}>
+                    {extendedRow1.map((company, index) => (
                         <div key={`row1-${index}`} className="mx-4 flex items-center justify-center min-w-[60px] md:min-w-[100px] cursor-pointer group">
                             <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-white group-hover:shadow-md transition-all duration-300 border border-transparent group-hover:border-gray-100">
                                 <img
                                     src={company.logo}
                                     alt={company.name}
+                                    title={company.name}
                                     className="h-4 md:h-6 w-auto object-contain grayscale group-hover:grayscale-0 opacity-60 group-hover:opacity-100 transition-all duration-300"
                                 />
                             </div>
@@ -106,13 +101,14 @@ const CompanyLogos = () => {
                 </Marquee>
 
                 {/* Row 2: Right to Left */}
-                <Marquee direction="right" speed={45}>
-                    {row2.map((company, index) => (
+                <Marquee direction="right" speed={80}>
+                    {extendedRow2.map((company, index) => (
                         <div key={`row2-${index}`} className="mx-4 flex items-center justify-center min-w-[60px] md:min-w-[100px] cursor-pointer group">
                             <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-white group-hover:shadow-md transition-all duration-300 border border-transparent group-hover:border-gray-100">
                                 <img
                                     src={company.logo}
                                     alt={company.name}
+                                    title={company.name}
                                     className="h-4 md:h-6 w-auto object-contain grayscale group-hover:grayscale-0 opacity-60 group-hover:opacity-100 transition-all duration-300"
                                 />
                             </div>
@@ -121,13 +117,14 @@ const CompanyLogos = () => {
                 </Marquee>
 
                 {/* Row 3: Right to Left (Startups/Mid-size) */}
-                <Marquee direction="left" speed={35}>
-                    {row3.map((company, index) => (
+                <Marquee direction="left" speed={75}>
+                    {extendedRow3.map((company, index) => (
                         <div key={`row3-${index}`} className="mx-4 flex items-center justify-center min-w-[60px] md:min-w-[100px] cursor-pointer group">
                             <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-white group-hover:shadow-md transition-all duration-300 border border-transparent group-hover:border-gray-100">
                                 <img
                                     src={company.logo}
                                     alt={company.name}
+                                    title={company.name}
                                     className="h-4 md:h-6 w-auto object-contain grayscale group-hover:grayscale-0 opacity-60 group-hover:opacity-100 transition-all duration-300"
                                 />
                             </div>

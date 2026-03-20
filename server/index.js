@@ -55,6 +55,7 @@ app.use('/api/inquiries', require('./routes/inquiryRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/jobs', require('./routes/jobRoutes'));
 app.use('/api/applications', require('./routes/applicationRoutes'));
+app.use('/api/student-jobs', require('./routes/studentJobRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/demos', require('./routes/demoRoutes'));
 app.use('/api/blogs', require('./routes/blogRoutes'));

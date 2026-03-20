@@ -35,8 +35,8 @@ const Home = () => {
 
 
 
-      {/* Certificate Section */}
-      <CertificateSection />
+      {/* Certificate Section }
+      <CertificateSection />*/}
 
       {/* Student Success Dashboard */}
       <StudentSuccessDashboard />
