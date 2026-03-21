@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MapPin, IndianRupee, Clock, CalendarClock, ChevronRight, Info, CheckCircle, AlertCircle, ExternalLink, RefreshCw, Building } from 'lucide-react';
+import { MapPin, IndianRupee, Clock, CalendarClock, ChevronRight, Info, CheckCircle, AlertCircle, ExternalLink, RefreshCw, Building, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -41,11 +41,20 @@ function JobCard({ job, onOpen, eligible, index }) {
             {/* Top: Company + Logo */}
             <div className="flex items-start justify-between gap-2">
                 <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{job.company}</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        {!eligible && <Lock size={10} />}
+                        {eligible ? job.company : `Company ID: ${job?._id?.slice(-6)?.toUpperCase() || 'HIDDEN'}`}
+                    </p>
                     <h2 className="text-xl font-bold text-gray-900 leading-tight">{job.title}</h2>
                 </div>
-                {job.companyLogo && (
-                    <img src={job.companyLogo} alt={job.company} className="w-10 h-10 rounded-lg object-cover border border-gray-100 flex-shrink-0" />
+                {eligible ? (
+                    job.companyLogo && (
+                        <img src={job.companyLogo} alt={job.company} className="w-10 h-10 rounded-lg object-cover border border-gray-100 flex-shrink-0" />
+                    )
+                ) : (
+                    <div className="w-10 h-10 rounded-lg flex flex-shrink-0 items-center justify-center bg-gray-100 border border-gray-200">
+                        <Lock size={16} className="text-gray-400" />
+                    </div>
                 )}
             </div>
 
@@ -99,8 +108,9 @@ function JobCard({ job, onOpen, eligible, index }) {
                     )}
                 </div>
                 <button
-                    onClick={() => onOpen(job, index)}
-                    className="flex items-center gap-1 px-4 py-2 rounded-lg bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all active:scale-[0.98] shadow-sm shadow-indigo-100"
+                    onClick={() => (eligible || isApplied) ? onOpen(job, index) : null}
+                    disabled={!eligible && !isApplied}
+                    className="flex items-center gap-1 px-4 py-2 rounded-lg bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all active:scale-[0.98] shadow-sm shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isApplied ? 'View Details' : eligible ? 'View Details' : 'Check Eligibility'}
                     <ChevronRight size={12} className="ml-1" />
@@ -158,7 +168,10 @@ function JobModal({ job, index, onClose, onApplied, eligible }) {
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-0.5">{job.company}</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5">
+                            {!eligible && <Lock size={12} />}
+                            {eligible ? job.company : `Company ID: ${job?._id?.slice(-6)?.toUpperCase() || 'HIDDEN'}`}
+                        </p>
                         <h2 className="text-lg font-black text-gray-900">{job.title}</h2>
                     </div>
                     <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-sm transition-colors">✕</button>
@@ -225,7 +238,7 @@ function JobModal({ job, index, onClose, onApplied, eligible }) {
                     )}
 
                     {/* About Company */}
-                    {(job.companyWebsite || job.companyLinkedin) && (
+                    {(job.companyWebsite || job.companyLinkedin) && eligible && (
                         <div>
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">About Company</h4>
                             <div className="space-y-2">
@@ -251,7 +264,7 @@ function JobModal({ job, index, onClose, onApplied, eligible }) {
 
 
                     {/* Action Panel */}
-                    {eligible ? (
+                    {(eligible || isApplied) ? (
                         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-3">
                             {!isApplied ? (
                                 <div className="space-y-6 py-2">
@@ -327,6 +340,7 @@ export default function JobPortal() {
     const [loading, setLoading] = useState(true);
     const [modal, setModal] = useState(null);
     const [eligible, setEligible] = useState(false);
+    const [completion, setCompletion] = useState(0);
 
     const fetchAll = useCallback(async (studentId) => {
         try {
@@ -350,7 +364,11 @@ export default function JobPortal() {
         const u = JSON.parse(localStorage.getItem('studentUser') || 'null');
         if (u?._id) {
             axios.get(`${API}/api/student/progress/stats/${u._id}`)
-                .then(r => setEligible((r.data.stats?.completionPercentage || 0) >= 75))
+                .then(r => {
+                    const pct = r.data.stats?.completionPercentage || 0;
+                    setCompletion(pct);
+                    setEligible(pct >= 75);
+                })
                 .catch(() => { });
             fetchAll(u._id);
         } else setLoading(false);
@@ -394,12 +412,77 @@ export default function JobPortal() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
-            <div className="max-w-5xl mx-auto px-4 pt-8">
+            <div className="max-w-5xl mx-auto px-4 pt-0">
 
 
+
+
+
+                {/* Premium Eligibility notice */}
+                {!eligible && tab === 'open' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-950 via-gray-900 to-black p-6 shadow-2xl border border-indigo-500/20"
+                    >
+                        {/* Decorative glow */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-[80px] -mr-16 -mt-16 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-[60px] -ml-8 -mb-8 pointer-events-none" />
+
+                        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-start gap-4 flex-1">
+                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 backdrop-blur-md shadow-inner border border-white/10">
+                                    <Lock size={22} className="text-primary-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.8)] text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-white mb-1 tracking-tight">
+                                        Level up to unlock Applications! 🚀
+                                    </h3>
+                                    <p className="text-sm text-gray-400 leading-relaxed max-w-lg mt-1">
+                                        You are currently at <span className="font-bold text-white px-2 py-0.5 bg-white/10 rounded-md border border-white/5">{completion}%</span> completion. Push forward to reach <span className="font-bold text-primary-400">75%</span> and unlock career opportunities.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 w-full max-w-sm md:ml-auto bg-black/40 rounded-xl p-5 shadow-inner border border-white/5 backdrop-blur-md relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 to-transparent pointer-events-none" />
+                                <div className="flex items-end justify-between mb-3 relative z-10">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Your Progress</p>
+                                        <p className="text-2xl font-black text-white mt-0.5 leading-none">{completion}<span className="text-primary-500 opacity-80 text-sm ml-0.5">%</span></p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Target Goal</p>
+                                        <p className="text-sm font-bold text-gray-300 mt-0.5 leading-none">75%</p>
+                                    </div>
+                                </div>
+
+                                {/* Progress bar track */}
+                                <div className="w-full bg-gray-800 rounded-full h-2.5 overflow-hidden ring-1 ring-white/5 relative z-10 p-[1px]">
+                                    {/* Progress bar fill */}
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(100, (completion / 75) * 100)}%` }}
+                                        transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
+                                        className="h-full bg-gradient-to-r from-primary-600 via-indigo-500 to-primary-400 rounded-full relative overflow-hidden"
+                                    >
+                                        <motion.div
+                                            animate={{ x: ["-100%", "200%"] }}
+                                            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                                            className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12"
+                                        />
+                                    </motion.div>
+                                </div>
+                                <p className="text-xs font-medium text-gray-400 mt-3 text-center relative z-10">
+                                    Only <span className="text-white font-bold">{Math.max(0, 75 - completion)}%</span> more to go! 🔥
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Tabs */}
-                <div className="flex gap-0 border-b border-gray-200 mb-6">
+                <div className="flex gap-2 md:gap-0 border-b border-gray-200 mb-6 overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {TABS.map(t => (
                         <button key={t.id} onClick={() => setTab(t.id)}
                             className={`relative flex items-center gap-1.5 px-6 py-3 text-sm font-bold transition-all ${tab === t.id
@@ -416,14 +499,6 @@ export default function JobPortal() {
                         </button>
                     ))}
                 </div>
-
-                {/* Eligibility notice */}
-                {!eligible && tab === 'open' && (
-                    <div className="mb-5 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                        <AlertCircle size={16} className="text-amber-500 flex-shrink-0" />
-                        <p className="text-sm text-amber-700">Complete <strong>75%</strong> of your course to unlock apply features.</p>
-                    </div>
-                )}
 
                 {/* Grid */}
                 {currentList.length === 0 ? (

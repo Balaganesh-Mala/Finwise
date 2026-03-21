@@ -39,12 +39,17 @@ const JobDetailsModal = ({ job, isOpen, onClose, eligible = true, completion = 0
                             </span>
                             <h2 className="text-2xl md:text-3xl font-bold mb-2 pr-8">{job.title}</h2>
                             <div className="flex items-center gap-3">
-                                {job.companyLogo && (
+                                {eligible && job.companyLogo && (
                                     <img src={job.companyLogo} alt="Company" className="w-12 h-12 object-contain bg-white rounded-lg p-1" />
+                                )}
+                                {!eligible && (
+                                    <div className="w-12 h-12 rounded-lg flex flex-shrink-0 items-center justify-center bg-gray-800/50 border border-gray-700">
+                                        <Lock size={20} className="text-gray-400" />
+                                    </div>
                                 )}
                                 <p className={`text-lg ${eligible ? 'text-gray-300' : 'text-amber-300 flex items-center gap-2'}`}>
                                     {!eligible && <Lock size={16} />}
-                                    {job.company}
+                                    {eligible ? job.company : `Company ID: ${job?._id?.slice(-6)?.toUpperCase() || 'HIDDEN'}`}
                                 </p>
                             </div>
 

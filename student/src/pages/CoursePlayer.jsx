@@ -68,7 +68,7 @@ const CoursePlayer = () => {
     // ─── Quiz Timer ───────────────────────────────────────────────
     useEffect(() => {
         if (quizPhase !== 'active') return;
-        
+
         // Timer countdown
         const timer = setInterval(() => {
             setTimeLeft(prev => {
@@ -76,7 +76,7 @@ const CoursePlayer = () => {
                 return prev - 1;
             });
         }, 1000);
-        
+
         return () => clearInterval(timer);
     }, [currentQIdx, quizPhase]);
 
@@ -118,7 +118,7 @@ const CoursePlayer = () => {
 
     const handleNextQuestion = () => {
         if (quizPhase !== 'active') return;
-        
+
         const isLastQuestion = currentQIdx >= shuffledQuestions.length - 1;
         if (isLastQuestion) {
             submitQuiz();
@@ -134,19 +134,19 @@ const CoursePlayer = () => {
         setQuizPhase('submitted');
         const storedUser = JSON.parse(localStorage.getItem('studentUser'));
         if (!storedUser || !topicContent?.mcqTest?.testId) return;
-        
+
         setMcqSubmitting(true);
         try {
             const answers = Object.entries(mcqAnswers).map(([questionId, selected]) => ({
                 questionId,
                 selected: Array.isArray(selected) ? selected : [selected]
             }));
-            
+
             const res = await axios.post(
                 `${import.meta.env.VITE_API_URL}/api/topic-content/${activeTopic._id}/attempt-mcq`,
                 { studentId: storedUser._id, testId: topicContent.mcqTest.testId._id, answers }
             );
-            
+
             setQuizResult(res.data.attempt);
             setMySubmissions(prev => ({ ...prev, mcq: res.data.attempt }));
         } catch (err) {
@@ -248,7 +248,7 @@ const CoursePlayer = () => {
                         ? axios.get(`${import.meta.env.VITE_API_URL}/api/topic-content/${activeTopic._id}/my-submissions/${storedUser._id}`)
                         : Promise.resolve({ data: { submissions: { tasks: [], assignments: [], mcq: null } } })
                 ]);
-                setTopicContent(contentRes.data.content);
+                setTopicContent(contentRes.data.content || {});
                 setMySubmissions(submissionsRes.data.submissions);
             } catch (e) {
                 console.error('Content fetch failed', e);
@@ -412,7 +412,7 @@ const CoursePlayer = () => {
 
     const checkTopicCompletionRequirements = () => {
         // Prevent bypassing checks if content is still loading or hasn't loaded
-        if (contentLoading || !topicContent) return { allowed: false, message: 'Please wait for lesson content to load before marking as complete.' };
+        if (contentLoading || topicContent === null) return { allowed: false, message: 'Please wait for lesson content to load before marking as complete.' };
 
         const subs = mySubmissions || { tasks: [], assignments: [], mcq: null };
 
@@ -633,92 +633,169 @@ const CoursePlayer = () => {
     if (loading) return <div className="h-screen flex items-center justify-center text-indigo-600 font-medium">Loading Course...</div>;
 
     return (
-        <div className="flex h-screen bg-gray-50 flex-col md:flex-row overflow-hidden">
-            {/* Sidebar Code */}
+        <div className="flex h-screen bg-[#f3f4f6] flex-col md:flex-row overflow-hidden relative">
+            {/* Sidebar Code (Timeline / Platform Flat UI Style) */}
             <div className={`
-                w-full md:w-80
+                w-full md:w-[320px] lg:w-[320px]
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                bg-[#0f172a] border-r border-slate-800 flex-shrink-0 transition-transform duration-300 flex flex-col z-20 absolute md:static h-full overflow-hidden shadow-2xl
+                bg-[#1B2538] border-r border-[#152040] flex-shrink-0 transition-transform duration-300 flex flex-col z-30 absolute md:static h-full overflow-hidden shadow-2xl font-sans
             `}>
-                {/* Sidebar Header */}
-                <div className="p-5 border-b border-slate-800/60 flex items-center justify-between bg-[#0f172a]">
-                    <h2 className="font-bold text-slate-100 tracking-wide line-clamp-1">{course?.title}</h2>
-                    <button onClick={() => setSidebarOpen(false)} className="p-1.5 md:hidden bg-slate-800 rounded-lg text-slate-300 hover:text-white transition-colors">
-                        <ArrowLeft size={18} />
-                    </button>
+                {/* Header Section */}
+                <div className="px-5 py-5 border-b border-[#0f1523] bg-[#0E1524] shrink-0">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                            <h2 className="font-semibold text-white text-[16px] leading-snug pr-2 tracking-wide font-sans" title={course?.title}>{course?.title || 'Course Player'}</h2>
+                        </div>
+                        <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1.5 rounded-md hover:bg-[#1f2937] text-white/70 hover:text-white transition-colors shrink-0">
+                            <ArrowLeft size={16} />
+                        </button>
+                    </div>
+                    {/* Overall Progress Bar */}
+                    <div className="mt-4">
+                        <div className="flex justify-between items-end mb-1.5">
+                            <span className="text-[12px] text-[#9ca3af]">Overall Progress</span>
+                            <span className="text-[12px] font-bold text-[#60A5FA]">
+                                {(() => {
+                                    let total = 0, comp = 0;
+                                    modules.forEach(m => {
+                                        total += (m.topics || []).length;
+                                        comp += (m.topics || []).filter(t => progress[t._id]?.completed).length;
+                                    });
+                                    return total > 0 ? Math.round((comp / total) * 100) : 0;
+                                })()}%
+                            </span>
+                        </div>
+                        <div className="h-2 w-full bg-[#0F172A] overflow-hidden shadow-inner relative border border-[#1e293b] rounded-full">
+                            {/* The filled bar with gradient and glow */}
+                            <div className="h-full bg-gradient-to-r from-[#059669] via-[#10B981] to-[#6EE7B7] rounded-full transition-all duration-700 relative shadow-[0_0_16px_rgba(52,211,153,0.8)]" style={{
+                                width: `${(() => {
+                                    let total = 0, comp = 0;
+                                    modules.forEach(m => {
+                                        total += (m.topics || []).length;
+                                        comp += (m.topics || []).filter(t => progress[t._id]?.completed).length;
+                                    });
+                                    return total > 0 ? Math.round((comp / total) * 100) : 0;
+                                })()}%`
+                            }}>
+                                {/* Intense glowing animated head */}
+                                <div className="absolute top-0 right-0 w-8 h-full bg-white blur-[2px] opacity-80 rounded-full animate-pulse"></div>
+                                {/* Shimmer Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/50 to-white/0 opacity-50 w-full animate-pulse mix-blend-overlay"></div>
+                            </div>
+
+                            {/* Ambient bar glow (track fill effect) */}
+                            <div className="absolute inset-0 bg-[#34D399] blur-[8px] opacity-25 select-none pointer-events-none transition-all duration-700" style={{
+                                width: `${(() => {
+                                    let total = 0, comp = 0;
+                                    modules.forEach(m => {
+                                        total += (m.topics || []).length;
+                                        comp += (m.topics || []).filter(t => progress[t._id]?.completed).length;
+                                    });
+                                    return total > 0 ? Math.round((comp / total) * 100) : 0;
+                                })()}%`
+                            }}></div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="overflow-y-auto flex-1 space-y-4 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="overflow-y-auto flex-1 pb-10 m-0 space-y-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-[#1B2538]">
                     {modules.length === 0 && (
-                        <div className="p-4 text-center text-gray-500 text-sm">
-                            <p>No modules found for this course.</p>
+                        <div className="p-8 mt-10 text-center text-[#9CA3AF]">
+                            <BookOpen size={24} className="mx-auto mb-3 opacity-50" />
+                            <p className="text-sm">No curriculum available.</p>
                         </div>
                     )}
                     {modules.map((module, mIdx) => {
                         const isExpanded = expandedModules[module._id];
+                        // Calculate module progress
+                        const modTopics = module.topics || [];
+                        const completedTopics = modTopics.filter(t => progress[t._id]?.completed).length;
+                        const totalTopics = modTopics.length;
+
                         return (
-                            <div key={module._id} className="mx-3 mb-2 bg-slate-800/40 border border-slate-700/60 rounded-[5px] overflow-hidden shadow-sm">
-                                {/* Accordion Header */}
+                            <div key={module._id} className="transition-all duration-0 outline-none">
+                                {/* Accordion Header (Flat dark or blue based on image) */}
                                 <button
-                                    onClick={() => setExpandedModules(prev => ({ ...prev, [module._id]: !prev[module._id] }))}
-                                    className="w-full flex items-center justify-between bg-transparent hover:bg-slate-700/30 px-4 py-3.5 transition-colors focus:outline-none group"
+                                    onClick={() => setExpandedModules(prev => prev[module._id] ? {} : { [module._id]: true })}
+                                    className={`w-full flex items-start justify-between px-5 py-4 transition-colors focus:outline-none group ${isExpanded ? 'bg-[#436BB5] hover:bg-[#436BB5] border-b border-[#3b5e9e]' : 'bg-[#1B2538] hover:bg-[#25324b] border-b border-[#2d3a54]'}`}
                                 >
-                                    <h3 className="text-[13px] font-semibold text-slate-200 tracking-wide text-left flex items-center gap-3">
-                                        {/*<span className="text-[10px] text-slate-300 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded shadow-sm group-hover:text-amber-400 group-hover:border-slate-600 transition-colors">
-                                            MOD {mIdx + 1}
-                                        </span>*/}
-                                        {module.title}
-                                    </h3>
-                                    <div className={`text-slate-500 transition-transform duration-300 ease-in-out ${isExpanded ? 'rotate-180 text-amber-500' : 'group-hover:text-slate-300'}`}>
-                                        <ChevronDown size={16} strokeWidth={2.5} />
+                                    <div className="flex-1 text-left pr-3 min-w-0">
+                                        <h3 className={`text-[15px] transition-colors leading-tight ${isExpanded ? 'text-white font-semibold' : 'text-[#e2e8f0] font-medium'}`}>
+                                            {module.title}
+                                        </h3>
+                                        <div className="mt-1.5 flex items-center gap-1.5 opacity-90">
+                                            <Clock size={12} className={isExpanded ? 'text-white/80' : 'text-[#94a3b8]'} />
+                                            <span className={`text-[12px] font-normal ${isExpanded ? 'text-white/90' : 'text-[#94a3b8]'}`}>{completedTopics}/{totalTopics} lessons</span>
+                                        </div>
+                                    </div>
+                                    <div className={`transition-transform duration-300 ease-in-out p-1 pt-0 ${isExpanded ? 'rotate-180 text-white' : 'text-[#94a3b8]'}`}>
+                                        <ChevronDown size={18} strokeWidth={2} />
                                     </div>
                                 </button>
 
-                                {/* Accordion Content */}
-                                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                                    <div className="flex flex-col pb-2">
+                                {/* Accordion Content: Timeline Style */}
+                                <div className={`overflow-hidden transition-all duration-300 ease-in-out bg-[#1B2538] ${isExpanded ? 'max-h-[3000px] opacity-100 border-b-4 border-[#0F1522]' : 'max-h-0 opacity-0 border-transparent'}`}>
+                                    <div className="flex flex-col pt-3 pb-3 relative">
                                         {module.topics.map((topic, tIdx) => {
                                             const unlocked = isTopicUnlocked(topic);
                                             const isActive = activeTopic?._id === topic._id;
+                                            const isCompleted = progress[topic._id]?.completed;
+                                            const isLast = tIdx === module.topics.length - 1;
 
                                             return (
                                                 <button
                                                     key={topic._id}
                                                     onClick={() => {
-                                                        if (!unlocked) { toast.error('This lesson is not unlocked yet'); return; }
+                                                        if (!unlocked) { toast.error('This lesson is locked', { icon: '🔒', style: { background: '#1c263c', color: '#fff' } }); return; }
                                                         setActiveTopic(topic);
                                                         setActiveTab('description');
                                                         if (window.innerWidth < 768) setSidebarOpen(false);
                                                     }}
-                                                    className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors group relative ${!unlocked
-                                                        ? 'opacity-50 cursor-not-allowed bg-transparent'
-                                                        : isActive
-                                                            ? 'bg-gradient-to-r from-amber-500/10 to-transparent'
-                                                            : 'hover:bg-slate-700/20'
+                                                    className={`w-full text-left relative px-5 py-4 flex items-start group ${!unlocked
+                                                            ? 'opacity-40 cursor-not-allowed'
+                                                            : isActive
+                                                                ? 'bg-[#1e345e]/30 border-l border-transparent border-r-0'
+                                                                : 'hover:bg-[#202b40]'
                                                         }`}
                                                 >
-                                                    {/* Active Indicator Line */}
-                                                    {isActive && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-amber-500 shadow-[2px_0_8px_0_rgba(245,158,11,0.5)]"></div>}
+                                                    {/* Vertical Connecting Line */}
+                                                    {!isLast && (
+                                                        <div className="absolute left-[31px] top-[34px] w-[2px] h-[calc(100%+8px)] bg-[#60A5FA] opacity-50 z-0"></div>
+                                                    )}
 
-                                                    <div className="mt-0.5 shrink-0 z-10">
+                                                    {/* Timeline Node Icon */}
+                                                    <div className="mt-0 flex-shrink-0 w-6 flex justify-center items-center z-10 bg-[#1B2538]">
                                                         {!unlocked ? (
-                                                            <Lock size={15} className="text-slate-600" />
-                                                        ) : progress[topic._id]?.completed ? (
-                                                            <CheckCircle size={15} className={isActive ? 'text-amber-400' : 'text-emerald-500'} />
+                                                            <div className="w-[18px] h-[18px] rounded-full border-2 border-[#475569] flex items-center justify-center bg-[#1B2538]"><Lock size={8} className="text-[#475569]" /></div>
+                                                        ) : isCompleted ? (
+                                                            <CheckCircle size={20} fill="#10B981" color="#1B2538" strokeWidth={1.5} className="z-10 shadow-sm" />
+                                                        ) : isActive ? (
+                                                            <div className="w-[18px] h-[18px] rounded-full border-2 border-[#10B981] bg-[#10B981]/20 flex justify-center items-center z-10 shadow-[0_0_8px_rgba(16,185,129,0.4)]">
+                                                                <div className="w-[8px] h-[8px] rounded-full bg-[#10B981]"></div>
+                                                            </div>
                                                         ) : (
-                                                            <PlayCircle size={15} className={isActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'} />
+                                                            <div className="w-[18px] h-[18px] rounded-full border-2 border-[#1B2538] ring-2 ring-[#10B981] bg-[#1B2538] z-10"></div>
                                                         )}
                                                     </div>
-                                                    <div className="min-w-0 flex-1 z-10">
-                                                        <p className={`text-[13px] font-medium leading-[1.3] ${!unlocked ? 'text-slate-600' : isActive ? 'text-amber-200 font-semibold' : 'text-slate-400 group-hover:text-slate-200'}`}>
-                                                            {tIdx + 1}. {topic.title}
+
+                                                    {/* Content & Action Icon */}
+                                                    <div className="min-w-0 flex-1 ml-4 pr-10">
+                                                        <p className={`text-[14px] leading-snug ${isActive ? 'font-medium text-white' : 'font-normal text-[#94a3b8] group-hover:text-[#cbd5e1]'}`}>
+                                                            {topic.title}
                                                         </p>
-                                                        <div className="flex items-center gap-3 mt-1.5">
-                                                            <span className={`text-[11px] font-medium flex items-center gap-1.5 ${isActive ? 'text-amber-400/80' : 'text-slate-500'}`}>
-                                                                <Clock size={11} /> {topic.duration}m
+                                                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                            <span className={`text-[12px] flex items-center gap-1.5 ${isActive ? 'text-[#94a3b8]' : 'text-[#64748b]'}`}>
+                                                                <Clock size={12} /> {topic.duration} mins
                                                             </span>
-                                                            {!unlocked && <span className="text-[9px] text-orange-400 font-bold uppercase tracking-wider bg-orange-900/30 px-1.5 py-0.5 rounded">Locked</span>}
                                                         </div>
+                                                    </div>
+
+                                                    {/* Right Side Resource Icon (Book/Pencil style) */}
+                                                    <div className="absolute right-5 top-5 flex justify-center items-center h-[20px]">
+                                                        {topic?.type === 'assignment' || topic?.type === 'mcq' || topic?.title?.toLowerCase().includes('practice')
+                                                            ? <BookOpen size={20} className="text-[#64748b] opacity-80" />
+                                                            : <BookOpen size={20} className="text-[#64748b] opacity-80" />
+                                                        }
                                                     </div>
                                                 </button>
                                             );
