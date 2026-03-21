@@ -102,13 +102,12 @@ const Layout = () => {
                     // So localStorage likely just holds the user object.
 
                     if (data) {
-                        // Merge or replace. The login response returns { user: ... }. 
-                        // The get/:id route returns the student object directly: res.json(student)
-
-                        // We need to make sure we format it consistently. 
-                        // Login response: { _id, name, email, access, courseName }
-                        // Get response: full student object.
-
+                        if (data.status !== 'Active') {
+                            localStorage.removeItem('studentUser');
+                            navigate('/login', { state: { error: 'Your account is inactive. Please contact support.' } });
+                            return;
+                        }
+                        
                         const updatedUser = {
                             _id: data._id,
                             name: data.name,

@@ -9,6 +9,11 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (user.status !== 'Active') {
+    localStorage.removeItem('studentUser');
+    return <Navigate to="/login" state={{ error: 'Your account is inactive. Please contact support.' }} replace />;
+  }
+
   return children ? children : <Outlet />;
 };
 

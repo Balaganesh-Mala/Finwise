@@ -10,20 +10,20 @@ const companies = [
     { name: "PwC", logo: "https://upload.wikimedia.org/wikipedia/commons/0/05/PricewaterhouseCoopers_Logo.svg" },
     { name: "Broadridge", logo: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Broadridge_Financial_Solutions_Logo.svg" },
     { name: "Accenture", logo: "https://upload.wikimedia.org/wikipedia/commons/c/cd/Accenture_2017_logo.svg" },
-    { name: "Ascensus", logo: "https://logo.clearbit.com/ascensus.com" },
-    { name: "Alter Domus", logo: "https://logo.clearbit.com/alterdomus.com" },
+    { name: "Ascensus", logo: "https://upload.wikimedia.org/wikipedia/commons/4/41/Ascensus_logo.svg" },
+    { name: "Alter Domus", logo: "https://upload.wikimedia.org/wikipedia/en/9/90/Alter_Domus_logo.png" },
     { name: "Genpact", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b2/Genpact_logo.svg" },
-    { name: "M2N Labs", logo: "https://logo.clearbit.com/m2nlabs.com" },
+    { name: "M2N Labs", logo: "https://avatars.githubusercontent.com/u/105156324?s=200&v=4" }, // Fallback for M2N
     { name: "Experian", logo: "https://upload.wikimedia.org/wikipedia/commons/1/1b/Experian_logo.svg" },
     { name: "IBM", logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" },
-    { name: "Clear Harbor", logo: "https://logo.clearbit.com/clearharbor.com" },
+    { name: "Clear Harbor", logo: "https://media.licdn.com/dms/image/C4D0BAQE8u1Q7V_z2_A/company-logo_200_200/0/1630567015444?e=2147483647&v=beta&t=k6z5lU0u0G9_9_9" }, // LinkedIn hosted
     { name: "Computershare", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Computershare_logo.svg" },
     { name: "Capgemini", logo: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Capgemini_2017_logo.svg" },
     { name: "Wipro", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a0/Wipro_Primary_Logo_Color_RGB.svg" },
     { name: "Infosys", logo: "https://upload.wikimedia.org/wikipedia/commons/9/95/Infosys_logo.svg" },
     { name: "Invesco", logo: "https://upload.wikimedia.org/wikipedia/commons/f/f5/Invesco_logo.svg" },
     { name: "Raymond James", logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Raymond_James_logo.svg" },
-    { name: "R1 RCM", logo: "https://logo.clearbit.com/r1rcm.com" },
+    { name: "R1 RCM", logo: "https://upload.wikimedia.org/wikipedia/commons/7/7c/R1_RCM_Logo.svg" },
     { name: "Goldman Sachs", logo: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Goldman_Sachs.svg" },
     { name: "JPMorgan Chase", logo: "https://upload.wikimedia.org/wikipedia/commons/0/06/JPMorgan_Chase_Logo_2008_1.svg" }
 ];

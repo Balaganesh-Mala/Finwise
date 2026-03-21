@@ -14,6 +14,8 @@ const Progress = require('../models/Progress');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
+const FeeStructure = require('../models/FeeStructure');
+const Installment = require('../models/Installment');
 
 // Configure Multer
 const upload = multer({ 
@@ -71,7 +73,8 @@ router.post('/login', async (req, res) => {
                 name: student.name,
                 email: student.email,
                 access: student.access,
-                courseName: student.courseName
+                courseName: student.courseName,
+                status: student.status
             }
         });
     } catch (err) {
@@ -260,8 +263,50 @@ router.get('/list', async (req, res) => {
     try {
         const students = await Student.find()
             .select('-passwordHash') // Exclude password
-            .sort({ createdAt: -1 });
-        res.json(students);
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const studentsWithFees = await Promise.all(students.map(async (student) => {
+            const feeStructure = await FeeStructure.findOne({ student_id: student._id }).lean();
+            if (!feeStructure) {
+                return { ...student, feeDetails: null };
+            }
+
+            const installments = await Installment.find({ fee_structure_id: feeStructure._id }).lean();
+            
+            let paidAmount = 0;
+            let pendingAmount = 0;
+            let paidInstallments = 0;
+            let overdueInstallments = 0;
+
+            installments.forEach(inst => {
+                if (inst.status === 'Paid') {
+                    paidAmount += inst.amount;
+                    paidInstallments++;
+                } else if (inst.status === 'Overdue') {
+                    pendingAmount += inst.amount;
+                    overdueInstallments++;
+                } else {
+                    // Pending
+                    pendingAmount += inst.amount;
+                }
+            });
+
+            return {
+                ...student,
+                feeDetails: {
+                    totalFee: feeStructure.total_fee,
+                    totalInstallments: feeStructure.total_installments,
+                    paidAmount,
+                    pendingAmount,
+                    paidInstallments,
+                    overdueInstallments,
+                    installments
+                }
+            };
+        }));
+
+        res.json(studentsWithFees);
     } catch (err) {
         console.error('Error fetching students:', err);
         res.status(500).json({ message: 'Server Error' });

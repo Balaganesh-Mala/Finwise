@@ -1,19 +1,43 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (location.state?.error) {
+            setError(location.state.error);
+            // Clear the error from state so it doesn't persist on refresh
+            window.history.replaceState(null, '');
+        }
+    }, [location]);
 
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
+
+    const [settings, setSettings] = useState(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const { data } = await axios.get(`${API_URL}/api/settings`);
+                setSettings(data);
+            } catch (error) {
+                console.error("Failed to fetch settings:", error);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     // Forgot Password States
     const [showForgotModal, setShowForgotModal] = useState(false);
@@ -95,7 +119,7 @@ const Login = () => {
             {/* Brand Slogan (Left Side) - Hidden on Mobile */}
             <div className="absolute left-16 bottom-16 z-10 hidden lg:block text-white max-w-xl">
                 <h1 className="text-5xl font-bold leading-tight mb-4 text-white">
-                    Unlock Your Potential with <span className="text-indigo-400">JobReady.</span>
+                    Unlock Your Potential with <span className="text-indigo-400">{settings?.siteTitle || 'Finwise'}.</span>
                 </h1>
                 <p className="text-lg text-gray-300">
                     Join thousands of students forwarding their careers with our award-winning curriculum and mentorship.

@@ -59,6 +59,7 @@ app.use('/api/student-jobs', require('./routes/studentJobRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/demos', require('./routes/demoRoutes'));
 app.use('/api/blogs', require('./routes/blogRoutes'));
+app.use('/api/newsletter', require('./routes/newsletterRoutes'));
 app.use('/api/run', require('./routes/runRoutes'));
 app.use('/api/code', require('./routes/codeRoutes'));
 app.use('/api/qr', require('./routes/qrRoutes'));

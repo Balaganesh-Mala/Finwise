@@ -11,6 +11,7 @@ import FaqSection from '../components/FaqSection';
 import StudentSuccessDashboard from '../components/StudentSuccessDashboard';
 import LocationSection from '../components/LocationSection';
 import BottomNav from '../components/BottomNav';
+import BlogSection from '../components/BlogSection';
 
 
 const Home = () => {
@@ -49,6 +50,9 @@ const Home = () => {
 
       {/* FAQ Section */}
       <FaqSection />
+
+      {/* Blog Section */}
+      <BlogSection />
 
       {/* Location Section */}
       <LocationSection />

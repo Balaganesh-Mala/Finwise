@@ -141,4 +141,40 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// @route   PATCH /api/blogs/:id/like
+// @desc    Increment likes for a blog
+// @access  Public
+router.patch('/:id/like', async (req, res) => {
+    try {
+        const blog = await Blog.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { likes: 1 } },
+            { new: true }
+        );
+        if (!blog) return res.status(404).json({ msg: 'Blog not found' });
+        res.json({ likes: blog.likes });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   PATCH /api/blogs/:id/share
+// @desc    Increment shares for a blog
+// @access  Public
+router.patch('/:id/share', async (req, res) => {
+    try {
+        const blog = await Blog.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { shares: 1 } },
+            { new: true }
+        );
+        if (!blog) return res.status(404).json({ msg: 'Blog not found' });
+        res.json({ shares: blog.shares });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;
