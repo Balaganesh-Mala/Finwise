@@ -45,6 +45,9 @@ const BlogSection = () => {
 
     return (
         <section className="py-20 bg-[#F9FAFB] overflow-hidden relative">
+            {/* Subtle Background Grid */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+            
             <div className="container mx-auto px-8 md:px-12 lg:px-20 relative z-10">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8 relative">

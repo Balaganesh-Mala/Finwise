@@ -1,14 +1,61 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { BookOpen, Award, Clock, TrendingUp, Calendar, CheckCircle, UserCheck, Trophy, Medal, Crown, Share2, Linkedin, MessageCircle, Star, X, Copy, Download, Check, Sparkles, Zap, Flame, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { BookOpen, Award, Clock, TrendingUp, Calendar, CheckCircle, UserCheck, Trophy, Medal, Crown, Share2, Linkedin, MessageCircle, Star, X, Copy, Download, Check, Sparkles, Zap, Flame, Loader2, ArrowLeft, Target } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 
-const RankCardModal = ({ rank, hours, user, weeklyActivity, settings, onClose }) => {
+const Confetti = () => {
+    const particles = Array.from({ length: 80 });
+    const colors = ['#f43f5e', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#ffffff', '#fbbf24'];
+
+    return (
+        <div className="fixed inset-0 pointer-events-none z-[10] overflow-hidden">
+            {particles.map((_, i) => {
+                const angle = (Math.random() * 360) * (Math.PI / 180);
+                const velocity = 300 + Math.random() * 600;
+                const xDist = Math.cos(angle) * velocity;
+                const yDist = Math.sin(angle) * velocity;
+
+                return (
+                    <motion.div
+                        key={i}
+                        initial={{
+                            x: "50vw",
+                            y: "50vh",
+                            scale: 0,
+                            rotate: 0,
+                            opacity: 1
+                        }}
+                        animate={{
+                            x: `calc(50vw + ${xDist}px)`,
+                            y: `calc(50vh + ${yDist}px)`,
+                            scale: [0, 1, 0.8, 0],
+                            rotate: Math.random() * 720,
+                            opacity: [0, 1, 1, 0]
+                        }}
+                        transition={{
+                            duration: 3 + Math.random() * 2,
+                            ease: [0.1, 0.5, 0.3, 1], // Decelerating burst
+                            delay: Math.random() * 0.2
+                        }}
+                        className="absolute w-1.5 h-3 rounded-[1px]"
+                        style={{
+                            backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+                            boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)'
+                        }}
+                    />
+                );
+            })}
+        </div>
+    );
+};
+
+const RankCardModal = ({ rank, hours, user, stats, activitySummary, weeklyActivity, settings, onClose }) => {
     const exportRef = useRef(null); // Ref for the hidden export card
     const [isSharing, setIsSharing] = useState(false);
-    const siteTitle = settings?.siteTitle || "JOBREADY SKILLS";
+    const siteTitle = settings?.siteTitle || "Finwise";
     const logoUrl = settings?.logoUrl;
 
     const shareText = `I just achieved Rank #${rank} on the ${siteTitle} Leaderboard! 🏆\nI learned for ${hours} hours this week. 🚀\nCheck my progress! \n#Learning #Achievement #JobReady`;
@@ -83,6 +130,7 @@ const RankCardModal = ({ rank, hours, user, weeklyActivity, settings, onClose })
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-300">
+            <Confetti />
 
             {/* --- HIDDEN EXPORT CARD (Optimized for HTML2Canvas) --- */}
             {/* Positioned off-screen but rendered so it captures correctly */}
@@ -90,12 +138,13 @@ const RankCardModal = ({ rank, hours, user, weeklyActivity, settings, onClose })
                 <div
                     ref={exportRef}
                     id="export-card-content"
-                    className="w-[1080px] h-[1350px] bg-slate-900 flex flex-col items-center justify-between p-16 relative overflow-hidden"
+                    className="w-[1080px] h-[1350px] bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] flex flex-col items-center justify-between p-16 relative overflow-hidden"
                 >
                     {/* Background Graphics */}
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
-                    <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-indigo-900/50 to-transparent"></div>
-                    <div className="absolute bottom-[-200px] right-[-200px] w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-[150px]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#1e40af] via-[#1d4ed8] to-[#1e40af]"></div>
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none"></div>
+                    <div className="absolute top-0 right-0 w-[1200px] h-[1200px] bg-white/10 rounded-full blur-[150px] -mr-60 -mt-60 pointer-events-none"></div>
+                    <div className="absolute bottom-[-200px] left-[-200px] w-[800px] h-[800px] bg-indigo-400/10 rounded-full blur-[150px]"></div>
 
                     {/* Logo Header */}
                     <div className="w-full flex justify-center z-10 pt-10">
@@ -151,7 +200,7 @@ const RankCardModal = ({ rank, hours, user, weeklyActivity, settings, onClose })
                     </div>
 
                     {/* Footer */}
-                    <div className="z-10 pb-10 flex flex-col items-center">
+                    <div className="z-10 pb-0 flex flex-col items-center">
                         <div className="flex gap-4 mb-4">
                             {days.map((day, idx) => {
                                 const isActive = safeWeeklyActivity[idx] && safeWeeklyActivity[idx].hours > 0;
@@ -169,120 +218,200 @@ const RankCardModal = ({ rank, hours, user, weeklyActivity, settings, onClose })
 
             {/* --- VISIBLE UI (Interactive Card) --- */}
             {/* Glow Effect behind the card */}
-            <div className="absolute w-full max-w-sm h-[500px] bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+            <div className="absolute w-full max-w-md h-[500px] bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none"></div>
 
-            <div className="w-full max-w-sm bg-slate-900 rounded-3xl shadow-2xl overflow-hidden relative border border-slate-700/50 ring-1 ring-white/10">
+            <div className="w-full max-w-md h-[650px] bg-gradient-to-b from-[#1e40af] via-[#1d4ed8] to-[#1e40af] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden relative border border-white/20 ring-1 ring-white/10 flex flex-col">
+                {/* Subtle Grid Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0f_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0f_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
+                {/* Cinematic Blobs */}
+                <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-[100px] -mr-40 -mt-40 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-60 h-60 bg-indigo-400/10 rounded-full blur-[80px] -ml-20 -mb-20 pointer-events-none" />
 
                 {/* Header Pattern */}
-                <div className="absolute top-0 w-full h-32 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+                <div className="absolute top-0 w-full h-24 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none"></div>
 
-                {/* Close Button */}
-                <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all z-20">
-                    <X size={20} />
-                </button>
-
-                {/* Company Branding */}
-                <div className="absolute top-6 left-6 z-20">
-                    {logoUrl ? (
-                        <img src={logoUrl} alt="Logo" className="h-8 w-auto object-contain brightness-0 invert opacity-80" crossOrigin="anonymous" />
-                    ) : (
-                        <h2 className="text-white/80 font-bold text-[10px] tracking-[0.2em] uppercase">{siteTitle}</h2>
-                    )}
+                {/* Top Navigation */}
+                <div className="absolute top-0 w-full p-4 flex justify-between items-center z-40 bg-[#1e40af]/80 backdrop-blur-md border-b border-white/10">
+                    <button onClick={onClose} className="text-white hover:bg-white/10 p-2 rounded-full transition-colors">
+                        <ArrowLeft size={18} />
+                    </button>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-white font-black text-[10px] tracking-[0.3em] uppercase opacity-60">Finwise</h2>
+                        <div className="h-3 w-px bg-white/20"></div>
+                        <h2 className="text-white font-black text-[10px] tracking-[0.3em] uppercase opacity-90">Career Solutions</h2>
+                    </div>
+                    <button onClick={onClose} className="text-white hover:bg-white/10 p-2 rounded-full transition-colors">
+                        <X size={18} />
+                    </button>
                 </div>
 
-                {/* Main Content */}
-                <div className="relative z-10 pt-20 pb-8 px-6 flex flex-col items-center">
+                {/* Scrollable Content */}
+                <div className="relative z-10 w-full h-full overflow-y-auto px-4 pt-20 pb-0 flex flex-col gap-5">
 
-                    {/* Rank Hero */}
-                    <div className="relative mb-6">
-                        <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-20 rounded-full"></div>
-                        <div className="relative">
-                            <h1 className="text-[6rem] font-black leading-none text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-yellow-500 to-yellow-700 drop-shadow-2xl">
-                                #{rank}
-                            </h1>
-                            <div className="absolute -top-6 -right-8 animate-bounce">
-                                <Crown size={40} className="text-yellow-400 fill-yellow-400/20 drop-shadow-lg" strokeWidth={1.5} />
+                    {/* Profile Section */}
+                    <div className="flex items-center gap-4 bg-[#1a237e]/60 p-5 rounded-[2.5rem] border border-white/10 backdrop-blur-xl shadow-xl">
+                        <div className="relative shrink-0">
+                            <div className="h-14 w-14 rounded-full border-[3px] border-yellow-400 p-0.5 overflow-hidden bg-slate-800 shadow-lg">
+                                {user?.profilePicture ? (
+                                    <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-white text-xl font-black bg-indigo-600">
+                                        {user?.name?.charAt(0)}
+                                    </div>
+                                )}
                             </div>
                         </div>
-                        <p className="text-center text-yellow-500/80 font-bold tracking-[0.3em] text-xs uppercase mt-2">Current Rank</p>
-                    </div>
-
-                    {/* User Profile Strip */}
-                    <div className="w-full bg-slate-800/50 rounded-2xl p-2 pr-4 flex items-center gap-3 border border-slate-700/50 backdrop-blur-md mb-6">
-                        <div className="h-10 w-10 rounded-xl bg-slate-700 overflow-hidden shrink-0">
-                            {user?.profilePicture ? (
-                                <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-lg">
-                                    {user?.name?.charAt(0) || 'U'}
+                        <div className="min-w-0">
+                            <h3 className="text-white font-black text-xl tracking-tight leading-none mb-2 truncate">{user?.name}</h3>
+                            <div className="bg-[#0d47a1] px-3 py-1.5 rounded-full inline-flex items-center gap-2 shadow-inner">
+                                <div className="p-1 bg-purple-500 rounded-full shadow-sm">
+                                    <Star size={8} className="text-white fill-white" />
                                 </div>
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-bold text-sm truncate">{user?.name}</h3>
-                            <div className="flex items-center gap-1.5">
-                                <span className={`w-2 h-2 rounded-full ${activeDays > 0 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-slate-600'}`}></span>
-                                <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">{activeDays > 2 ? 'On Fire 🔥' : 'Learning'}</span>
+                                <span className="text-white text-[10px] font-black tracking-tight">{Math.floor(hours * 2345).toLocaleString()} Points</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 w-full gap-3 mb-6">
-                        <div className="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/30 flex flex-col items-center justify-center relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <Clock className="text-indigo-400 mb-2" size={20} />
-                            <span className="text-2xl font-bold text-white">{hours}h</span>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Time Spent</span>
-                        </div>
-                        <div className="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/30 flex flex-col items-center justify-center relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <Trophy className="text-yellow-500 mb-2" size={20} />
-                            <span className="text-2xl font-bold text-white">{Math.floor(hours * 100)}</span>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">XP Points</span>
-                        </div>
-                    </div>
-
-                    {/* Streak Dots */}
-                    <div className="w-full flex justify-between items-center px-2 mb-6 opacity-70">
-                        {days.map((day, idx) => {
-                            const isActive = safeWeeklyActivity[idx] && safeWeeklyActivity[idx].hours > 0;
-                            return (
-                                <div key={day} className="flex flex-col items-center gap-1.5">
-                                    <div className={`w-1.5 h-6 rounded-full transition-all duration-300 ${isActive ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]' : 'bg-slate-700'}`}></div>
+                    {/* Hero Card: Daily Goal */}
+                    <div className="bg-white rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden flex flex-col items-center border border-indigo-50/50">
+                        <div className="w-full flex items-center justify-between gap-4 mb-6">
+                            {/* Target Illustration */}
+                            <div className="relative h-24 w-24 shrink-0">
+                                <div className="absolute inset-0 bg-red-50 rounded-full scale-110"></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center shadow-inner">
+                                        <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center border-[3px] border-white shadow-md">
+                                            <div className="w-4 h-4 bg-red-900 rounded-full"></div>
+                                        </div>
+                                    </div>
                                 </div>
-                            )
-                        })}
+                                <div className="absolute top-0 right-0 text-yellow-500">
+                                    <Sparkles size={16} fill="currentColor" />
+                                </div>
+                            </div>
+
+                            {/* Achievement Text */}
+                            <div className="flex-1 text-center py-2">
+                                <h1 className="text-[#1a237e] text-2xl font-black leading-none mb-3">Daily Goal</h1>
+                                <div className="bg-purple-600 text-white px-5 py-2.5 rounded-2xl font-black text-base shadow-[0_8px_20px_rgba(147,51,234,0.3)] inline-block transform hover:scale-105 transition-transform cursor-default">
+                                    Achieved
+                                </div>
+                            </div>
+
+                            {/* Points Circle */}
+                            <div className="relative h-20 w-20 shrink-0">
+                                <svg className="w-full h-full -rotate-90">
+                                    <circle cx="40" cy="40" r="35" stroke="#f3e5f5" strokeWidth="6" fill="transparent" />
+                                    <motion.circle
+                                        cx="40" cy="40" r="35" stroke="#7e57c2" strokeWidth="6" fill="transparent"
+                                        initial={{ strokeDasharray: "220", strokeDashoffset: "220" }}
+                                        animate={{ strokeDashoffset: 220 - (220 * 0.25) }}
+                                        transition={{ duration: 1.5, delay: 0.2 }}
+                                        strokeLinecap="round"
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <Star size={12} className="text-purple-600 mb-0.5 fill-purple-600" />
+                                    <span className="text-[#1a237e] text-[9px] font-black leading-none">1210/100</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Daily Stats Grid */}
+                        <div className="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-5">
+                            <div className="flex items-center gap-3 justify-center bg-slate-50/50 py-3 rounded-2xl transition-colors hover:bg-slate-100/50">
+                                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl shadow-sm">
+                                    <Trophy size={18} strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <p className="text-[#1a237e] font-black text-xl leading-none mb-1">#{rank}</p>
+                                    <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest leading-none">Daily Rank</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 justify-center bg-slate-50/50 py-3 rounded-2xl transition-colors hover:bg-slate-100/50">
+                                <div className="p-2 bg-yellow-100 text-yellow-600 rounded-xl shadow-sm">
+                                    <Zap size={18} fill="currentColor" strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <p className="text-[#1a237e] font-black text-xl leading-none mb-1">50</p>
+                                    <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest leading-none">Coins Earned</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="w-full grid grid-cols-2 gap-3">
-                        <button
-                            onClick={() => handleSmartShare('whatsapp')}
-                            disabled={isSharing}
-                            className="flex items-center justify-center gap-2 py-3.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-green-900/20 active:translate-y-0.5 disabled:opacity-50"
-                        >
-                            {isSharing ? <Loader2 size={18} className="animate-spin" /> : <MessageCircle size={18} />}
-                            WhatsApp
-                        </button>
-                        <button
-                            onClick={() => handleSmartShare('linkedin')}
-                            disabled={isSharing}
-                            className="flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-900/20 active:translate-y-0.5 disabled:opacity-50"
-                        >
-                            {isSharing ? <Loader2 size={18} className="animate-spin" /> : <Linkedin size={18} />}
-                            LinkedIn
-                        </button>
+                    {/* Sub-Cards Row */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white rounded-[2rem] p-5 shadow-xl flex flex-col h-full border border-slate-50">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-[#1a237e] font-black text-[10px] uppercase tracking-tight">Course Progress</h4>
+                                <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg shadow-sm">
+                                    <BookOpen size={10} strokeWidth={3} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 mb-4 flex-1">
+                                <div>
+                                    <p className="text-lg font-black text-[#1a237e] leading-none mb-1">{stats?.batchProgress || 0}%</p>
+                                    <p className="text-slate-400 text-[7px] font-black uppercase tracking-widest leading-none">Overall Progress</p>
+                                </div>
+                                <div>
+                                    <p className="text-lg font-black text-[#1a237e] leading-none mb-1">{stats?.enrolledCourses || 0}</p>
+                                    <p className="text-slate-400 text-[7px] font-black uppercase tracking-widest leading-none">Enrolled</p>
+                                </div>
+                            </div>
+                            <div className="mt-auto">
+                                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                    <motion.div initial={{ width: 0 }} animate={{ width: `${stats?.batchProgress || 0}%` }} className="h-full bg-emerald-500 rounded-full shadow-md" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-[2rem] p-5 shadow-xl flex flex-col h-full border border-slate-50">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-[#1a237e] font-black text-[10px] uppercase tracking-tight">Weekly Goal</h4>
+                                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg shadow-sm">
+                                    <Clock size={10} strokeWidth={3} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 mb-4 flex-1">
+                                <div>
+                                    <p className="text-lg font-black text-[#1a237e] leading-none mb-1">{activitySummary?.activeDays || 0}/7</p>
+                                    <p className="text-slate-400 text-[7px] font-black uppercase tracking-widest leading-none">Active Days</p>
+                                </div>
+                                <div>
+                                    <p className="text-lg font-black text-[#1a237e] leading-none mb-1">{activitySummary?.topicCount || 0}</p>
+                                    <p className="text-slate-400 text-[7px] font-black uppercase tracking-widest leading-none">Topics</p>
+                                </div>
+                            </div>
+                            <div className="mt-auto">
+                                <div className="flex gap-1.5 justify-between px-1">
+                                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => (
+                                        <div key={idx} className="flex flex-col items-center gap-1.5">
+                                            <div className={`h-2 w-2 rounded-full shadow-sm transition-all duration-300 ${idx + 1 <= (activitySummary?.activeDays || 0) ? 'bg-indigo-500 scale-110 shadow-indigo-200' : 'bg-slate-200'}`} />
+                                            <span className="text-[7px] font-black text-slate-400">{day}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Copy Link Text */}
-                    <button onClick={() => {
-                        navigator.clipboard.writeText(shareText);
-                        toast.success("Text copied!");
-                    }} className="mt-4 flex items-center gap-2 text-slate-500 hover:text-white text-xs font-semibold transition-colors">
-                        <Copy size={12} /> Copy Text Only
-                    </button>
-
+                    {/* Share Your Progress */}
+                    <div className="mt-4 pb-2">
+                        <h3 className="text-center text-white/60 font-black text-[10px] uppercase tracking-[0.4em] mb-5">Share Your Progress</h3>
+                        <div className="grid grid-cols-3 gap-4">
+                            <button onClick={() => handleSmartShare('whatsapp')} className="bg-[#1a237e]/40 border border-white/10 hover:bg-white/10 h-14 rounded-2xl flex items-center justify-center transition-all group backdrop-blur-md">
+                                <MessageCircle className="text-white/40 group-hover:text-white transition-colors" size={20} />
+                            </button>
+                            <button onClick={() => handleSmartShare('linkedin')} className="bg-[#1a237e]/40 border border-white/10 hover:bg-white/10 h-14 rounded-2xl flex items-center justify-center transition-all group backdrop-blur-md">
+                                <Linkedin className="text-white/40 group-hover:text-white transition-colors" size={20} />
+                            </button>
+                            <button onClick={() => handleSmartShare('whatsapp')} className="bg-[#1a237e]/40 border border-white/10 hover:bg-white/10 h-14 rounded-2xl flex items-center justify-center transition-all group backdrop-blur-md">
+                                <Download className="text-white/40 group-hover:text-white transition-colors" size={20} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -432,6 +561,8 @@ const Dashboard = () => {
                     rank={userRankInfo.rank}
                     hours={userRankInfo.hours}
                     user={user}
+                    stats={stats}
+                    activitySummary={activitySummary}
                     weeklyActivity={weeklyActivity}
                     settings={settings}
                     onClose={() => setShowRankCard(false)}
@@ -482,8 +613,8 @@ const Dashboard = () => {
                                     key={tab.key}
                                     onClick={() => setActivityRange(tab.key)}
                                     className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-all ${activityRange === tab.key
-                                            ? 'bg-white text-indigo-600 shadow-sm'
-                                            : 'text-gray-500 hover:text-gray-700'
+                                        ? 'bg-white text-indigo-600 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
                                     {tab.label}
