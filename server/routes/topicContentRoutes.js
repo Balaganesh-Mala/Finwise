@@ -111,7 +111,7 @@ router.post('/:topicId/task', upload.single('file'), async (req, res) => {
 
         if (!title) return res.status(400).json({ message: 'Task title is required' });
 
-        let fileUrl = '';
+        let fileUrl = req.body.fileUrl || '';
         let filePublicId = '';
 
         if (req.file) {
@@ -162,7 +162,7 @@ router.post('/:topicId/assignment', upload.single('questionFile'), async (req, r
 
         if (!title) return res.status(400).json({ message: 'Assignment title is required' });
 
-        let questionUrl = '';
+        let questionUrl = req.body.questionUrl || '';
         let questionPublicId = '';
 
         if (req.file) {

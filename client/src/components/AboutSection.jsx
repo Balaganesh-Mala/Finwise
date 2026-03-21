@@ -61,7 +61,7 @@ const AboutSection = () => {
                             </h2>
 
                             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                                <strong>Finwise Career Solutions</strong> is a premier institute in Hyderabad dedicated to transforming commerce graduates into industry-ready professionals. We bridge the gap between academic theory and corporate requirements through practical training in <strong>Global Accounting, Investment Banking, and Taxation</strong>.
+                                <strong>Finwise Career Solutions</strong> is a premier training hub dedicated to transforming graduates into industry-ready <strong>Finance & Accounting</strong> professionals. We bridge the gap between academic education and corporate excellence through specialized training in <strong>Global Accounting, Investment Banking, Audit, and Taxation</strong>.
                             </p>
 
                             <div className="space-y-6 mb-10">

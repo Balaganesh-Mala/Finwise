@@ -27,7 +27,8 @@ const TopicSchema = new mongoose.Schema({
   notes: [{
     url: String,
     publicId: String,
-    name: String
+    name: String,
+    type: { type: String, enum: ['file', 'google_doc'], default: 'file' }
   }],
   order: {
     type: Number,

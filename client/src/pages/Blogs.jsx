@@ -49,11 +49,11 @@ const Blogs = () => {
     <div className="bg-[#F9FAFB] min-h-screen relative overflow-hidden text-slate-900">
       <SEO 
         title={`Journal - ${settings?.siteTitle || 'Finwise'}`} 
-        description={`Explore insights on professional growth, technology, and industry trends.`}
+        description={`Explore insights on professional finance growth, investment strategies, and accounting trends.`}
       />
 
       {/* Cinematic Header Section */}
-      <div className="pt-24 pb-12 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 border-b border-white/5 relative overflow-hidden shadow-2xl">
+      <div className="pt-36 pb-12 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 border-b border-white/5 relative overflow-hidden shadow-2xl">
           {/* Subtle Grid Pattern */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
           

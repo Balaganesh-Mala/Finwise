@@ -6,7 +6,7 @@ import {
     ChevronDown, ChevronRight, Download, Menu, ArrowLeft, Clock,
     Edit2, Trash2, Lock, AlertCircle, Upload, BookOpen,
     Trophy, XCircle, SkipForward, RotateCcw, Award,
-    Play, Pause, Volume2, VolumeX, Maximize2
+    Play, Pause, Volume2, VolumeX, Maximize2, Globe, ShieldCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -752,10 +752,10 @@ const CoursePlayer = () => {
                                                         if (window.innerWidth < 768) setSidebarOpen(false);
                                                     }}
                                                     className={`w-full text-left relative px-5 py-4 flex items-start group ${!unlocked
-                                                            ? 'opacity-40 cursor-not-allowed'
-                                                            : isActive
-                                                                ? 'bg-[#1e345e]/30 border-l border-transparent border-r-0'
-                                                                : 'hover:bg-[#202b40]'
+                                                        ? 'opacity-40 cursor-not-allowed'
+                                                        : isActive
+                                                            ? 'bg-[#1e345e]/30 border-l border-transparent border-r-0'
+                                                            : 'hover:bg-[#202b40]'
                                                         }`}
                                                 >
                                                     {/* Vertical Connecting Line */}
@@ -1026,17 +1026,71 @@ const CoursePlayer = () => {
                                         <div className="space-y-3">
                                             <h3 className="font-semibold text-gray-800 mb-4">Lesson Materials</h3>
                                             {activeTopic.notes && activeTopic.notes.length > 0 ? (
-                                                activeTopic.notes.map((note, idx) => (
+                                                activeTopic.notes.map((note, idx) => note.type === 'google_doc' ? (
+                                                    <div key={idx} className="mt-4 space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                                                    <Globe size={20} />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-slate-800 leading-none">{note.name || `Note ${idx + 1}`}</p>
+                                                                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">Document Preview</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100">
+                                                                <Lock size={12} />
+                                                                <span className="text-[10px] font-bold uppercase">View Only</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Iframe Preview Container - Long Iframe Scroll Hack */}
+                                                        {/* We set a large height and scroll the parent, while blocking pointer events on the iframe to prevent copy */}
+                                                        <div className="relative w-full h-[600px] bg-slate-100 rounded-2xl overflow-y-auto border border-slate-200 shadow-inner group/preview select-none"
+                                                            onContextMenu={(e) => e.preventDefault()}
+                                                        >
+                                                            <div className="pointer-events-none w-full">
+                                                                <iframe
+                                                                    src={(() => {
+                                                                        try {
+                                                                            let url = note.url;
+                                                                            if (url.includes('/edit')) url = url.split('/edit')[0] + '/preview';
+                                                                            else if (url.includes('/view')) url = url.split('/view')[0] + '/preview';
+                                                                            else if (!url.includes('/preview')) {
+                                                                                url = url.endsWith('/') ? url + 'preview' : url + '/preview';
+                                                                            }
+                                                                            return url;
+                                                                        } catch (e) { return note.url; }
+                                                                    })()}
+                                                                    className="w-full h-[12000px] border-none"
+                                                                    title={note.name}
+                                                                    loading="lazy"
+                                                                ></iframe>
+                                                            </div>
+                                                            {/* Floating deterrent badge */}
+                                                            <div className="sticky top-4 right-4 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur shadow-sm px-3 py-1.5 rounded-full border border-slate-200 text-slate-500 font-bold text-[10px] uppercase pointer-events-none">
+                                                                <ShieldCheck size={12} className="text-indigo-600" />
+                                                                Protected Content
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
                                                     <div key={idx} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-indigo-200 transition-colors">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="p-2 bg-red-50 text-red-600 rounded-lg"><FileText size={20} /></div>
+                                                            <div className="p-2 bg-red-50 text-red-600 rounded-lg">
+                                                                <FileText size={20} />
+                                                            </div>
                                                             <div>
                                                                 <p className="font-medium text-gray-700 line-clamp-1">{note.name || `Note ${idx + 1}`}</p>
                                                                 <p className="text-xs text-gray-400">PDF Document</p>
                                                             </div>
                                                         </div>
-                                                        <a href={note.url} target="_blank" rel="noopener noreferrer"
-                                                            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                                                        <a
+                                                            href={note.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                                                        >
                                                             <Download size={16} /> Download
                                                         </a>
                                                     </div>
@@ -1410,7 +1464,7 @@ const CoursePlayer = () => {
                                                                 {task.fileUrl && (
                                                                     <a href={task.fileUrl} target="_blank" rel="noopener noreferrer"
                                                                         className="inline-flex items-center gap-2 mt-2 text-sm text-indigo-600 hover:underline">
-                                                                        <Download size={14} /> Download resource file
+                                                                        <Download size={14} /> View resource
                                                                     </a>
                                                                 )}
                                                             </div>
@@ -1472,7 +1526,7 @@ const CoursePlayer = () => {
                                                             {assign.questionUrl && (
                                                                 <a href={assign.questionUrl} target="_blank" rel="noopener noreferrer"
                                                                     className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:underline">
-                                                                    <Download size={14} /> Download Question Paper
+                                                                    <Download size={14} /> View Question Paper
                                                                 </a>
                                                             )}
                                                             {existing ? (

@@ -87,11 +87,13 @@ const StudentSuccessDashboard = () => {
     const loopedFeatures = [...features, ...features];
 
     return (
-        <section className="py-24 bg-white relative overflow-hidden">
-            {/* Background Decoration */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-[#FF7F50] rounded-full mix-blend-multiply filter blur-[120px] opacity-[0.05]"></div>
-                <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-500 rounded-full mix-blend-multiply filter blur-[120px] opacity-[0.05]"></div>
+        <section className="py-24 bg-slate-950 relative overflow-hidden">
+            {/* Cinematic Background Decoration */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_30%,transparent_100%)] pointer-events-none" />
+            
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-indigo-600 rounded-full filter blur-[120px] opacity-[0.15]"></div>
+                <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-600 rounded-full filter blur-[120px] opacity-[0.1]"></div>
             </div>
 
             <div className="container-fluid relative z-10">
@@ -102,59 +104,79 @@ const StudentSuccessDashboard = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                     >
-                        <h2 className="text-sm font-bold tracking-widest text-primary-600 uppercase mb-3">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest relative z-10 shadow-xl mb-6 mx-auto"
+                        >
+                            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
                             Student Features
-                        </h2>
-                        <h3 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
-                            Your <span className="text-primary-600">Success Dashboard</span>
+                        </motion.div>
+                        
+                        <h3 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight tracking-tight">
+                            Your <span className="text-indigo-400">Success Dashboard</span>
                         </h3>
-                        <p className="text-lg text-gray-600 leading-relaxed">
-                            Everything you need to master your skills and land your dream job, all in one place.
+                        <p className="text-lg text-slate-400 font-medium leading-relaxed max-w-2xl mx-auto">
+                            Everything you need to master your skills and land your dream job, seamlessly integrated into one powerful platform.
                         </p>
                     </motion.div>
                 </div>
 
                 {/* Infinite Carousel Container */}
-                <div className="flex overflow-hidden py-8 mask-gradient relative">
-                    <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white to-transparent z-20 pointer-events-none md:block hidden" />
-                    <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white to-transparent z-20 pointer-events-none md:block hidden" />
+                <div className="flex overflow-hidden py-8 relative group">
+                    <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-950 to-transparent z-20 pointer-events-none md:block hidden" />
+                    <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-950 to-transparent z-20 pointer-events-none md:block hidden" />
 
                     <motion.div
-                        className="flex gap-8"
+                        className="flex gap-8 px-4"
                         animate={{ x: "-50%" }}
                         transition={{
                             ease: "linear",
-                            duration: 40, // Adjust speed here
+                            duration: 50,
                             repeat: Infinity
                         }}
-                        style={{ width: "max-content" }}
+                        style={{ width: "max-content", willChange: "transform" }}
                     >
                         {loopedFeatures.map((feature, idx) => (
                             <div
                                 key={idx}
-                                className="w-[350px] md:w-[400px] flex-shrink-0 group p-6 rounded-3xl bg-gray-50 hover:bg-white border border-gray-100 hover:border-[#FF7F50]/30 hover:shadow-2xl transition-all duration-300 flex flex-col h-full"
+                                className="w-[350px] md:w-[420px] flex-shrink-0 group/card p-6 rounded-[2rem] bg-slate-900 border border-white/10 hover:border-indigo-500/50 hover:bg-slate-800 transition-all duration-300 flex flex-col h-full relative overflow-hidden"
                             >
-                                {/* Image Container */}
-                                <div className="mb-6 rounded-2xl overflow-hidden shadow-sm border border-gray-100 group-hover:shadow-md transition-shadow duration-300 bg-white h-56 flex items-center justify-center p-4">
-                                    <img
-                                        src={feature.image}
-                                        alt={feature.title}
-                                        className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                </div>
+                                {/* Glow Overlay */}
+                                <div className="absolute inset-0 bg-transparent group-hover/card:bg-indigo-500/5 rounded-[2rem] transition-colors duration-300 pointer-events-none" />
 
-                                <div className="flex items-center gap-4 mb-3">
-                                    <div className="p-2 bg-[#FF7F50]/10 rounded-lg text-[#FF7F50] group-hover:bg-[#FF7F50] group-hover:text-white transition-colors duration-300">
-                                        <feature.icon className="w-6 h-6" />
+                                {/* macOS Browser Mockup for Screenshots */}
+                                <div className="mb-8 rounded-2xl overflow-hidden shadow-xl shadow-black/30 border border-white/5 bg-slate-950 h-64 flex flex-col relative z-10 transition-transform duration-300 group-hover/card:-translate-y-1">
+                                    <div className="bg-slate-800 px-4 py-3 flex items-center gap-2 border-b border-white/5">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
                                     </div>
-                                    <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF7F50] transition-colors">
-                                        {feature.title}
-                                    </h4>
+                                    <div className="flex-1 flex items-center justify-center p-2 bg-slate-900 overflow-hidden relative">
+                                        {/* Fallback pattern in case image is missing */}
+                                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none" />
+                                        <img
+                                            src={feature.image}
+                                            alt={feature.title}
+                                            className="w-full h-full object-contain relative z-10"
+                                        />
+                                    </div>
                                 </div>
 
-                                <p className="text-gray-500 leading-relaxed text-sm flex-grow">
-                                    {feature.desc}
-                                </p>
+                                <div className="flex flex-col relative z-10 flex-grow">
+                                    <div className="flex items-center gap-4 mb-3">
+                                        <div className="p-3 bg-white/5 rounded-xl text-indigo-400 group-hover/card:bg-indigo-500 group-hover/card:text-white border border-white/10 group-hover/card:border-indigo-400 transition-all duration-500 shadow-md">
+                                            <feature.icon className="w-6 h-6" />
+                                        </div>
+                                        <h4 className="text-2xl font-black text-white group-hover/card:text-indigo-400 transition-colors duration-300">
+                                            {feature.title}
+                                        </h4>
+                                    </div>
+
+                                    <p className="text-slate-400 leading-relaxed font-medium mt-2">
+                                        {feature.desc}
+                                    </p>
+                                </div>
                             </div>
                         ))}
                     </motion.div>
@@ -165,11 +187,11 @@ const StudentSuccessDashboard = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="mt-12 text-center"
+                    className="mt-16 text-center relative z-10"
                 >
                     <Link
                         to="/student/login"
-                        className="inline-flex items-center justify-center gap-2 bg-primary-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg shadow-primary-600/30 hover:bg-primary-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                        className="inline-flex items-center justify-center gap-2 bg-white text-slate-950 px-10 py-5 rounded-full font-black uppercase text-sm tracking-widest shadow-xl shadow-white/10 hover:bg-indigo-500 hover:text-white hover:shadow-indigo-500/30 hover:-translate-y-1 transition-all duration-300 group"
                     >
                         Access Student Login
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

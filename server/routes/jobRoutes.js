@@ -30,6 +30,9 @@ const uploadToCloudinary = (buffer) => {
 // @access  Public
 router.get('/', async (req, res) => {
     try {
+        // Auto-expire jobs past their deadline
+        await Job.updateMany({ deadline: { $lt: new Date() }, isActive: true }, { $set: { isActive: false } });
+
         let query = { isActive: true };
         
         // Retain query param logic for backward compatibility or direct calls
@@ -53,6 +56,10 @@ router.get('/', async (req, res) => {
 router.get('/fetch/student', async (req, res) => {
     try {
         console.log("API: Fetching STRICT Student Jobs");
+        
+        // Auto-expire jobs past their deadline
+        await Job.updateMany({ deadline: { $lt: new Date() }, isActive: true }, { $set: { isActive: false } });
+
         const jobs = await Job.find({ isActive: true, isStudentOnly: true }).sort({ postedAt: -1 });
         console.log(`API: Found ${jobs.length} student jobs`);
 
@@ -121,6 +128,10 @@ router.get('/fetch/student', async (req, res) => {
 router.get('/fetch/client', async (req, res) => {
     try {
         console.log("API: Fetching STRICT Client Jobs");
+        
+        // Auto-expire jobs past their deadline
+        await Job.updateMany({ deadline: { $lt: new Date() }, isActive: true }, { $set: { isActive: false } });
+
         const jobs = await Job.find({ isActive: true, isStudentOnly: { $ne: true } }).sort({ postedAt: -1 });
         console.log(`API: Found ${jobs.length} client jobs`);
         res.json(jobs);

@@ -15,15 +15,22 @@ exports.updateProgress = async (req, res) => {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
+        let shouldAwardPoints = false;
         // Upsert progress
         let progress = await Progress.findOne({ studentId, topicId });
 
         if (progress) {
+            if (completed && !progress.completedAt) {
+                shouldAwardPoints = true;
+            }
             if (courseId) progress.courseId = courseId; // Fix for orphaned progress records
             if (completed !== undefined) progress.completed = completed;
             if (watchedDuration !== undefined) progress.watchedDuration = watchedDuration;
             if (completed && !progress.completedAt) progress.completedAt = Date.now();
         } else {
+            if (completed) {
+                shouldAwardPoints = true;
+            }
             progress = new Progress({
                 studentId,
                 courseId,
@@ -35,6 +42,11 @@ exports.updateProgress = async (req, res) => {
         }
 
         await progress.save();
+
+        if (shouldAwardPoints) {
+            await Student.findByIdAndUpdate(studentId, { $inc: { points: 100 } });
+            console.log(`Awarded 100 points to Student ${studentId} for completing Topic ${topicId}`);
+        }
 
         // --- NEW: Calculate & Update Overall Course Progress Percentage for Student ---
         try {

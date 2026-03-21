@@ -17,6 +17,7 @@ const StudentSchema = new mongoose.Schema({
   batchTiming: { type: String }, // e.g., "Morning", "Evening"
   startDate: { type: Date },
   progress: { type: Number, default: 0 }, // Overall course progress percentage
+  points: { type: Number, default: 0 },
 
   // Feature Access Controls
   access: {

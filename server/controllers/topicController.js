@@ -62,8 +62,29 @@ exports.createTopic = async (req, res) => {
                 topicData.notes.push({
                     url: result.secure_url,
                     publicId: result.public_id,
-                    name: file.originalname
+                    name: file.originalname,
+                    type: 'file'
                 });
+            }
+        }
+
+        // Handle External Notes (Google Docs)
+        if (req.body.externalNotes) {
+            try {
+                const extNotes = typeof req.body.externalNotes === 'string' ? JSON.parse(req.body.externalNotes) : req.body.externalNotes;
+                if (Array.isArray(extNotes)) {
+                    extNotes.forEach(note => {
+                        if (note.url && note.name) {
+                            topicData.notes.push({
+                                url: note.url,
+                                name: note.name,
+                                type: 'google_doc'
+                            });
+                        }
+                    });
+                }
+            } catch (pErr) {
+                console.warn('Failed to parse externalNotes:', pErr);
             }
         }
 
@@ -126,16 +147,36 @@ exports.updateTopic = async (req, res) => {
         }
 
         // Handle Notes Update
-        // If 'notes' files are uploaded, APPEND them. To delete, we need a separate delete endpoint or logic.
-        // For simplicity: Appending new notes.
+        // If 'notes' files are uploaded, APPEND them.
         if (req.files && req.files['notes']) {
             for (const file of req.files['notes']) {
                 const result = await uploadToCloudinary(file.path, 'courses/topics/notes', 'raw');
                 topic.notes.push({
                     url: result.secure_url,
                     publicId: result.public_id,
-                    name: file.originalname
+                    name: file.originalname,
+                    type: 'file'
                 });
+            }
+        }
+
+        // Handle External Notes Update (Append)
+        if (req.body.externalNotes) {
+            try {
+                const extNotes = typeof req.body.externalNotes === 'string' ? JSON.parse(req.body.externalNotes) : req.body.externalNotes;
+                if (Array.isArray(extNotes)) {
+                    extNotes.forEach(note => {
+                        if (note.url && note.name) {
+                            topic.notes.push({
+                                url: note.url,
+                                name: note.name,
+                                type: 'google_doc'
+                            });
+                        }
+                    });
+                }
+            } catch (pErr) {
+                console.warn('Failed to parse externalNotes:', pErr);
             }
         }
         

@@ -11,7 +11,6 @@ import FaqSection from '../components/FaqSection';
 import StudentSuccessDashboard from '../components/StudentSuccessDashboard';
 import LocationSection from '../components/LocationSection';
 import BottomNav from '../components/BottomNav';
-import BlogSection from '../components/BlogSection';
 
 
 const Home = () => {
@@ -19,7 +18,7 @@ const Home = () => {
     <div className="bg-gray-50 min-h-screen">
       <SEO
         title="Home"
-        description="Launch your career with Skill Up Academy. Expert-led courses in MERN Stack, Data Science, and Digital Marketing."
+        description="Launch your career with Finwise Career Solutions. Expert-led courses in Global Accounting, Investment Banking, and Taxation."
       />
 
       {/* Hero Section */}
@@ -50,9 +49,6 @@ const Home = () => {
 
       {/* FAQ Section */}
       <FaqSection />
-
-      {/* Blog Section */}
-      <BlogSection />
 
       {/* Location Section */}
       <LocationSection />

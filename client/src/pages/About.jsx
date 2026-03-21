@@ -24,48 +24,74 @@ const About = () => {
     }, []);
 
     return (
-        <div className='bg-white'>
+        <div className="bg-[#F9FAFB] min-h-screen relative overflow-hidden text-slate-900">
             <SEO
                 title="About Us"
-                description="Learn about our mission to empower the next generation of tech leaders through industry-focused training."
+                description="Learn about our mission to empower the next generation of finance and accounting professionals through industry-focused training."
             />
 
-            {/* Modern Hero Banner */}
-            <div className="relative h-[500px] flex items-center justify-center overflow-hidden bg-indigo-600">
-                {/* Background Image */}
-                <div className="absolute inset-0">
-                    <img
-                        src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
-                        alt="Team collaboration"
-                        className="w-full h-full object-cover opacity-40"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/95 via-indigo-900/80 to-black/50 mix-blend-multiply" />
-                </div>
-
-                {/* Content using Framer Motion */}
-                <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
+            {/* Cinematic Header Section */}
+            <div className="pt-36 pb-12 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 border-b border-white/5 relative overflow-hidden shadow-2xl">
+                {/* Subtle Grid Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+                
+                {/* Animated Header Specific Blobs - Traveling Effect */}
+                <motion.div 
+                    animate={{ 
+                        x: [-200, 800, -200],
+                        y: [-200, 200, -200],
+                        opacity: [0.1, 0.3, 0.1]
+                    }}
+                    transition={{ 
+                        duration: 25, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                    }}
+                    className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500 rounded-full blur-[140px] pointer-events-none" 
+                />
+                <motion.div 
+                    animate={{ 
+                        x: [800, -200, 800],
+                        y: [200, -200, 200],
+                        opacity: [0.1, 0.25, 0.1]
+                    }}
+                    transition={{ 
+                        duration: 30, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                    }}
+                    className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500 rounded-full blur-[120px] pointer-events-none" 
+                />
+    
+                <div className="container mx-auto px-8 md:px-12 lg:px-20 relative z-10 text-center space-y-8">
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "outBack" }}
+                        className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 text-indigo-300 text-xs font-black uppercase tracking-widest relative z-10 shadow-xl mx-auto"
                     >
-                        <span className="inline-block py-1 px-3 rounded-full bg-indigo-500/30 border border-indigo-400/30 text-indigo-100 text-sm font-semibold tracking-wider mb-6 backdrop-blur-sm">
-                            OUR MISSION
-                        </span>
-                        <h1 className="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight text-white leading-tight">
-                            Empowering the <br className="hidden md:block" />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200">
-                                Future of Tech
-                            </span>
-                        </h1>
-                        <p className="text-xl md:text-2xl text-indigo-100 max-w-3xl mx-auto leading-relaxed font-light mb-10">
-                            Bridging the gap between academic theory and industry reality through immersive, project-based training.
-                        </p>
+                        <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                        Our Mission
                     </motion.div>
+                    
+                    <motion.h1 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-5xl md:text-7xl font-black text-white leading-none tracking-tight relative z-10"
+                    >
+                        Empowering the <br className="hidden md:block" />
+                        <span className="text-indigo-400">Future of Finance</span>.
+                    </motion.h1>
+                    
+                    <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-lg text-slate-400 max-w-3xl mx-auto font-medium relative z-10"
+                    >
+                        Transforming commerce graduates into industry-ready accounting and finance professionals through practical, project-based training.
+                    </motion.p>
                 </div>
-
-                {/* Decorative bottom fade to blend with next section */}
-                <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-gray-50 to-transparent"></div>
             </div>
 
             <AboutSection />
@@ -87,8 +113,8 @@ const About = () => {
                                     <h3 className="text-xl font-bold text-gray-900">{member.title}</h3>
                                     <p className="text-indigo-600 font-medium text-sm mt-1">
                                         {member.order === 8 ? 'CEO & Founder' :
-                                            member.order === 9 ? 'CTO' :
-                                                member.order === 10 ? 'Head of Education' : 'Senior Mentor'}
+                                            member.order === 9 ? 'Chief Financial Expert' :
+                                                member.order === 10 ? 'Head of Professional Training' : 'Financial Mentor'}
                                     </p>
                                 </div>
                             ))}

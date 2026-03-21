@@ -51,50 +51,89 @@ const Career = () => {
 
 
     return (
-        <div className="bg-gray-50 min-h-screen pb-20 font-sans">
+        <div className="bg-[#F9FAFB] min-h-screen relative overflow-hidden text-slate-900 font-sans pb-20">
             <SEO
-                title="Careers | We Design Your Future"
-                description="Find your dream job with our hiring partners. We connect skilled graduates with top tech companies."
+                title="Careers | Finwise"
+                description="Find your dream job through Finwise. We connect skilled professionals with top companies."
             />
 
-            {/* Hero Section */}
-            <div className="bg-gray-900 text-white py-24 relative overflow-hidden">
-                <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 bg-primary-600 rounded-full blur-[128px] opacity-40"></div>
-                <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 bg-orange-600 rounded-full blur-[100px] opacity-30"></div>
+            {/* Cinematic Header Section */}
+            <div className="pt-36 pb-24 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 border-b border-white/5 relative overflow-hidden shadow-2xl">
+                {/* Subtle Grid Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                {/* Animated Header Specific Blobs */}
+                <motion.div
+                    animate={{
+                        x: [-200, 800, -200],
+                        y: [-200, 200, -200],
+                        opacity: [0.1, 0.3, 0.1]
+                    }}
+                    transition={{
+                        duration: 25,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                    className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500 rounded-full blur-[140px] pointer-events-none"
+                />
+                <motion.div
+                    animate={{
+                        x: [800, -200, 800],
+                        y: [200, -200, 200],
+                        opacity: [0.1, 0.25, 0.1]
+                    }}
+                    transition={{
+                        duration: 30,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                    className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500 rounded-full blur-[120px] pointer-events-none"
+                />
+
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
                     <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 text-indigo-300 text-xs font-black uppercase tracking-widest relative z-10 shadow-xl mx-auto"
+                    >
+                        <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                        Finwise Careers
+                    </motion.div>
+
+                    <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
+                        className="text-5xl md:text-7xl font-black text-white leading-none tracking-tight relative z-10"
                     >
-                        <span className="inline-block py-1 px-3 rounded-full bg-primary-500/10 border border-primary-500/30 text-primary-400 text-sm font-semibold mb-6 tracking-wide uppercase">
-                            Career Opportunities
-                        </span>
-                        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight text-white">
-                            Build Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-orange-400">Future</span> With Us
-                        </h1>
-                        <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-                            Connect with top companies and startups. We bridge the gap between your skills and your dream career.
-                        </p>
-                    </motion.div>
+                        Build Your Career with <span className="text-indigo-400">Finwise</span>
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.6 }}
+                        className="text-lg text-slate-400 max-w-3xl mx-auto font-medium relative z-10"
+                    >
+                        Explore exclusive job opportunities from our trusted partner network. Accelerate your career in finance and tech.
+                    </motion.p>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2, duration: 0.6 }}
-                        className="flex justify-center gap-4 md:gap-12 flex-wrap text-gray-300 font-medium border-t border-gray-800 pt-10 mt-4 max-w-4xl mx-auto"
+                        className="flex justify-center gap-4 md:gap-12 flex-wrap text-gray-300 font-medium border-t border-slate-800 pt-10 mt-8 max-w-4xl mx-auto relative z-10"
                     >
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gray-800 rounded-lg text-primary-400"><Users size={20} /></div>
-                            <span>500+ Hired</span>
+                            <div className="p-2 bg-slate-800 rounded-lg text-indigo-400"><Users size={20} /></div>
+                            <span>50+ Hiried</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gray-800 rounded-lg text-primary-400"><TrendingUp size={20} /></div>
+                            <div className="p-2 bg-slate-800 rounded-lg text-indigo-400"><TrendingUp size={20} /></div>
                             <span>Top Packages</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gray-800 rounded-lg text-primary-400"><Award size={20} /></div>
+                            <div className="p-2 bg-slate-800 rounded-lg text-indigo-400"><Award size={20} /></div>
                             <span>Verified Jobs</span>
                         </div>
                     </motion.div>

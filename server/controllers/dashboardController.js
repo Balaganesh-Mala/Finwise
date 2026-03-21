@@ -142,6 +142,7 @@ exports.getStudentDashboardStats = async (req, res) => {
                 hoursLearned,          // now uses topic.duration, not watchedDuration
                 attendance: attendanceCount,
                 batchProgress,         // now uses BatchStudent courseId lookup
+                points: student.points || 0,
                 certificates: 0        // placeholder
             },
             recentActivity,

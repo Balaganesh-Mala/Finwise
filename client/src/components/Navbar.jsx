@@ -74,9 +74,17 @@ const Navbar = () => {
 
             {/* Action Buttons */}
             <div className="hidden lg:flex items-center gap-4">
+              <a
+                href={import.meta.env.VITE_STUDENT_APP_URL || 'http://localhost:5174'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-indigo-600 transition-colors px-4 py-2 rounded-xl border border-gray-200 hover:border-indigo-100 hover:bg-indigo-50/30"
+              >
+                <LogIn size={18} /> Student Login
+              </a>
               <button
                 onClick={openPopup}
-                className="bg-gray-900 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-gray-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
               >
                 Get Quote <ChevronRight size={14} />
               </button>

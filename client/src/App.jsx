@@ -56,7 +56,7 @@ function App() {
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <QuotePopup />
-                <main className="flex-grow pt-20"><Courses /></main>
+                <main className="flex-grow"><Courses /></main>
                 <Footer />
               </div>
             } />
@@ -72,7 +72,7 @@ function App() {
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <QuotePopup />
-                <main className="flex-grow pt-20"><Careers /></main>
+                <main className="flex-grow"><Careers /></main>
                 <Footer />
               </div>
             } />
@@ -80,7 +80,7 @@ function App() {
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <QuotePopup />
-                <main className="flex-grow pt-20"><About /></main>
+                <main className="flex-grow"><About /></main>
                 <Footer />
               </div>
             } />
@@ -88,7 +88,7 @@ function App() {
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <QuotePopup />
-                <main className="flex-grow pt-20"><Blogs /></main>
+                <main className="flex-grow"><Blogs /></main>
                 <Footer />
               </div>
             } />
@@ -96,7 +96,7 @@ function App() {
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <QuotePopup />
-                <main className="flex-grow pt-20"><BlogDetails /></main>
+                <main className="flex-grow"><BlogDetails /></main>
                 <Footer />
               </div>
             } />
@@ -104,7 +104,7 @@ function App() {
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <QuotePopup />
-                <main className="flex-grow pt-20"><BlogDetails /></main>
+                <main className="flex-grow"><BlogDetails /></main>
                 <Footer />
               </div>
             } />
@@ -112,7 +112,7 @@ function App() {
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <QuotePopup />
-                <main className="flex-grow pt-20"><Contact /></main>
+                <main className="flex-grow"><Contact /></main>
                 <Footer />
               </div>
             } />

@@ -4,7 +4,7 @@ import axios from 'axios';
 import {
     Plus, ArrowLeft, Trash2, Edit2, ChevronDown, ChevronRight,
     Video, FileText, Save, X, Calendar, Check,
-    BookOpen, Upload, ClipboardList, Layers, Lock, LockOpen, ShieldCheck
+    BookOpen, Upload, ClipboardList, Layers, Lock, LockOpen, ShieldCheck, Globe
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -42,7 +42,8 @@ const ManageCourseModules = () => {
         video: null,
         videoUrl: '',
         isUrlMode: false,
-        notes: []
+        notes: [],
+        externalNotes: [] // [{ name, url }]
     };
     const [topicForm, setTopicForm] = useState(initialTopicState);
     const [uploading, setUploading] = useState(false);
@@ -59,10 +60,14 @@ const ManageCourseModules = () => {
     // New task form
     const [newTask, setNewTask] = useState({ title: '', description: '' });
     const [newTaskFile, setNewTaskFile] = useState(null);
+    const [isTaskUrlMode, setIsTaskUrlMode] = useState(false);
+    const [newTaskUrl, setNewTaskUrl] = useState('');
     const [savingTask, setSavingTask] = useState(false);
     // New assignment form
     const [newAssignment, setNewAssignment] = useState({ title: '' });
     const [newAssignFile, setNewAssignFile] = useState(null);
+    const [isAssignUrlMode, setIsAssignUrlMode] = useState(false);
+    const [newAssignUrl, setNewAssignUrl] = useState('');
     const [savingAssign, setSavingAssign] = useState(false);
 
     useEffect(() => {
@@ -88,8 +93,12 @@ const ManageCourseModules = () => {
         setSelectedTestId('');
         setNewTask({ title: '', description: '' });
         setNewTaskFile(null);
+        setIsTaskUrlMode(false);
+        setNewTaskUrl('');
         setNewAssignment({ title: '' });
         setNewAssignFile(null);
+        setIsAssignUrlMode(false);
+        setNewAssignUrl('');
         setContentLoading(true);
         fetchTestBank();
         try {
@@ -131,10 +140,14 @@ const ManageCourseModules = () => {
         formData.append('description', newTask.description);
         if (newTaskFile) formData.append('file', newTaskFile);
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/task`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/task`, isTaskUrlMode ? { title: newTask.title, description: newTask.description, fileUrl: newTaskUrl } : formData, {
+                headers: { 'Content-Type': isTaskUrlMode ? 'application/json' : 'multipart/form-data' }
+            });
             setTopicContent(res.data.content);
             setNewTask({ title: '', description: '' });
             setNewTaskFile(null);
+            setNewTaskUrl('');
+            setIsTaskUrlMode(false);
             toast.success('Task added!');
         } catch (e) { toast.error('Failed to add task'); }
         finally { setSavingTask(false); }
@@ -156,10 +169,14 @@ const ManageCourseModules = () => {
         // The backend `topicContentRoutes.js` expects the field name to be 'questionFile'
         if (newAssignFile) formData.append('questionFile', newAssignFile);
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/assignment`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/topic-content/${contentModalTopic._id}/assignment`, isAssignUrlMode ? { title: newAssignment.title, questionUrl: newAssignUrl } : formData, {
+                headers: { 'Content-Type': isAssignUrlMode ? 'application/json' : 'multipart/form-data' }
+            });
             setTopicContent(res.data.content);
             setNewAssignment({ title: '' });
             setNewAssignFile(null);
+            setNewAssignUrl('');
+            setIsAssignUrlMode(false);
             toast.success('Assignment added!');
         } catch (e) { toast.error('Failed to add assignment'); }
         finally { setSavingAssign(false); }
@@ -335,7 +352,8 @@ const ManageCourseModules = () => {
                 video: null,
                 videoUrl: topic.videoUrl || '',
                 isUrlMode: topic.videoUrl && (topic.videoUrl.includes('youtube') || topic.videoUrl.includes('youtu.be')),
-                notes: []
+                notes: [],
+                externalNotes: []
             });
         } else {
             setEditingTopic(null);
@@ -373,6 +391,10 @@ const ManageCourseModules = () => {
                 Array.from(topicForm.notes).forEach((file) => {
                     formData.append('notes', file);
                 });
+            }
+
+            if (topicForm.externalNotes && topicForm.externalNotes.length > 0) {
+                formData.append('externalNotes', JSON.stringify(topicForm.externalNotes));
             }
 
             let res;
@@ -773,6 +795,65 @@ const ManageCourseModules = () => {
                                         ))}
                                     </div>
                                 )}
+                                {topicForm.externalNotes?.length > 0 && (
+                                    <div className="mt-2 space-y-1">
+                                        <p className="text-xs text-indigo-500 font-medium tracking-wide flex items-center gap-1.5 uppercase">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> New Google Docs:
+                                        </p>
+                                        {topicForm.externalNotes.map((note, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-2 bg-indigo-50 border border-indigo-100 rounded-lg group/note">
+                                                <div className="flex items-center gap-2 text-xs text-indigo-700 font-medium truncate">
+                                                    <Globe size={13} className="shrink-0" />
+                                                    <span className="truncate">{note.name}</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setTopicForm(p => ({ ...p, externalNotes: p.externalNotes.filter((_, i) => i !== idx) }))}
+                                                    className="p-1 hover:bg-white rounded text-gray-400 hover:text-red-500 transition-colors"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Add External Note Section */}
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                <label className="flex items-center gap-2 text-sm font-bold text-slate-800 uppercase tracking-tight">
+                                    <Globe size={16} className="text-indigo-600" />
+                                    Add Google Doc (Preview Only)
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <input
+                                        type="text"
+                                        placeholder="Note Name (e.g. Audit PPT)"
+                                        id="extNoteName"
+                                        className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:border-indigo-500 outline-none bg-white"
+                                    />
+                                    <input
+                                        type="url"
+                                        placeholder="Google Doc URL"
+                                        id="extNoteUrl"
+                                        className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:border-indigo-500 outline-none bg-white"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const name = document.getElementById('extNoteName').value;
+                                        const url = document.getElementById('extNoteUrl').value;
+                                        if (!name || !url) return toast.error('Please provide name and URL');
+                                        setTopicForm(p => ({ ...p, externalNotes: [...(p.externalNotes || []), { name, url }] }));
+                                        document.getElementById('extNoteName').value = '';
+                                        document.getElementById('extNoteUrl').value = '';
+                                    }}
+                                    className="w-full py-2 bg-white border-2 border-dashed border-indigo-200 text-indigo-600 rounded-lg font-bold text-xs hover:bg-indigo-50 hover:border-indigo-400 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Plus size={14} /> Attach Google Doc
+                                </button>
+                                <p className="text-[10px] text-slate-400 text-center font-medium">Documents will be shown as an embedded preview for students</p>
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -913,12 +994,29 @@ const ManageCourseModules = () => {
                                                 <textarea placeholder="Description (optional)" value={newTask.description}
                                                     onChange={e => setNewTask(p => ({ ...p, description: e.target.value }))}
                                                     rows="2" className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 outline-none resize-none" />
-                                                <div className="flex items-center gap-3">
-                                                    <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-                                                        <Upload size={14} /> Resource File (optional)
-                                                        <input type="file" className="hidden" onChange={e => setNewTaskFile(e.target.files[0])} />
-                                                    </label>
-                                                    {newTaskFile && <span className="text-xs text-gray-500 truncate max-w-[140px]">{newTaskFile.name}</span>}
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-4 mb-1">
+                                                        <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                                                            <input type="radio" checked={!isTaskUrlMode} onChange={() => setIsTaskUrlMode(false)} className="text-indigo-600 focus:ring-indigo-500" />
+                                                            File Upload
+                                                        </label>
+                                                        <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                                                            <input type="radio" checked={isTaskUrlMode} onChange={() => setIsTaskUrlMode(true)} className="text-indigo-600 focus:ring-indigo-500" />
+                                                            Public URL
+                                                        </label>
+                                                    </div>
+                                                    {isTaskUrlMode ? (
+                                                        <input type="url" placeholder="https://..." value={newTaskUrl} onChange={e => setNewTaskUrl(e.target.value)}
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 outline-none" />
+                                                    ) : (
+                                                        <div className="flex items-center gap-3">
+                                                            <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                                                                <Upload size={14} /> Resource File (optional)
+                                                                <input type="file" className="hidden" onChange={e => setNewTaskFile(e.target.files[0])} />
+                                                            </label>
+                                                            {newTaskFile && <span className="text-xs text-gray-500 truncate max-w-[140px]">{newTaskFile.name}</span>}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <button onClick={handleAddTask} disabled={savingTask}
                                                     className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
@@ -955,12 +1053,29 @@ const ManageCourseModules = () => {
                                                 <input type="text" placeholder="Assignment title *" value={newAssignment.title}
                                                     onChange={e => setNewAssignment(p => ({ ...p, title: e.target.value }))}
                                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 outline-none" />
-                                                <div className="flex items-center gap-3">
-                                                    <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-                                                        <Upload size={14} /> Question Paper (PDF, optional)
-                                                        <input type="file" accept="application/pdf,image/*" className="hidden" onChange={e => setNewAssignFile(e.target.files[0])} />
-                                                    </label>
-                                                    {newAssignFile && <span className="text-xs text-gray-500 truncate max-w-[140px]">{newAssignFile.name}</span>}
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-4 mb-1">
+                                                        <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                                                            <input type="radio" checked={!isAssignUrlMode} onChange={() => setIsAssignUrlMode(false)} className="text-indigo-600 focus:ring-indigo-500" />
+                                                            File Upload
+                                                        </label>
+                                                        <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                                                            <input type="radio" checked={isAssignUrlMode} onChange={() => setIsAssignUrlMode(true)} className="text-indigo-600 focus:ring-indigo-500" />
+                                                            Public URL
+                                                        </label>
+                                                    </div>
+                                                    {isAssignUrlMode ? (
+                                                        <input type="url" placeholder="https://..." value={newAssignUrl} onChange={e => setNewAssignUrl(e.target.value)}
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 outline-none" />
+                                                    ) : (
+                                                        <div className="flex items-center gap-3">
+                                                            <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                                                                <Upload size={14} /> Question Paper (PDF, optional)
+                                                                <input type="file" accept="application/pdf,image/*" className="hidden" onChange={e => setNewAssignFile(e.target.files[0])} />
+                                                            </label>
+                                                            {newAssignFile && <span className="text-xs text-gray-500 truncate max-w-[140px]">{newAssignFile.name}</span>}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <button onClick={handleAddAssignment} disabled={savingAssign}
                                                     className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">

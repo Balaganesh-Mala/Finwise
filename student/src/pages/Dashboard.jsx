@@ -268,7 +268,7 @@ const RankCardModal = ({ rank, hours, user, stats, activitySummary, weeklyActivi
                                 <div className="p-1 bg-purple-500 rounded-full shadow-sm">
                                     <Star size={8} className="text-white fill-white" />
                                 </div>
-                                <span className="text-white text-[10px] font-black tracking-tight">{Math.floor(hours * 2345).toLocaleString()} Points</span>
+                                <span className="text-white text-[10px] font-black tracking-tight">{(stats?.points || 0).toLocaleString()} Total Points</span>
                             </div>
                         </div>
                     </div>
@@ -334,8 +334,8 @@ const RankCardModal = ({ rank, hours, user, stats, activitySummary, weeklyActivi
                                     <Zap size={18} fill="currentColor" strokeWidth={2.5} />
                                 </div>
                                 <div>
-                                    <p className="text-[#1a237e] font-black text-xl leading-none mb-1">50</p>
-                                    <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest leading-none">Coins Earned</p>
+                                    <p className="text-[#1a237e] font-black text-xl leading-none mb-1">{stats?.points || 0}</p>
+                                    <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest leading-none">Total Points</p>
                                 </div>
                             </div>
                         </div>
@@ -538,6 +538,7 @@ const Dashboard = () => {
         { label: 'Enrolled Courses', value: stats.enrolledCourses, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', trend: 'Active' },
         { label: 'Classes Attended', value: stats.attendance, icon: UserCheck, color: 'text-green-600', bg: 'bg-green-50', trend: 'Keep it up!' },
         { label: 'Hours Learned', value: `${stats.hoursLearned}h`, icon: Clock, color: 'text-purple-600', bg: 'bg-purple-50', trend: 'Video Time' },
+        { label: 'Points Earned', value: stats.points || 0, icon: Trophy, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Rewards' },
         { label: 'Batch Progress', value: `${stats.batchProgress}%`, icon: TrendingUp, color: 'text-orange-600', bg: 'bg-orange-50', trend: 'On Track' },
     ];
 
