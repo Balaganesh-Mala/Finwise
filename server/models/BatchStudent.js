@@ -24,6 +24,10 @@ const BatchStudentSchema = new mongoose.Schema({
         type: String,
         enum: ['active', 'inactive', 'completed'],
         default: 'active'
+    },
+    isBonus: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

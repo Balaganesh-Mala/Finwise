@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-    ArrowLeft, UserPlus, Users, Trash2, RefreshCw, X, Search, Calendar, IndianRupee, CheckCircle2, AlertCircle, Clock
+    ArrowLeft, UserPlus, Users, Trash2, RefreshCw, X, Search, Calendar, IndianRupee, CheckCircle2, AlertCircle, Clock, Gift, Check, ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -87,6 +87,14 @@ const BatchStudents = () => {
     const [assignStudentId, setAssignStudentId] = useState('');
     const [saving, setSaving] = useState(false);
 
+    // Bonus Course Logic
+    const [isBonusOpen, setIsBonusOpen] = useState(false);
+    const [allCourses, setAllCourses] = useState([]);
+    const [bonusCourseId, setBonusCourseId] = useState('');
+    const [bonusTargetBatchId, setBonusTargetBatchId] = useState('');
+    const [bonusTargetBatches, setBonusTargetBatches] = useState([]);
+    const [selectedBonusStudents, setSelectedBonusStudents] = useState([]);
+
     useEffect(() => {
         fetchBatch();
         fetchEnrollments();
@@ -122,13 +130,22 @@ const BatchStudents = () => {
         }
     };
 
-    const fetchBatchesForCourse = async () => {
+    const fetchBatchesForCourse = async (courseId, setFn) => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/batches`);
-            setAllBatches((res.data.batches || []).filter(b => b._id !== batchId));
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/batches?courseId=${courseId}`);
+            setFn(res.data.batches || []);
         } catch (err) {
             console.error('Failed to load batches', err);
             toast.error('Could not load available batches');
+        }
+    };
+
+    const fetchAllCourses = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/courses`);
+            setAllCourses(res.data);
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -172,6 +189,31 @@ const BatchStudents = () => {
         }
     };
 
+    const handleAssignBonus = async (e) => {
+        e.preventDefault();
+        if (!bonusCourseId || !bonusTargetBatchId || selectedBonusStudents.length === 0) {
+            toast.error('Please select a course, batch, and at least one student');
+            return;
+        }
+        setSaving(true);
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/batches/assign-bonus`, {
+                courseId: bonusCourseId,
+                targetBatchId: bonusTargetBatchId,
+                studentIds: selectedBonusStudents
+            });
+            toast.success(`Bonus course gifted to ${selectedBonusStudents.length} students!`);
+            setIsBonusOpen(false);
+            setBonusCourseId('');
+            setBonusTargetBatchId('');
+            setSelectedBonusStudents([]);
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to gift bonus course');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleRemoveStudent = async (studentId) => {
         if (!window.confirm('Remove this student from the batch?')) return;
         try {
@@ -187,8 +229,14 @@ const BatchStudents = () => {
     const openChangeBatch = (enrollment) => {
         setSelectedStudent(enrollment);
         setNewBatchId('');
-        fetchBatchesForCourse();
+        fetchBatchesForCourse(enrollment.courseId?._id, setAllBatches);
         setIsChangeBatchOpen(true);
+    };
+
+    const openBonusModal = () => {
+        fetchAllCourses();
+        setSelectedBonusStudents(enrollments.map(e => e.studentId?._id).filter(Boolean));
+        setIsBonusOpen(true);
     };
 
     // Already enrolled student IDs
@@ -226,12 +274,20 @@ const BatchStudents = () => {
                         {batch?.courseId?.title} · {enrollments.length} / {batch?.maxStudents} students enrolled
                     </p>
                 </div>
-                <button
-                    onClick={() => { setAssignStudentId(''); setSearch(''); setIsAssignOpen(true); }}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
-                >
-                    <UserPlus size={18} /> Assign Student
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={openBonusModal}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 font-medium transition-colors"
+                    >
+                        <Gift size={18} /> Gift Bonus Course
+                    </button>
+                    <button
+                        onClick={() => { setAssignStudentId(''); setSearch(''); setIsAssignOpen(true); }}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                    >
+                        <UserPlus size={18} /> Assign Student
+                    </button>
+                </div>
             </div>
 
             {/* Fee Summary Cards */}
@@ -452,6 +508,114 @@ const BatchStudents = () => {
                                 <button type="button" onClick={() => setIsChangeBatchOpen(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-medium">Cancel</button>
                                 <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">
                                     {saving ? 'Moving...' : 'Move Student'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Gift Bonus Course Modal */}
+            {isBonusOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-purple-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                                    <Gift size={22} />
+                                </div>
+                                <h2 className="text-lg font-bold text-gray-800">Gift Bonus Course</h2>
+                            </div>
+                            <button onClick={() => setIsBonusOpen(false)}><X size={22} className="text-gray-400" /></button>
+                        </div>
+                        
+                        <form onSubmit={handleAssignBonus} className="p-6 flex flex-col gap-6 overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Step 1: Select Course</label>
+                                    <select
+                                        value={bonusCourseId}
+                                        onChange={(e) => {
+                                            setBonusCourseId(e.target.value);
+                                            setBonusTargetBatchId('');
+                                            if (e.target.value) fetchBatchesForCourse(e.target.value, setBonusTargetBatches);
+                                        }}
+                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-500 outline-none text-sm bg-white"
+                                        required
+                                    >
+                                        <option value="">Select a course...</option>
+                                        {allCourses.filter(c => c._id !== batch?.courseId?._id).map(c => (
+                                            <option key={c._id} value={c._id}>{c.title}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Step 2: Select Target Batch</label>
+                                    <select
+                                        value={bonusTargetBatchId}
+                                        onChange={(e) => setBonusTargetBatchId(e.target.value)}
+                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-500 outline-none text-sm bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                        required
+                                        disabled={!bonusCourseId}
+                                    >
+                                        <option value="">{bonusCourseId ? 'Select target batch...' : 'Select course first'}</option>
+                                        {bonusTargetBatches.map(b => (
+                                            <option key={b._id} value={b._id}>{b.name} ({b.studentCount || 0}/{b.maxStudents})</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 min-h-[250px] flex flex-col">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm font-semibold text-gray-700">Step 3: Select Students ({selectedBonusStudents.length})</label>
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            if (selectedBonusStudents.length === enrollments.length) setSelectedBonusStudents([]);
+                                            else setSelectedBonusStudents(enrollments.map(e => e.studentId?._id).filter(Boolean));
+                                        }}
+                                        className="text-xs font-bold text-purple-600 hover:text-purple-700"
+                                    >
+                                        {selectedBonusStudents.length === enrollments.length ? 'Deselect All' : 'Select All In Batch'}
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 overflow-y-auto p-4 bg-gray-50 rounded-xl border border-gray-100 max-h-60">
+                                    {enrollments.map(e => {
+                                        const s = e.studentId;
+                                        const isSelected = selectedBonusStudents.includes(s?._id);
+                                        return (
+                                            <label 
+                                                key={s?._id} 
+                                                className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${isSelected ? 'border-purple-300 bg-white ring-2 ring-purple-100' : 'bg-white border-gray-100 hover:border-gray-300'}`}
+                                            >
+                                                <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${isSelected ? 'bg-purple-600 text-white' : 'bg-gray-100'}`}>
+                                                    {isSelected && <Check size={14} />}
+                                                </div>
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="hidden" 
+                                                    checked={isSelected}
+                                                    onChange={() => {
+                                                        setSelectedBonusStudents(prev => 
+                                                            prev.includes(s._id) ? prev.filter(id => id !== s._id) : [...prev, s._id]
+                                                        );
+                                                    }}
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-gray-800 truncate">{s?.name}</p>
+                                                    <p className="text-[10px] text-gray-500 truncate">{s?.email}</p>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={() => setIsBonusOpen(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">Cancel</button>
+                                <button type="submit" disabled={saving || !bonusCourseId || !bonusTargetBatchId || selectedBonusStudents.length === 0} className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 disabled:opacity-50 shadow-lg shadow-purple-100 flex items-center justify-center gap-2 transition-all">
+                                    {saving ? 'Processing...' : <><Gift size={18} /> Gift Course</>}
                                 </button>
                             </div>
                         </form>

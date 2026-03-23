@@ -325,6 +325,11 @@ const CoursePlayer = () => {
                         setYtPlaying(playing);
                         const d = e.target.getDuration?.() || 0;
                         if (d > 0) setYtDuration(d);
+
+                        // Auto-complete when video ends
+                        if (e.data === window.YT?.PlayerState?.ENDED) {
+                            updateProgress(true, d);
+                        }
                     },
                 },
             });
@@ -344,13 +349,19 @@ const CoursePlayer = () => {
         if (ytPlaying) {
             ytPollRef.current = setInterval(() => {
                 const ct = ytPlayerRef.current?.getCurrentTime?.();
-                if (ct !== undefined) setYtCurrentTime(ct);
-            }, 500);
+                if (ct !== undefined) {
+                    setYtCurrentTime(ct);
+                    // Automatic progress update when > 90% watched
+                    if (ytDuration > 0 && (ct / ytDuration) > 0.9 && (!progress[activeTopic._id] || !progress[activeTopic._id].completed)) {
+                        updateProgress(true, ct);
+                    }
+                }
+            }, 1000);
         } else {
             clearInterval(ytPollRef.current);
         }
         return () => clearInterval(ytPollRef.current);
-    }, [ytPlaying]);
+    }, [ytPlaying, ytDuration, activeTopic?._id, progress]);
 
     // ─── YouTube player helpers ─────────────────────────────────
     const ytFormatTime = (s) => {

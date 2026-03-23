@@ -26,6 +26,10 @@ const ProgressSchema = new mongoose.Schema({
   },
   completedAt: {
     type: Date
+  },
+  pointsAwarded: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

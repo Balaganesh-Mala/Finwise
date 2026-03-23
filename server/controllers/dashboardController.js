@@ -62,8 +62,13 @@ exports.getStudentDashboardStats = async (req, res) => {
         let batchProgress = 0;
         try {
             // Try BatchStudent first (reliable)
-            const enrollment = await BatchStudent.findOne({ studentId }).populate('courseId');
-            let courseId = enrollment?.courseId?._id;
+            // 1. Get Enrollments (Prioritize primary batch)
+        const enrollments = await BatchStudent.find({ studentId }).populate('courseId');
+        
+        // Find primary enrollment (where isBonus is false), fallback to first enrollment if none marked as non-bonus
+        const batchStudent = enrollments.find(e => !e.isBonus) || enrollments[0];
+        
+        let courseId = batchStudent?.courseId?._id;
 
             // Fallback: use Progress distinct courseIds if batch not found
             if (!courseId && distinctCourseIds.length > 0) {
@@ -135,6 +140,15 @@ exports.getStudentDashboardStats = async (req, res) => {
             { name: 'Sun', hours: parseFloat(activityMap['Sun'].toFixed(2)) },
         ];
 
+        // ─── 8. Daily Progress (Topics completed today) ──────────────────────────
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const topicsCompletedToday = await Progress.countDocuments({
+            studentId,
+            completed: true,
+            updatedAt: { $gte: startOfToday }
+        });
+
         res.json({
             success: true,
             stats: {
@@ -143,6 +157,8 @@ exports.getStudentDashboardStats = async (req, res) => {
                 attendance: attendanceCount,
                 batchProgress,         // now uses BatchStudent courseId lookup
                 points: student.points || 0,
+                dailyPoints: topicsCompletedToday * 100,
+                dailyGoal: 100,        // Default goal: 1 topic (100 pts)
                 certificates: 0        // placeholder
             },
             recentActivity,
@@ -155,25 +171,44 @@ exports.getStudentDashboardStats = async (req, res) => {
     }
 };
 
-// @desc    Get Student Leaderboard (Top 10 of the week by topic duration)
-// @route   GET /api/students/leaderboard
+// @desc    Get Student Leaderboard (Top 10 of the week by completed topics)
+// @route   GET /api/students/leaderboard?studentId=...
 // @access  Public
 exports.getLeaderboard = async (req, res) => {
     try {
+        const { studentId } = req.query;
+        let studentIdsInBatch = null;
+
+        // If studentId is provided, filter by their batch
+        if (studentId) {
+            const myBatchEntry = await BatchStudent.findOne({ studentId });
+            if (myBatchEntry) {
+                const batchSiblings = await BatchStudent.find({ batchId: myBatchEntry.batchId }).select('studentId');
+                studentIdsInBatch = batchSiblings.map(s => s.studentId);
+            }
+        }
+
         const today = new Date();
         const diffToMon = (today.getDay() + 6) % 7;
         const startOfWeek = new Date(today);
         startOfWeek.setDate(today.getDate() - diffToMon);
         startOfWeek.setHours(0, 0, 0, 0);
 
+        // Build Match Stage
+        const matchStage = {
+            completed: true,
+            updatedAt: { $gte: startOfWeek }
+        };
+
+        // Apply Batch Filter if applicable
+        if (studentIdsInBatch) {
+            matchStage.studentId = { $in: studentIdsInBatch };
+        }
+
         // Aggregate completed topics this week, join topic duration
-        // We use $lookup to get topic duration since watchedDuration is unreliable for YouTube
         const leaderboard = await Progress.aggregate([
             {
-                $match: {
-                    completed: true,
-                    updatedAt: { $gte: startOfWeek }
-                }
+                $match: matchStage
             },
             {
                 // Join with topics to get their duration
@@ -193,16 +228,8 @@ exports.getLeaderboard = async (req, res) => {
             {
                 $group: {
                     _id: '$studentId',
-                    // Sum topic durations (minutes); fall back to watchedDuration if no topic duration
-                    totalMinutes: {
-                        $sum: {
-                            $cond: [
-                                { $gt: ['$topic.duration', 0] },
-                                '$topic.duration',
-                                { $divide: [{ $ifNull: ['$watchedDuration', 0] }, 60] }
-                            ]
-                        }
-                    }
+                    // Earned Points this week: 100 points per completed topic
+                    totalPoints: { $sum: 100 }
                 }
             },
             {
@@ -224,10 +251,11 @@ exports.getLeaderboard = async (req, res) => {
                     _id: 1,
                     name: '$studentInfo.name',
                     email: '$studentInfo.email',
-                    totalHours: { $divide: ['$totalMinutes', 60] }
+                    profilePicture: '$studentInfo.profilePicture',
+                    points: '$totalPoints'
                 }
             },
-            { $sort: { totalHours: -1 } },
+            { $sort: { points: -1 } },
             { $limit: 10 }
         ]);
 
@@ -236,7 +264,8 @@ exports.getLeaderboard = async (req, res) => {
             id: entry._id,
             name: entry.name,
             email: entry.email,
-            hours: entry.totalHours ? parseFloat(entry.totalHours.toFixed(1)) : 0
+            profilePicture: entry.profilePicture,
+            points: entry.points || 0
         }));
 
         res.json({ success: true, leaderboard: formattedLeaderboard });

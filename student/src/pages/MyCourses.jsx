@@ -31,7 +31,7 @@ const MyCourses = () => {
                 } catch (e) {
                     console.warn("Could not fetch fresh student details, using local storage", e);
                 }
-                
+
                 try {
                     const dashRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/students/dashboard/${user._id}`);
                     if (dashRes.data?.stats?.batchProgress) {
@@ -42,31 +42,45 @@ const MyCourses = () => {
                 }
             }
 
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/courses`);
+            if (user?._id) {
+                // 1. Fetch Student Enrollments (includes primary and bonus)
+                const enrollmentRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/batches/student/${user._id}/enrollment`);
+                const enrollments = enrollmentRes.data.enrollments || [];
 
-            if (user?.courseName) {
-                // 1. Try Exact Case-Insensitive Match
-                let enrolled = res.data.filter(c =>
-                    c.title.trim().toLowerCase() === user.courseName.trim().toLowerCase()
-                );
+                // 2. Fetch all courses (for fallback matching)
+                const coursesRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/courses`);
+                const allCourses = coursesRes.data;
 
-                // 2. If no match, Try Partial
-                if (enrolled.length === 0) {
-                    enrolled = res.data.filter(c =>
-                        c.title.toLowerCase().includes(user.courseName.trim().toLowerCase()) ||
-                        user.courseName.trim().toLowerCase().includes(c.title.toLowerCase())
+                // 3. Map enrollments to course objects with isBonus flag
+                const mergedCourses = enrollments.map(e => ({
+                    ...e.courseId,
+                    isBonus: e.isBonus,
+                    enrollmentId: e._id,
+                    enrollmentProgress: e.progress
+                }));
+
+                // 4. Fallback: Include legacy courseName if not already covered by enrollments
+                if (user.courseName) {
+                    const alreadyEnrolledTitles = new Set(mergedCourses.map(c => c.title.toLowerCase().trim()));
+                    const legacyCourses = allCourses.filter(c =>
+                        c.title.toLowerCase().trim() === user.courseName.toLowerCase().trim() &&
+                        !alreadyEnrolledTitles.has(c.title.toLowerCase().trim())
                     );
+
+                    if (legacyCourses.length > 0) {
+                        setCourses([...mergedCourses, ...legacyCourses]);
+                    } else {
+                        setCourses(mergedCourses);
+                    }
+                } else {
+                    setCourses(mergedCourses);
                 }
 
-                if (enrolled.length > 0) {
-                    setCourses(enrolled);
-                } else {
-                    setCourses([]);
-                    toast.error(`Course "${user.courseName}" not found.`);
+                if (mergedCourses.length === 0 && (!user.courseName)) {
+                    toast('No enrolled course found.', { icon: 'ℹ️' });
                 }
             } else {
                 setCourses([]);
-                toast('No enrolled course found.', { icon: 'ℹ️' });
             }
 
             setLoading(false);
@@ -102,8 +116,10 @@ const MyCourses = () => {
             totalDays = parseInt(durationStr) || 90;
         }
 
-        // Cap at 100%
-        let percent = realProgress || 0;
+        // Cap at 100%. Priority order: 
+        // 1. Enrollment-specific progress (most accurate)
+        // 2. Dashboard daily progress (fallback)
+        let percent = course.enrollmentProgress ?? realProgress ?? 0;
 
         return {
             percent,
@@ -154,8 +170,8 @@ const MyCourses = () => {
 
                                 <div className="p-5 flex flex-col flex-1">
                                     <div className="flex justify-between items-start mb-2">
-                                        <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
-                                            {course.skillLevel || 'Course'}
+                                        <span className={`text-xs font-semibold px-2 py-1 rounded ${course.isBonus ? 'text-purple-600 bg-purple-50' : 'text-indigo-600 bg-indigo-50'}`}>
+                                            {course.isBonus ? 'Bonus' : (course.skillLevel || 'Course')}
                                         </span>
                                         <span className="text-xs text-gray-500 flex items-center gap-1">
                                             <Clock size={12} /> {course.duration}

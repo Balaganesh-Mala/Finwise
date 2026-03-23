@@ -20,7 +20,7 @@ exports.updateProgress = async (req, res) => {
         let progress = await Progress.findOne({ studentId, topicId });
 
         if (progress) {
-            if (completed && !progress.completedAt) {
+            if (completed && (!progress.completedAt || !progress.pointsAwarded)) {
                 shouldAwardPoints = true;
             }
             if (courseId) progress.courseId = courseId; // Fix for orphaned progress records
@@ -41,12 +41,19 @@ exports.updateProgress = async (req, res) => {
             });
         }
 
-        await progress.save();
-
         if (shouldAwardPoints) {
-            await Student.findByIdAndUpdate(studentId, { $inc: { points: 100 } });
-            console.log(`Awarded 100 points to Student ${studentId} for completing Topic ${topicId}`);
+            try {
+                await Student.findByIdAndUpdate(studentId, { $inc: { points: 100 } });
+                console.log(`Awarded 100 points to Student ${studentId} for completing Topic ${topicId}`);
+                if (progress) {
+                    progress.pointsAwarded = true; 
+                }
+            } catch (pointErr) {
+                console.error("Error awarding points to student:", pointErr);
+            }
         }
+
+        await progress.save();
 
         // --- NEW: Calculate & Update Overall Course Progress Percentage for Student ---
         try {

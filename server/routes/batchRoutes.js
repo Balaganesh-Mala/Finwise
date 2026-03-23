@@ -6,6 +6,9 @@ const Student = require('../models/Student');
 const Course = require('../models/Course');
 const FeeStructure = require('../models/FeeStructure');
 const Installment = require('../models/Installment');
+const Module = require('../models/Module');
+const Topic = require('../models/Topic');
+const Progress = require('../models/Progress');
 
 // @route   POST /api/batches
 // @desc    Create a new batch
@@ -155,6 +158,37 @@ router.post('/:id/assign', async (req, res) => {
     }
 });
 
+// @route   POST /api/batches/assign-bonus
+// @desc    Bulk assign a bonus course to students
+// @access  Admin
+router.post('/assign-bonus', async (req, res) => {
+    try {
+        const { courseId, targetBatchId, studentIds } = req.body;
+
+        if (!courseId || !targetBatchId || !studentIds || !Array.isArray(studentIds)) {
+            return res.status(400).json({ message: 'courseId, targetBatchId, and studentIds array are required' });
+        }
+
+        const results = await Promise.all(studentIds.map(async (studentId) => {
+            return await BatchStudent.findOneAndUpdate(
+                { studentId, courseId },
+                { 
+                    batchId: targetBatchId, 
+                    isBonus: true,
+                    enrollmentDate: new Date(),
+                    status: 'active'
+                },
+                { upsert: true, new: true }
+            );
+        }));
+
+        res.json({ success: true, message: `Successfully assigned bonus course to ${results.length} students`, results });
+    } catch (err) {
+        console.error('Assign Bonus Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 // @route   PUT /api/batches/student/change-batch
 // @desc    Move a student to a different batch
 // @access  Admin
@@ -236,9 +270,38 @@ router.get('/student/:studentId/enrollment', async (req, res) => {
     try {
         const enrollments = await BatchStudent.find({ studentId: req.params.studentId })
             .populate('batchId', 'name startDate endDate status')
-            .populate('courseId', 'title');
+            .populate('courseId');
 
-        res.json({ success: true, enrollments });
+        // Calculate progress for each enrollment
+        const enrollmentsWithProgress = await Promise.all(enrollments.map(async (enrollment) => {
+            const courseId = enrollment.courseId?._id;
+            let progress = 0;
+            
+            if (courseId) {
+                try {
+                    const modules = await Module.find({ courseId }).select('_id');
+                    const moduleIds = modules.map(m => m._id);
+                    const totalTopics = await Topic.countDocuments({ moduleId: { $in: moduleIds } });
+                    const completedTopics = await Progress.countDocuments({
+                        studentId: req.params.studentId,
+                        courseId,
+                        completed: true
+                    });
+                    if (totalTopics > 0) {
+                        progress = Math.min(100, Math.round((completedTopics / totalTopics) * 100));
+                    }
+                } catch (err) {
+                    console.error('Error calculating enrollment progress:', err);
+                }
+            }
+            
+            return {
+                ...enrollment.toObject(),
+                progress
+            };
+        }));
+
+        res.json({ success: true, enrollments: enrollmentsWithProgress });
     } catch (err) {
         console.error('Get Student Enrollment Error:', err);
         res.status(500).json({ message: 'Server Error' });
