@@ -10,7 +10,10 @@ import {
     BookOpen,
     FileText,
     Receipt,
-    ArrowRight
+    ArrowRight,
+    LineChart,
+    GraduationCap,
+    Calendar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -34,10 +37,10 @@ const StudentSuccessDashboard = () => {
             desc: "Your central hub for course progress, upcoming classes, and quick actions."
         },
         {
-            icon: BarChart2,
+            icon: LineChart,
             image: PerformanceReportsImg,
-            title: "Performance Reports",
-            desc: "Weekly detailed insights into your learning curve and assessment scores."
+            title: "Dashboard",
+            desc: "Comprehensive overview of your progress, activity metrics, and course statistics."
         },
         {
             icon: Trophy,
@@ -58,10 +61,10 @@ const StudentSuccessDashboard = () => {
             desc: "Direct access to hiring partners and premium job listings."
         },
         {
-            icon: Award,
+            icon: GraduationCap,
             image: CertificatesImg,
-            title: "Certificates",
-            desc: "Showcase your achievements with verifiable digital certificates."
+            title: "Learning",
+            desc: "Access your enrolled courses, resume classes, and track your curriculum effortlessly."
         },
         {
             icon: BookOpen,
@@ -76,10 +79,10 @@ const StudentSuccessDashboard = () => {
             desc: "Hands-on coding challenges and quizzes to reinforce learning."
         },
         {
-            icon: Receipt,
+            icon: Calendar,
             image: FeeInvoiceImg,
-            title: "Fee & Invoice History",
-            desc: "Transparent access to all your payment records and invoices."
+            title: "Attendance",
+            desc: "Monitor your class attendance and keep track of your daily learning streaks."
         }
     ];
 
