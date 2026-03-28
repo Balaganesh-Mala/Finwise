@@ -32,6 +32,7 @@ app.use(cors({
         'https://finwise-student.vercel.app', // Student Portal Deployed
         process.env.CLIENT_URL,
         process.env.ADMIN_URL,
+        process.env.STUDENT_URL,
         'https://finwise-3tlb.vercel.app',
         'https://vapi.ai',
         'https://*.vapi.ai'
@@ -102,7 +103,7 @@ app.get('/api/test/email', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('JobReady Skills Center API is running');
+    res.send('API is running');
 });
 
 // Error Handling Middleware
@@ -113,6 +114,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT} (Bound to 0.0.0.0)`);
 });
