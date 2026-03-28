@@ -45,18 +45,18 @@ const QuotePopup = () => {
     });
 
     const handleChange = (e) => {
-         setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
-        
+
         try {
-             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries`, formData);
-             setSubmitted(true);
-             setTimeout(() => {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries`, formData);
+            setSubmitted(true);
+            setTimeout(() => {
                 closePopup();
                 setSubmitted(false);
                 setFormData({
@@ -81,14 +81,14 @@ const QuotePopup = () => {
 
     return (
         <AnimatePresence>
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 bg-opacity-70"
                 onClick={closePopup}
             >
-                <motion.div 
+                <motion.div
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -97,7 +97,7 @@ const QuotePopup = () => {
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Close Button */}
-                    <button 
+                    <button
                         onClick={closePopup}
                         className="absolute top-4 right-4 z-10 p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-gray-600 hover:text-gray-900 transition-colors"
                     >
@@ -106,15 +106,15 @@ const QuotePopup = () => {
 
                     {/* Left Side - Image (Desktop Only) */}
                     <div className="hidden md:block w-1/2 relative bg-indigo-300">
-                        <img 
-                            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                            alt="Student Success" 
+                        <img
+                            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                            alt="Student Success"
                             className="absolute inset-0 w-full h-full object-cover opacity-100 mix-blend-overlay"
                         />
-                         <div className="absolute inset-0 bg-gradient-to-t from-indigo-200/10 to-transparent flex flex-col justify-end p-8 text-white">
-                            <h3 className="text-2xl font-bold mb-2 text-white">Kickstart Your Career</h3>
-                            <p className="text-white text-sm">Join 5000+ students who have transformed their lives with our industry-led courses.</p>
-                         </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-indigo-200/10 to-transparent flex flex-col justify-end p-8 text-white">
+                            <h3 className="text-2xl font-bold mb-2 text-white">Master Finance & Accounting</h3>
+                            <p className="text-white text-sm">Empower your professional journey with Finwise Career Solutions. Gain the practical, industry-ready financial skills needed to secure your dream role.</p>
+                        </div>
                     </div>
 
                     {/* Right Side - Form */}
@@ -131,8 +131,8 @@ const QuotePopup = () => {
                                     {error && <div className="text-red-500 text-sm text-center">{error}</div>}
                                     <div className="space-y-4">
                                         <div>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 name="name"
                                                 value={formData.name}
                                                 onChange={handleChange}
@@ -142,8 +142,8 @@ const QuotePopup = () => {
                                             />
                                         </div>
                                         <div>
-                                            <input 
-                                                type="email" 
+                                            <input
+                                                type="email"
                                                 name="email"
                                                 value={formData.email}
                                                 onChange={handleChange}
@@ -153,8 +153,8 @@ const QuotePopup = () => {
                                             />
                                         </div>
                                         <div>
-                                            <input 
-                                                type="tel" 
+                                            <input
+                                                type="tel"
                                                 name="phone"
                                                 value={formData.phone}
                                                 onChange={handleChange}
@@ -164,7 +164,7 @@ const QuotePopup = () => {
                                             />
                                         </div>
                                         <div>
-                                            <select 
+                                            <select
                                                 name="courseInterested"
                                                 value={formData.courseInterested}
                                                 onChange={handleChange}
@@ -189,14 +189,14 @@ const QuotePopup = () => {
                                         </div>
                                     </div>
 
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         disabled={loading}
                                         className="w-full bg-indigo-600 text-white py-3.5 rounded-lg font-semibold hover:bg-indigo-700 active:transform active:scale-[0.98] transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 group disabled:bg-indigo-400"
                                     >
                                         {loading ? <Loader size={18} className="animate-spin" /> : <>Get My Free Quote <Send size={18} className="group-hover:translate-x-1 transition-transform" /></>}
                                     </button>
-                                    
+
                                     <p className="text-center text-xs text-gray-400 mt-4">
                                         No spam. Your data is secure with us.
                                     </p>

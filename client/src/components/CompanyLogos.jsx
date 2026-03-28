@@ -1,29 +1,47 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+import accentureLogo from '../assets/Accenture-logo.jpg';
+import deloitteLogo from '../assets/Deloitte.jpg';
+import e2openLogo from '../assets/E2open.png';
+import factsetLogo from '../assets/FactSet.png';
+import genpactLogo from '../assets/Genpact.png';
+import kfintechLogo from '../assets/KFINTECH.png';
+import cognizantLogo from '../assets/Cognizant.png';
+import alterDomusLogo from '../assets/alterdomus.jpg';
+import ascensusLogo from '../assets/ascensus.jpg';
+import clearHarborLogo from '../assets/clear harbor.jpg';
+import computershareLogo from '../assets/computershare.png';
+import invescoLogo from '../assets/invesco.jpg';
+import spGlobalLogo from '../assets/s&p global.png';
+import stateStreetLogo from '../assets/state street.jpg';
+import kpmg from "../assets/KPMG.png";
+import ey from "../assets/EY.png";
+import broadridge from "../assets/Broadridge.png";
+
 const companies = [
     { name: "Wells Fargo", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b3/Wells_Fargo_Bank.svg" },
-    { name: "FactSet", logo: "https://upload.wikimedia.org/wikipedia/commons/8/87/FactSet_logo.svg" },
-    { name: "Deloitte", logo: "https://upload.wikimedia.org/wikipedia/commons/5/56/Deloitte.svg" },
-    { name: "EY", logo: "https://upload.wikimedia.org/wikipedia/commons/f/f8/EY_logo_2019.svg" },
-    { name: "KPMG", logo: "https://upload.wikimedia.org/wikipedia/commons/1/18/KPMG_logo.svg" },
-    { name: "S&P Global", logo: "https://upload.wikimedia.org/wikipedia/commons/0/05/PricewaterhouseCoopers_Logo.svg" },
-    { name: "Broadridge", logo: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Broadridge_Financial_Solutions_Logo.svg" },
-    { name: "Accenture", logo: "https://upload.wikimedia.org/wikipedia/commons/c/cd/Accenture_2017_logo.svg" },
-    { name: "Ascensus", logo: "https://upload.wikimedia.org/wikipedia/commons/4/41/Ascensus_logo.svg" },
-    { name: "Alter Domus", logo: "https://upload.wikimedia.org/wikipedia/en/9/90/Alter_Domus_logo.png" },
-    { name: "Genpact", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b2/Genpact_logo.svg" },
+    { name: "FactSet", logo: factsetLogo },
+    { name: "Deloitte", logo: deloitteLogo },
+    { name: "EY", logo: ey },
+    { name: "KPMG", logo: kpmg },
+    { name: "S&P Global", logo: spGlobalLogo },
+    { name: "Broadridge", logo: broadridge },
+    { name: "Accenture", logo: accentureLogo },
+    { name: "Ascensus", logo: ascensusLogo },
+    { name: "Alter Domus", logo: alterDomusLogo },
+    { name: "Genpact", logo: genpactLogo },
     { name: "MSN Labs", logo: "https://avatars.githubusercontent.com/u/105156324?s=200&v=4" }, // Fallback for M2N
-    { name: "KFintech", logo: "https://upload.wikimedia.org/wikipedia/commons/1/1b/Experian_logo.svg" },
+    { name: "KFintech", logo: kfintechLogo },
     { name: "IBM", logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" },
-    { name: "Clear Harbor", logo: "https://media.licdn.com/dms/image/C4D0BAQE8u1Q7V_z2_A/company-logo_200_200/0/1630567015444?e=2147483647&v=beta&t=k6z5lU0u0G9_9_9" }, // LinkedIn hosted
-    { name: "Computershare", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fd/Computershare_logo.svg" },
-    { name: "Cognizant", logo: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Capgemini_2017_logo.svg" },
+    { name: "Clear Harbor", logo: clearHarborLogo },
+    { name: "Computershare", logo: computershareLogo },
+    { name: "Cognizant", logo: cognizantLogo },
     { name: "Wipro", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a0/Wipro_Primary_Logo_Color_RGB.svg" },
     { name: "Infosys", logo: "https://upload.wikimedia.org/wikipedia/commons/9/95/Infosys_logo.svg" },
-    { name: "Invesco", logo: "https://upload.wikimedia.org/wikipedia/commons/f/f5/Invesco_logo.svg" },
-    { name: "E2Open", logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Raymond_James_logo.svg" },
-    { name: "State Street", logo: "https://upload.wikimedia.org/wikipedia/commons/7/7c/R1_RCM_Logo.svg" }
+    { name: "Invesco", logo: invescoLogo },
+    { name: "E2Open", logo: e2openLogo },
+    { name: "State Street", logo: stateStreetLogo }
 ];
 
 // Internal Marquee Component using Framer Motion
