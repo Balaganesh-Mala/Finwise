@@ -8,7 +8,7 @@ import axios from 'axios';
 const CoursesSection = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Manual responsive logic to bypass potential Slick issues
   const [slidesToShow, setSlidesToShow] = useState(3);
   const [showArrows, setShowArrows] = useState(true);
@@ -77,9 +77,9 @@ const CoursesSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-indigo-600 font-semibold tracking-wider uppercase mb-2">Our Courses</h2>
-          <h3 className="text-3xl md:text-4xl font-bold text-gray-900">Explore Popular Courses</h3>
+          <h3 className="text-3xl md:text-4xl font-bold text-gray-900">Explore Courses</h3>
           <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500">
-             Choose from our wide range of industry-aligned courses and start your journey today.
+            Choose from our wide range of industry-aligned courses and start your journey today.
           </p>
         </div>
 

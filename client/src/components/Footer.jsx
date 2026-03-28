@@ -40,7 +40,7 @@ const Footer = () => {
               <p className="text-gray-400 text-sm leading-relaxed max-w-sm">Career Solutions</p>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
-              Empowering your career with industry-ready skills and professional training. Join thousands of students achieving their dreams.
+              Skill up for the future with professional training, and take the next step toward your dream career.
             </p>
 
             {/* Newsletter Input */}

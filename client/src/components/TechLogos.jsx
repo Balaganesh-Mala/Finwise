@@ -30,7 +30,7 @@ const technologies = [
     { name: "Order to Cash (O2C)", icon: <FiActivity className="w-5 h-5 mr-3 text-emerald-600" /> },
 
     // Row 2: Finance Roles & Profiles
-    { name: "NA Analyst", icon: <FiMonitor className="w-5 h-5 mr-3 text-indigo-600" /> },
+    { name: "NAV Analyst", icon: <FiMonitor className="w-5 h-5 mr-3 text-indigo-600" /> },
     { name: "Financial Analyst", icon: <FiBarChart2 className="w-5 h-5 mr-3 text-indigo-600" /> },
     { name: "Financial Reporting Analyst", icon: <FiFileText className="w-5 h-5 mr-3 text-indigo-600" /> },
     { name: "Research Analyst", icon: <FiTrendingUp className="w-5 h-5 mr-3 text-indigo-600" /> },
@@ -43,9 +43,6 @@ const technologies = [
     { name: "Advanced Excel", icon: <FiGrid className="w-5 h-5 mr-3 text-green-600" /> },
     { name: "MS Word", icon: <FiFileText className="w-5 h-5 mr-3 text-blue-700" /> },
     { name: "MS PowerPoint", icon: <FiMonitor className="w-5 h-5 mr-3 text-orange-600" /> },
-    { name: "Tally Prime", icon: <FiDatabase className="w-5 h-5 mr-3 text-purple-600" /> },
-    { name: "SAP FICO", icon: <SiSap className="w-5 h-5 mr-3 text-blue-500" /> },
-    { name: "QuickBooks", icon: <FiDatabase className="w-5 h-5 mr-3 text-green-500" /> },
     { name: "Power BI", icon: <FiPieChart className="w-5 h-5 mr-3 text-yellow-600" /> },
     { name: "SQL", icon: <FiDatabase className="w-5 h-5 mr-3 text-blue-400" /> }
 ];

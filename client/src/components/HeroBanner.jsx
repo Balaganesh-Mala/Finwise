@@ -116,15 +116,15 @@ const HeroBanner = () => {
                             New Batch Starting Soon
                         </div>
 
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.1] mb-6">
-                            Launch your Career in <br className="hidden md:block" />
+                        <h1 className="text-3xl md:text-5xl lg:text-5xl font-bold text-gray-900 leading-[1.1] mb-6">
+                            Become Job Ready for MNC Finance  <br className="hidden md:block" />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-[#E2D6FE] block md:inline mt-2 md:mt-0">
-                                Core Finance
+                                Roles in 2-3 Months
                             </span>
                         </h1>
 
                         <p className="text-base md:text-xl text-gray-600 mb-6 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                            Stop learning outdated theory. Get hands-on experience with real-world projects and mentorship from engineers at top companies.
+                            Master Invetment Banking Operations | Fund Accounting | Corporate Accounting | KYC/AML | Data Skills
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-8">

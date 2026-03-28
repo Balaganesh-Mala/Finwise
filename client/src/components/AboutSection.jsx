@@ -53,22 +53,22 @@ const AboutSection = () => {
                             </div>
 
                             <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
-                                Empowering <br />
+                                Next-Gen <br />
                                 <span className="relative inline-block mt-2">
-                                    <span className="relative z-10 text-indigo-600">Financial Careers</span>
+                                    <span className="relative z-10 text-indigo-600">Finance Careers</span>
                                     <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-100 -z-10 bg-opacity-60 skew-x-12"></span>
                                 </span>
                             </h2>
 
                             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                                <strong>Finwise Career Solutions</strong> is a premier training hub dedicated to transforming graduates into industry-ready <strong>Finance & Accounting</strong> professionals. We bridge the gap between academic education and corporate excellence through specialized training in <strong>Global Accounting, Investment Banking, Audit, and Taxation</strong>.
+                                <strong>Finwise Career Solutions</strong> is a premier training hub dedicated to transforming graduates into industry-ready <strong>Finance & Accounting</strong> professionals. We bridge the gap between academic education and corporate excellence through specialized training in <strong>Corporate Accounting, Investment Banking Operations, Fund Accounting, KYC/AML</strong>.
                             </p>
 
                             <div className="space-y-6 mb-10">
                                 {[
-                                    { title: "Expert Mentorship", desc: "Learn from veterans in Big 4 and Top Tier Banks.", icon: Users },
+                                    { title: "Expert Mentorship", desc: "Learn from Qualified CAs and Industry Experts.", icon: Users },
                                     { title: "Practical Exposure", desc: "Hands-on training with real-world case studies.", icon: Target },
-                                    { title: "Career Launchpad", desc: "Specialized placement support for MNCs.", icon: Zap }
+                                    { title: "Mock Interviews ", desc: "Weekly Mock Interviews & Interview Preparation.", icon: Zap }
                                 ].map((item, idx) => (
                                     <motion.div
                                         key={idx}

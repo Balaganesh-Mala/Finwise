@@ -34,35 +34,35 @@ const About = () => {
             <div className="pt-36 pb-12 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 border-b border-white/5 relative overflow-hidden shadow-2xl">
                 {/* Subtle Grid Pattern */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-                
+
                 {/* Animated Header Specific Blobs - Traveling Effect */}
-                <motion.div 
-                    animate={{ 
+                <motion.div
+                    animate={{
                         x: [-200, 800, -200],
                         y: [-200, 200, -200],
                         opacity: [0.1, 0.3, 0.1]
                     }}
-                    transition={{ 
-                        duration: 25, 
-                        repeat: Infinity, 
-                        ease: "easeInOut" 
+                    transition={{
+                        duration: 25,
+                        repeat: Infinity,
+                        ease: "easeInOut"
                     }}
-                    className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500 rounded-full blur-[140px] pointer-events-none" 
+                    className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500 rounded-full blur-[140px] pointer-events-none"
                 />
-                <motion.div 
-                    animate={{ 
+                <motion.div
+                    animate={{
                         x: [800, -200, 800],
                         y: [200, -200, 200],
                         opacity: [0.1, 0.25, 0.1]
                     }}
-                    transition={{ 
-                        duration: 30, 
-                        repeat: Infinity, 
-                        ease: "easeInOut" 
+                    transition={{
+                        duration: 30,
+                        repeat: Infinity,
+                        ease: "easeInOut"
                     }}
-                    className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500 rounded-full blur-[120px] pointer-events-none" 
+                    className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500 rounded-full blur-[120px] pointer-events-none"
                 />
-    
+
                 <div className="container mx-auto px-8 md:px-12 lg:px-20 relative z-10 text-center space-y-8">
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -72,18 +72,18 @@ const About = () => {
                         <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
                         Our Mission
                     </motion.div>
-                    
-                    <motion.h1 
+
+                    <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-5xl md:text-7xl font-black text-white leading-none tracking-tight relative z-10"
+                        className="text-4xl md:text-5xl font-black text-white leading-none tracking-tight relative z-10"
                     >
-                        Empowering the <br className="hidden md:block" />
-                        <span className="text-indigo-400">Future of Finance</span>.
+                        Building Job-Ready Finance Professionals  <br className="hidden md:block" />
+                        <span className="text-indigo-400">for the Future</span>.
                     </motion.h1>
-                    
-                    <motion.p 
+
+                    <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
@@ -121,7 +121,7 @@ const About = () => {
                         </div>
                     ) : (
                         <div className="text-center text-gray-500 italic p-8">
-                            Our team list is currently updating. Please check back later!
+
                         </div>
                     )}
                 </div>

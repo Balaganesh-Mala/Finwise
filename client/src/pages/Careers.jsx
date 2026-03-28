@@ -115,7 +115,7 @@ const Career = () => {
                         transition={{ delay: 0.2, duration: 0.6 }}
                         className="text-lg text-slate-400 max-w-3xl mx-auto font-medium relative z-10"
                     >
-                        Explore exclusive job opportunities from our trusted partner network. Accelerate your career in finance and tech.
+                        Explore exclusive job opportunities.
                     </motion.p>
 
                     <motion.div
@@ -124,18 +124,7 @@ const Career = () => {
                         transition={{ delay: 0.2, duration: 0.6 }}
                         className="flex justify-center gap-4 md:gap-12 flex-wrap text-gray-300 font-medium border-t border-slate-800 pt-10 mt-8 max-w-4xl mx-auto relative z-10"
                     >
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-800 rounded-lg text-indigo-400"><Users size={20} /></div>
-                            <span>50+ Hiried</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-800 rounded-lg text-indigo-400"><TrendingUp size={20} /></div>
-                            <span>Top Packages</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-800 rounded-lg text-indigo-400"><Award size={20} /></div>
-                            <span>Verified Jobs</span>
-                        </div>
+
                     </motion.div>
                 </div>
             </div>

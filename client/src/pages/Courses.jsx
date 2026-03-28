@@ -35,7 +35,7 @@ const Courses = () => {
         <div className="bg-[#F9FAFB] min-h-screen relative overflow-hidden text-slate-900">
             <SEO
                 title="Our Courses"
-                description="Explore our range of professional finance courses including Global Accounting, Investment Banking, Taxation, and Audit."
+                description="Explore our range of professional finance courses including Corporate Accounting, Investment Banking Operations,Fund Accounting."
             />
 
             {/* Cinematic Header Section */}
@@ -88,7 +88,7 @@ const Courses = () => {
                                 transition={{ delay: 0.1 }}
                                 className="text-5xl md:text-7xl font-black text-white leading-none tracking-tight mb-8 relative z-10"
                             >
-                                Upgrade Your <span className="text-indigo-400">Skills</span>.
+                                Build Skills That <span className="text-indigo-400">Get You Hired</span>.
                             </motion.h1>
                             <motion.p
                                 initial={{ opacity: 0 }}
@@ -96,7 +96,7 @@ const Courses = () => {
                                 transition={{ delay: 0.2 }}
                                 className="text-lg text-slate-400 max-w-xl font-medium relative z-10"
                             >
-                                Explore our comprehensive range of courses designed to get you job-ready.
+                                Corporate Accounting, Investment Banking Operations, Fund Accounting, KYC/AML, MIS & Reporting, and more.
                             </motion.p>
                         </div>
 
@@ -111,8 +111,8 @@ const Courses = () => {
                                     key={cat}
                                     onClick={() => setActiveCategory(cat)}
                                     className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg ${activeCategory === cat
-                                            ? 'bg-white text-slate-950 shadow-white/10'
-                                            : 'bg-white/5 text-slate-400 border border-white/10 hover:border-indigo-400 hover:text-white'
+                                        ? 'bg-white text-slate-950 shadow-white/10'
+                                        : 'bg-white/5 text-slate-400 border border-white/10 hover:border-indigo-400 hover:text-white'
                                         }`}
                                 >
                                     {cat === 'All' ? 'All Skills' : cat}

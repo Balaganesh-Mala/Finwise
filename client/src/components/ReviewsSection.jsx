@@ -183,10 +183,10 @@ const ReviewsSection = () => {
                     Wall of Love
                 </span>
                 <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                    Trusted by <span className="text-primary-600">Thousands</span>
+                    Trusted by students <span className="text-primary-600">Proven by Results</span>
                 </h2>
                 <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-                    Join the community of developers, designers, and managers who have transformed their careers with us.
+                    From Fresher to Working Professionals, we have helped many students achieve their dream career.
                 </p>
             </div>
 

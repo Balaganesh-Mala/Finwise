@@ -10,27 +10,19 @@ const FaqSection = () => {
   const faqs = [
     {
       question: "What specific finance roles can I apply for after this course?",
-      answer: "Our curriculum prepares you for high-demand roles such as Investment Banking Analyst, Equity Research Associate, Financial Analyst (FP&A), Risk Analyst, and Private Equity Associate. We target roles at top-tier banks and financial firms."
+      answer: "After completing this program, you can apply for entry-level roles such as Investment Banking Operations Analyst, Fund Accountant, AP/AR/R2R/P2P/O2C Analyst, KYC/AML Analyst, and MIS or Reporting Executive across MNCs, BFSI companies, and corporate organizations. This program equips you with multiple career opportunities, so you’re not limited to just one path as a fresher."
     },
     {
       question: "Is this course suitable for non-commerce graduates?",
-      answer: "Absolutely. We have a 'Finance for Non-Finance' module that starts from the very basics of accounting and economics. Engineers and science graduates have successfully transitioned into finance roles through our program."
+      answer: "No, this program is specifically designed for students from commerce and finance backgrounds such as B.Com, BBA, MBA (Finance), and M.Com. Since the training involves core accounting, financial concepts, and real-time processes, having a basic understanding of commerce is essential to grasp the concepts effectively and succeed in the program."
     },
     {
       question: "Do you teach practical Financial Modeling?",
       answer: "Yes, Financial Modeling is the core of our program. You will build comprehensive 3-statement models, DCF valuations, and LBO models from scratch using real historical data of public companies."
     },
     {
-      question: "Which companies hire from Finwise Career Solutions?",
-      answer: "Our graduates are working at leading firms like J.P. Morgan, Goldman Sachs, Morgan Stanley, Deloitte, KPMG, and various boutique investment banks. We have a dedicated placement team to connect you with these opportunities."
-    },
-    {
-      question: "What tools will I master during the course?",
-      answer: "You will gain advanced proficiency in Excel (including macros and VBA), Power BI for financial dashboarding, and Python for Finance. We also continually update our tool stack based on industry requirements."
-    },
-    {
-      question: "How is this different from doing a CFA or MBA?",
-      answer: "While CFA/MBA provide theoretical knowledge, Finwise focuses on practical, job-ready skills. You will be building models and pitchbooks just like an analyst on the job. Our program is designed to get you hired immediately."
+      question: "Where do our students work?",
+      answer: "Finwise students are working in reputed organizations across the finance and corporate sector, including companies like Wells Fargo, State Street, S&P Global, FactSet, Genpact, Accenture, KFintech, Alter Domus, CES, MSN Laboratories, and Computershare"
     }
   ];
 
@@ -55,7 +47,7 @@ const FaqSection = () => {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Questions</span>
               </h2>
               <p className="text-lg text-gray-500 mb-8 leading-relaxed">
-                Everything you need to know about the product and billing. Can’t find the answer you’re looking for? Please chat to our friendly team.
+                Clear your doubts and make an informed decision about your career
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
