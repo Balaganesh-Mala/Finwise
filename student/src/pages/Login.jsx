@@ -122,7 +122,7 @@ const Login = () => {
                     Unlock Your Potential with <span className="text-indigo-400">{settings?.siteTitle || 'Finwise'}.</span>
                 </h1>
                 <p className="text-lg text-gray-300">
-                    Join thousands of students forwarding their careers with our award-winning curriculum and mentorship.
+                    Join a growing community of professionals advancing their careers with our premier finance and accounting curriculum and expert mentorship.
                 </p>
             </div>
 

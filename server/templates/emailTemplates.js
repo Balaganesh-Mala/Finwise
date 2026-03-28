@@ -1,23 +1,30 @@
 // Shared styles and helpers
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
-const BRAND_COLOR = '#4f46e5';
+const BRAND_COLOR = '#1e3a8a'; // Professional Navy Blue for Finance
+const ACCENT_COLOR = '#f8fafc';
 
 // Helper to get branding
 const getBranding = (settings) => ({
-    name: settings?.siteTitle || 'Wonew Skill Up Academy',
+    name: settings?.siteTitle || 'Finwise Career Solutions',
     logo: settings?.logoUrl || '',
-    email: settings?.contact?.email || 'support@wonew.in',
-    phone: settings?.contact?.phone || '6300369201',
+    email: settings?.contact?.email || 'info@finwisecareers.com',
+    phone: settings?.contact?.phone || '+91-XXXXXXXXXX',
     address: settings?.contact?.address || ''
 });
 
 const baseLayout = (content, settings) => {
     const brand = getBranding(settings);
     
-    // Logo HTML or Text Fallback
+    // Logo HTML or Text Fallback with Company Details on Top
     const headerContent = brand.logo 
-        ? `<img src="${brand.logo}" alt="${brand.name}" style="max-height: 50px; max-width: 200px; display: block; margin: 0 auto;">`
-        : `<div style="color: white; font-size: 24px; font-weight: bold; letter-spacing: 1px;">${brand.name.toUpperCase()}</div>`;
+        ? `<div style="text-align: center;">
+             <img src="${brand.logo}" alt="${brand.name}" style="max-height: 60px; max-width: 250px; display: block; margin: 0 auto 10px auto;">
+             <div style="color: #bfdbfe; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;">${brand.name}</div>
+           </div>`
+        : `<div style="text-align: center;">
+             <div style="color: white; font-size: 26px; font-weight: 900; letter-spacing: 1.5px; margin-bottom: 5px; text-transform: uppercase;">${brand.name}</div>
+             <div style="color: #bfdbfe; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;">Premier Finance & Accounting Institute</div>
+           </div>`;
 
     return `
 <!DOCTYPE html>
@@ -26,18 +33,20 @@ const baseLayout = (content, settings) => {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; }
-  .wrapper { width: 100%; table-layout: fixed; background-color: #f5f5f5; padding-bottom: 40px; }
-  .main-table { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; font-family: sans-serif; color: #171919; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-  .header { background-color: ${BRAND_COLOR}; padding: 30px 20px; text-align: center; }
-  .content { padding: 40px 30px; }
-  .footer { background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
-  .btn { display: inline-block; padding: 14px 30px; background-color: ${BRAND_COLOR}; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; margin: 20px 0; }
-  .info-box { background-color: #f3f4f6; border-left: 4px solid ${BRAND_COLOR}; padding: 15px; margin: 20px 0; border-radius: 4px; }
-  .feature-list { background-color: #fbfbfb; border: 1px dashed #d1d5db; border-radius: 8px; padding: 20px; margin-top: 20px; }
-  .feature-item { margin-bottom: 8px; font-size: 14px; color: #4b5563; }
+  body { margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; }
+  .wrapper { width: 100%; table-layout: fixed; background-color: #f1f5f9; padding-bottom: 40px; padding-top: 20px; }
+  .main-table { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+  .header { background-color: ${BRAND_COLOR}; padding: 35px 20px; text-align: center; border-bottom: 4px solid #3b82f6; }
+  .content { padding: 45px 35px; }
+  .footer { background-color: #0f172a; padding: 30px 20px; text-align: center; font-size: 13px; color: #94a3b8; }
+  .footer a { color: #38bdf8; text-decoration: none; }
+  .btn { display: inline-block; padding: 14px 32px; background-color: #2563eb; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 25px 0; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: background-color 0.3s; }
+  .info-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 5px solid #2563eb; padding: 20px; margin: 25px 0; border-radius: 6px; }
+  .feature-list { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 25px; margin-top: 30px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
+  .feature-item { margin-bottom: 12px; font-size: 15px; color: #475569; display: flex; align-items: start; }
+  .feature-icon { margin-right: 10px; font-size: 16px; color: #2563eb; }
   @media screen and (max-width: 600px) {
-    .content { padding: 20px; }
+    .content { padding: 25px 20px; }
     .btn { display: block; width: 100%; text-align: center; box-sizing: border-box; }
   }
 </style>
@@ -62,10 +71,11 @@ const baseLayout = (content, settings) => {
       <!-- Footer -->
       <tr>
         <td class="footer">
-          <p style="margin: 0 0 10px;">${brand.name}</p>
-          <p style="margin: 0;">Support: <a href="mailto:${brand.email}" style="color: ${BRAND_COLOR}">${brand.email}</a> ${brand.phone ? `| Phone: ${brand.phone}` : ''}</p>
-          ${brand.address ? `<p style="margin: 5px 0 0;">${brand.address}</p>` : ''}
-          <p style="margin: 10px 0 0;">&copy; ${new Date().getFullYear()} ${brand.name}. All rights reserved.</p>
+          <p style="margin: 0 0 12px; font-weight: 600; color: #f8fafc; font-size: 15px;">${brand.name}</p>
+          <p style="margin: 0 0 8px;">Email: <a href="mailto:${brand.email}">${brand.email}</a> ${brand.phone ? `| Phone: <span style="color: #cbd5e1;">${brand.phone}</span>` : ''}</p>
+          ${brand.address ? `<p style="margin: 0 0 12px; color: #cbd5e1;">${brand.address}</p>` : ''}
+          <div style="height: 1px; background-color: #334155; margin: 15px 0;"></div>
+          <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${brand.name}. All rights reserved.</p>
         </td>
       </tr>
     </table>
@@ -76,86 +86,81 @@ const baseLayout = (content, settings) => {
 };
 
 const studentRegistrationTemplate = (name, email, password, settings = {}) => {
-  const brandName = settings?.siteTitle || 'Wonew Skill Up Academy';
+  const brandName = settings?.siteTitle || 'Finwise Career Solutions';
   const content = `
-    <h1 style="margin: 0 0 20px; color: #111827; font-size: 24px;">Welcome, ${name}! 🎉</h1>
-    <p style="margin: 0 0 20px; color: #4b5563; line-height: 1.6;">
-      We are thrilled to have you at <strong>${brandName}</strong>. Your student account has been successfully created.
-      You now have access to our comprehensive learning platform.
+    <h1 style="margin: 0 0 20px; color: #0f172a; font-size: 26px; font-weight: 800;">Welcome to ${brandName}!</h1>
+    <p style="margin: 0 0 20px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Dear <strong>${name}</strong>,<br><br>
+      We are delighted to welcome you to our professional learning community. Your student portal access has been successfully provisioned, granting you entry to our premier finance and accounting resources.
     </p>
 
     <!-- Credentials -->
     <div class="info-box">
-      <p style="margin: 0 0 5px; font-size: 12px; text-transform: uppercase; color: #6b7280; font-weight: bold;">Login Email</p>
-      <p style="margin: 0 0 15px; font-size: 16px; font-family: monospace; color: #111827;">${email}</p>
+      <p style="margin: 0 0 6px; font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">Portal Login Email</p>
+      <p style="margin: 0 0 20px; font-size: 18px; color: #0f172a; font-weight: 600;">${email}</p>
       
-      <p style="margin: 0 0 5px; font-size: 12px; text-transform: uppercase; color: #6b7280; font-weight: bold;">Temporary Password</p>
-      <p style="margin: 0; font-size: 16px; font-family: monospace; color: #111827;">${password}</p>
+      <p style="margin: 0 0 6px; font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">Temporary Password</p>
+      <p style="margin: 0; font-size: 18px; font-family: 'Courier New', Courier, monospace; color: #0f172a; font-weight: 600; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; display: inline-block;">${password}</p>
     </div>
 
     <!-- CTA -->
-    <div style="text-align: center;">
-      <a href="${CLIENT_URL}/login" class="btn">Login to Portal</a>
+    <div style="text-align: center; margin-top: 10px;">
+      <a href="${CLIENT_URL}/student/login" class="btn">Access Student Portal</a>
     </div>
     
-    <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: -10px; margin-bottom: 30px;">
-      Please change your password after your first login.
+    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: -5px; margin-bottom: 25px;">
+      <em>* For security purposes, please update your password upon first login.</em>
     </p>
-
-    <!-- Features -->
-    <div class="feature-list">
-      <p style="margin: 0 0 10px; font-weight: bold; color: #374151;">Your Portal Features:</p>
-      <div class="feature-item">⭐ <strong>Student Dashboard:</strong> Track your progress</div>
-      <div class="feature-item">⭐ <strong>QR Attendance:</strong> Easy check-ins</div>
-      <div class="feature-item">⭐ <strong>Code Playground:</strong> Practice coding live</div>
-      <div class="feature-item">⭐ <strong>AI Mock Interview:</strong> Prepare for jobs</div>
-      <div class="feature-item">⭐ <strong>Typing Practice:</strong> Improve your speed</div>
-    </div>
   `;
   return baseLayout(content, settings);
 };
 
 const resetPasswordTemplate = (name, link, settings = {}) => {
-  const brandName = settings?.siteTitle || 'Wonew Skill Up Academy';
+  const brandName = settings?.siteTitle || 'Finwise Career Solutions';
   const content = `
-    <h1 style="margin: 0 0 20px; color: #111827; font-size: 24px;">Password Reset Request 🔒</h1>
-    <p style="margin: 0 0 20px; color: #4b5563; line-height: 1.6;">
-      Hello ${name}, we received a request to reset your password for your ${brandName} account.
+    <h1 style="margin: 0 0 20px; color: #0f172a; font-size: 24px; font-weight: 800;">Password Reset Request</h1>
+    <p style="margin: 0 0 25px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Dear ${name},<br><br>
+      We received a request to reset the password associated with your ${brandName} portal account.
     </p>
 
     <div style="text-align: center;">
-      <a href="${link}" class="btn" style="background-color: #dc2626;">Reset My Password</a>
+      <a href="${link}" class="btn" style="background-color: #0f172a;">Reset My Password</a>
     </div>
 
-    <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px;">
-      This link will expire in <strong>30 minutes</strong>.
+    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 25px;">
+      This secure link will expire in <strong>30 minutes</strong>.
     </p>
     
-    <p style="margin: 20px 0 0; color: #9ca3af; font-size: 13px; text-align: center;">
-      If you didn't request this, you can safely ignore this email.
-    </p>
+    <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin-top: 30px; border-radius: 4px;">
+      <p style="margin: 0; color: #92400e; font-size: 14px;">
+        If you did not request a password reset, please ignore this email or contact support immediately if you have concerns about your account security.
+      </p>
+    </div>
   `;
   return baseLayout(content, settings);
 };
 
-// Course Enrollment Template (Bonus)
+// Course Enrollment Template
 const courseEnrolledTemplate = (name, course, settings = {}) => {
+  const brandName = settings?.siteTitle || 'Finwise Career Solutions';
   const content = `
-    <h1 style="margin: 0 0 20px; color: #111827; font-size: 24px;">Enrollment Confirmed! 📚</h1>
-    <p style="margin: 0 0 20px; color: #4b5563; line-height: 1.6;">
-      Hello ${name}, you have been successfully enrolled in:
+    <h1 style="margin: 0 0 20px; color: #0f172a; font-size: 24px; font-weight: 800;">Enrollment Confirmed</h1>
+    <p style="margin: 0 0 20px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Dear ${name},<br><br>
+      Congratulations! Your enrollment has been successfully processed for the following professional program:
     </p>
     
-    <div style="background: #e0e7ff; color: #3730a3; padding: 20px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 25px;">
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 25px; border-radius: 8px; text-align: center; font-weight: 700; font-size: 20px; margin-bottom: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
       ${course}
     </div>
 
-    <p style="margin: 0 0 20px; color: #4b5563; line-height: 1.6;">
-      Visit your dashboard to access course materials and start learning.
+    <p style="margin: 0 0 25px; color: #475569; line-height: 1.6; font-size: 16px;">
+      You can now access your comprehensive syllabus, professional resources, and lecture schedules through the student portal.
     </p>
 
     <div style="text-align: center;">
-      <a href="${CLIENT_URL}/my-courses" class="btn">Go to My Courses</a>
+      <a href="${CLIENT_URL}/my-courses" class="btn">Access the Program</a>
     </div>
   `;
   return baseLayout(content, settings);
