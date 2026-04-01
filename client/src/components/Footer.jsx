@@ -34,10 +34,9 @@ const Footer = () => {
 
           {/* Brand & Newsletter - Spans 4 columns */}
           <div className="lg:col-span-4 space-y-0">
-            <img src={logo} alt='logo' className='w-40 h-40 my-[-60px] ' />
+
             <Link to="/" className="inline-block">
-              <h3 className="text-3xl font-bold text-white tracking-tight">{siteTitle}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed max-w-sm">Career Solutions</p>
+              <img src={logo} alt='logo' className='w-40 h-40 my-[-60px] ' />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
               Skill up for the future with professional training, and take the next step toward your dream career.
@@ -130,7 +129,7 @@ const Footer = () => {
           </p>
           <div className="flex items-center space-x-8 text-sm text-gray-500">
             <Link to="/privacy" className="hover:text-indigo-400 transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-indigo-400 transition-colors">Terms of Service</Link>
+            <Link to="/terms-conditions" className="hover:text-indigo-400 transition-colors">Terms & Conditions</Link>
             <Link to="/cookies" className="hover:text-indigo-400 transition-colors">Cookies</Link>
           </div>
         </div>

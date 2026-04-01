@@ -192,13 +192,15 @@ const StudentSuccessDashboard = () => {
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="mt-16 text-center relative z-10"
                 >
-                    <Link
-                        to="/student/login"
+                    <a
+                        href={import.meta.env.VITE_STUDENT_APP_URL || 'http://localhost:5174'}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="inline-flex items-center justify-center gap-2 bg-white text-slate-950 px-10 py-5 rounded-full font-black uppercase text-sm tracking-widest shadow-xl shadow-white/10 hover:bg-indigo-500 hover:text-white hover:shadow-indigo-500/30 hover:-translate-y-1 transition-all duration-300 group"
                     >
                         Access Student Login
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                    </a>
                 </motion.div>
             </div>
         </section>

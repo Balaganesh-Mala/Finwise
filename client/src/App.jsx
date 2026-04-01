@@ -17,6 +17,7 @@ import CourseDetails from './pages/CourseDetails';
 import About from './pages/About';
 import StudentLogin from './pages/StudentLogin';
 import NotFound from './pages/NotFound';
+import TermsConditions from './pages/TermsConditions';
 
 // Admin Imports
 import AdminLayout from './components/AdminLayout';
@@ -64,7 +65,7 @@ function App() {
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <QuotePopup />
-                <main className="flex-grow pt-20"><CourseDetails /></main>
+                <main className="flex-grow"><CourseDetails /></main>
                 <Footer />
               </div>
             } />
@@ -113,6 +114,15 @@ function App() {
                 <Navbar />
                 <QuotePopup />
                 <main className="flex-grow"><Contact /></main>
+                <Footer />
+              </div>
+            } />
+            
+            <Route path="/terms-conditions" element={
+              <div className="flex flex-col min-h-screen">
+                <Navbar />
+                <QuotePopup />
+                <main className="flex-grow"><TermsConditions /></main>
                 <Footer />
               </div>
             } />

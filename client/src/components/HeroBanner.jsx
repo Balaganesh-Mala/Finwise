@@ -153,7 +153,7 @@ const HeroBanner = () => {
                                         </div>
                                     ))}
                                     <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-600">
-                                        2k+
+                                        +
                                     </div>
                                 </div>
                                 <div className="text-sm text-left">

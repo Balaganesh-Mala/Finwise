@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Clock, BookOpen, IndianRupee, ArrowUpRight, BarChart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import FeeCurriculumModal from './FeeCurriculumModal';
 
 const CourseCard = ({ course }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
-    <motion.div
+    <>
+      <motion.div
       whileHover={{ y: -5 }}
       className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-1xl transition-all duration-300 border border-gray-100 h-full flex flex-col relative"
     >
@@ -50,23 +54,24 @@ const CourseCard = ({ course }) => {
         </p>
 
         {/* Footer */}
-        <div className="mt-auto flex items-center justify-between pt-4 border-t border-dashed border-gray-200">
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-400 font-medium">Course Fee</span>
-            <span className="text-lg font-bold text-gray-900 flex items-center">
-              <IndianRupee size={16} /> {course.fee}
-            </span>
-          </div>
-
-          <Link
-            to="/contact"
-            className="w-10 h-10 rounded-full bg-gray-50 hover:bg-indigo-600 text-indigo-600 hover:text-white flex items-center justify-center transition-all duration-300 group/btn"
+        <div className="mt-auto pt-4 border-t border-dashed border-gray-200">
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsModalOpen(true); }}
+            className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center text-sm"
           >
-            <ArrowUpRight size={20} className="transform group-hover/btn:rotate-45 transition-transform" />
-          </Link>
+            Get Fee & Curriculum
+          </button>
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+
+      {/* Modal extracted to separate component */}
+      <FeeCurriculumModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        course={course} 
+      />
+    </>
   );
 };
 

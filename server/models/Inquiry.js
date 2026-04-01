@@ -22,7 +22,7 @@ const InquirySchema = new mongoose.Schema({
     },
     source: {
         type: String,
-        enum: ['contact_form', 'quote_popup'],
+        enum: ['contact_form', 'quote_popup', 'brochure_download', 'syllabus_download'],
         default: 'contact_form'
     },
     status: {

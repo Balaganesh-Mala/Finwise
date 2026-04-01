@@ -3,12 +3,15 @@ import SEO from '../components/SEO';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Clock, IndianRupee, CheckCircle, Download, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import FeeCurriculumModal from '../components/FeeCurriculumModal';
 
 const CourseDetails = () => {
     const { id } = useParams();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [openModuleIndex, setOpenModuleIndex] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalIntent, setModalIntent] = useState('fee');
 
     useEffect(() => {
         const fetchCourse = async () => {
@@ -57,7 +60,6 @@ const CourseDetails = () => {
                         <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">{course.title}</h1>
                         <div className="flex justify-center flex-wrap gap-6 text-lg">
                             <span className="flex items-center"><Clock className="mr-2" /> {course.duration}</span>
-                            <span className="flex items-center"><IndianRupee className="mr-2" /> {course.fee}</span>
                         </div>
                     </div>
                 </div>
@@ -98,7 +100,7 @@ const CourseDetails = () => {
                                     <h2 className="text-2xl font-bold text-gray-900">Course Syllabus</h2>
                                     {course.syllabusPdf && course.syllabusPdf.url && (
                                         <button
-                                            onClick={() => handleDownload('syllabus')}
+                                            onClick={() => { setModalIntent('syllabus'); setIsModalOpen(true); }}
                                             className="flex items-center text-indigo-600 font-semibold hover:text-indigo-800"
                                         >
                                             <Download size={20} className="mr-2" /> Download Syllabus
@@ -153,20 +155,19 @@ const CourseDetails = () => {
                                     <span className="text-gray-600">Level</span>
                                     <span className="font-semibold text-gray-900">{course.skillLevel}</span>
                                 </div>
-                                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                                    <span className="text-gray-600">Total Fee</span>
-                                    <span className="font-bold text-indigo-600 text-xl">{course.fee}</span>
-                                </div>
                             </div>
 
                             <div className="space-y-4">
-                                <Link to="/contact" className="block w-full bg-indigo-600 text-white text-center font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                                    Enroll Now
-                                </Link>
+                                <button
+                                    onClick={() => { setModalIntent('fee'); setIsModalOpen(true); }}
+                                    className="block w-full bg-indigo-600 text-white text-center font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors shadow-md"
+                                >
+                                    Get Fee & Curriculum
+                                </button>
 
                                 {course.brochurePdf && course.brochurePdf.url && (
                                     <button
-                                        onClick={() => handleDownload('brochure')}
+                                        onClick={() => { setModalIntent('brochure'); setIsModalOpen(true); }}
                                         className="block w-full border border-indigo-600 text-indigo-600 text-center font-bold py-3 rounded-lg hover:bg-indigo-50 transition-colors"
                                     >
                                         Download Brochure
@@ -174,14 +175,20 @@ const CourseDetails = () => {
                                 )}
                             </div>
 
-                            <p className="text-xs text-center text-gray-500 mt-6">
-                                * EMI options available. Contact us for more details.
-                            </p>
+
                         </div>
                     </div>
 
                 </div>
             </div>
+
+            {/* Modal for Inquiry */}
+            <FeeCurriculumModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                course={course} 
+                intent={modalIntent}
+            />
         </div>
     );
 };

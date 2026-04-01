@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, LogIn, ChevronRight } from 'lucide-react';
 import { usePopup } from '../context/PopupContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
 
 import { useSettings } from '../context/SettingsContext';
 
@@ -11,6 +11,7 @@ const Navbar = () => {
   const { openPopup } = usePopup();
   const { settings } = useSettings();
   const location = useLocation();
+  const { scrollYProgress } = useScroll();
 
   const siteTitle = settings?.siteTitle || 'Finwise';
 
@@ -24,7 +25,14 @@ const Navbar = () => {
   ];
 
   return (
-    <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
+    <>
+      {/* Scroll Progress Bar at the very top of the screen */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-indigo-600 origin-left z-[100]"
+        style={{ scaleX: scrollYProgress }}
+      />
+      
+      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
       <nav
         className="w-full max-w-7xl bg-white rounded-2xl shadow-lg border border-gray-100 py-3 transition-all duration-300"
       >
@@ -144,6 +152,7 @@ const Navbar = () => {
         </AnimatePresence>
       </nav >
     </div >
+    </>
   );
 };
 

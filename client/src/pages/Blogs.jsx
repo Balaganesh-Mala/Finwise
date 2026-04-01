@@ -11,7 +11,7 @@ const Blogs = () => {
   const [settings, setSettings] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
 
-  const categories = ['All', 'Career Advice', 'Technology', 'Design', 'Development', 'Success Stories'];
+  const categories = ['All', 'Career Advice', 'Technology', 'Success Stories'];
 
   const getAuthorName = (author) => {
     const companyTitle = settings?.siteTitle || 'Finwise';

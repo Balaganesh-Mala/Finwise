@@ -1,5 +1,6 @@
 // Shared styles and helpers
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const STUDENT_URL = process.env.STUDENT_URL || 'http://localhost:5174';
 const BRAND_COLOR = '#1e3a8a'; // Professional Navy Blue for Finance
 const ACCENT_COLOR = '#f8fafc';
 
@@ -105,7 +106,7 @@ const studentRegistrationTemplate = (name, email, password, settings = {}) => {
 
     <!-- CTA -->
     <div style="text-align: center; margin-top: 10px;">
-      <a href="${CLIENT_URL}/student/login" class="btn">Access Student Portal</a>
+      <a href="${STUDENT_URL}" class="btn">Access Student Portal</a>
     </div>
     
     <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: -5px; margin-bottom: 25px;">
@@ -166,8 +167,102 @@ const courseEnrolledTemplate = (name, course, settings = {}) => {
   return baseLayout(content, settings);
 };
 
+// Brochure Download Template
+const brochureDownloadTemplate = (name, courseName, brochureUrl, settings = {}) => {
+  const brandName = settings?.siteTitle || 'Finwise Career Solutions';
+  const content = `
+    <h1 style="margin: 0 0 20px; color: #0f172a; font-size: 24px; font-weight: 800;">Your Course Brochure</h1>
+    <p style="margin: 0 0 20px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Dear ${name},<br><br>
+      Thank you for your interest in our professional programs at ${brandName}. As requested, we have provided the official brochure for the following course:
+    </p>
+    
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; padding: 25px; border-radius: 8px; text-align: center; font-weight: 700; font-size: 20px; margin-bottom: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+      ${courseName}
+    </div>
+
+    <p style="margin: 0 0 25px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Click the button below to securely download the complete curriculum, fee structure, and syllabus details from the brochure.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 25px;">
+      <a href="${brochureUrl}" class="btn">Download Brochure Now</a>
+    </div>
+
+    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 5px;">
+      If you have any further questions or would like to speak with an admission counselor, simply reply to this email.
+    </p>
+  `;
+  return baseLayout(content, settings);
+};
+
+// Syllabus Download Template
+const syllabusDownloadTemplate = (name, courseName, syllabusUrl, settings = {}) => {
+  const brandName = settings?.siteTitle || 'Finwise Career Solutions';
+  const content = `
+    <h1 style="margin: 0 0 20px; color: #0f172a; font-size: 24px; font-weight: 800;">Your Course Syllabus</h1>
+    <p style="margin: 0 0 20px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Dear ${name},<br><br>
+      Thank you for reaching out to ${brandName}. We have prepared the detailed syllabus for the following course for you:
+    </p>
+    
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; padding: 25px; border-radius: 8px; text-align: center; font-weight: 700; font-size: 20px; margin-bottom: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+      ${courseName}
+    </div>
+
+    <p style="margin: 0 0 25px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Click the button below to securely download the comprehensive course syllabus document.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 25px;">
+      <a href="${syllabusUrl}" class="btn">Download Syllabus Now</a>
+    </div>
+
+    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 5px;">
+      If you have any further questions regarding the modules or schedule, please reply to this email.
+    </p>
+  `;
+  return baseLayout(content, settings);
+};
+
+// Fee & Curriculum Template
+const feeAndCurriculumTemplate = (name, courseName, courseFee, curriculumUrl, settings = {}) => {
+  const brandName = settings?.siteTitle || 'Finwise Career Solutions';
+  const content = `
+    <h1 style="margin: 0 0 20px; color: #0f172a; font-size: 24px; font-weight: 800;">Course Information</h1>
+    <p style="margin: 0 0 20px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Dear ${name},<br><br>
+      Thank you for requesting information from ${brandName}. Here are the fee and curriculum details you requested for the following program:
+    </p>
+    
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; padding: 25px; border-radius: 8px; text-align: center; font-weight: 700; font-size: 20px; margin-bottom: 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+      ${courseName}
+    </div>
+    
+    <div style="background: white; border: 1px solid #bfdbfe; border-top: 0; color: #475569; padding: 15px 25px; border-radius: 0 0 8px 8px; text-align: center; font-size: 16px; margin-bottom: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); grid-template-columns: 1fr; display: grid; gap: 10px;">
+       <div>Total Fee: <strong style="color: #0f172a; font-size: 18px;">${courseFee || 'Contact for details'}</strong></div>
+    </div>
+
+    <p style="margin: 0 0 25px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Click the button below to download the official curriculum syllabus to explore all the subjects and modules covered in this program.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 25px;">
+      <a href="${curriculumUrl}" class="btn">Download Curriculum</a>
+    </div>
+
+    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 5px;">
+      If you would like to proceed with enrollment, simply reply to this email or visit our website.
+    </p>
+  `;
+  return baseLayout(content, settings);
+};
+
 module.exports = {
   studentRegistrationTemplate,
   resetPasswordTemplate,
-  courseEnrolledTemplate
+  courseEnrolledTemplate,
+  brochureDownloadTemplate,
+  syllabusDownloadTemplate,
+  feeAndCurriculumTemplate
 };
