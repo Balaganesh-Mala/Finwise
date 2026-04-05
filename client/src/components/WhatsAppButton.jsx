@@ -8,7 +8,7 @@ const WhatsAppButton = () => {
     // Get WhatsApp number from settings or fallback
     const rawNumber = getContactInfo('whatsapp');
     // Simple basic cleanup if user entered dashes or spaces, though input should be strict
-    const phoneNumber = rawNumber ? rawNumber.replace(/\D/g, '') : "1234567890";
+    const phoneNumber = rawNumber ? rawNumber.replace(/\D/g, '') : "";
     
     const message = encodeURIComponent("Hi, I'm interested in your courses. Can you please help me?");
 

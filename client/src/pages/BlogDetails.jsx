@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Calendar, User, ArrowLeft, Clock, Loader, Share2, MessageCircle, Heart, Bookmark, ChevronLeft, Check } from 'lucide-react';
 import SEO from '../components/SEO';
+import { useSettings } from '../context/SettingsContext';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 const BlogDetails = () => {
     const { id } = useParams();
-    const [blog, setBlog] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const location = useLocation();
+    
+    // Initialize from location state if available (Instant UX)
+    const [blog, setBlog] = useState(location.state?.blog || null);
+    const [loading, setLoading] = useState(!location.state?.blog);
     const [error, setError] = useState(false);
-    const [settings, setSettings] = useState(null);
+    const { settings } = useSettings();
 
     // Interaction States
     const [likes, setLikes] = useState(0);
@@ -40,12 +44,8 @@ const BlogDetails = () => {
         const fetchData = async () => {
             try {
                 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-                const [blogRes, settingsRes] = await Promise.all([
-                    axios.get(`${API_URL}/api/blogs/${id}`),
-                    axios.get(`${API_URL}/api/settings`)
-                ]);
+                const blogRes = await axios.get(`${API_URL}/api/blogs/${id}`);
                 setBlog(blogRes.data);
-                setSettings(settingsRes.data);
                 setLikes(blogRes.data.likes || 0);
 
                 const likedPosts = JSON.parse(localStorage.getItem('liked_posts') || '[]');
@@ -109,37 +109,39 @@ const BlogDetails = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB]">
-                <div className="w-12 h-12 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin mb-4" />
-                <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-[10px]">Preparing Story</p>
-            </div>
-        );
-    }
-
-    if (error || !blog) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB] px-4">
-                <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl flex items-center justify-center mb-8 border border-slate-50">
-                    <Bookmark size={32} className="text-slate-200" />
-                </div>
-                <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Article unavailable.</h2>
-                <Link to="/blogs" className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200">
-                    Return to Journal
-                </Link>
-            </div>
-        );
-    }
-
     return (
         <div className="bg-[#F9FAFB] min-h-screen relative overflow-x-hidden text-slate-900">
-            <SEO 
-                title={`${blog.title} - The Journal`} 
-                description={blog.excerpt || blog.title} 
-                image={blog.imageUrl}
-                keywords={`${blog.category}, finance careers, accounting jobs, professional development, Finwise`}
-            />
+            {loading ? (
+                <>
+                    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB]">
+                        <div className="w-12 h-12 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin mb-4" />
+                        <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-[10px]">Preparing Story</p>
+                    </div>
+                </>
+            ) : error || !blog ? (
+                <>
+                    <SEO title="Article Unavailable" description="The requested article could not be found." />
+                    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB] px-4">
+                        <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl flex items-center justify-center mb-8 border border-slate-50">
+                            <Bookmark size={32} className="text-slate-200" />
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Article unavailable.</h2>
+                        <Link to="/blogs" className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200">
+                            Return to Journal
+                        </Link>
+                    </div>
+                </>
+            ) : (
+                <>
+                    {/* Dynamic SEO (Always active after load or from state) */}
+                    {blog && (
+                        <SEO 
+                            title={blog.title} 
+                            description={blog.excerpt || blog.title} 
+                            image={blog.imageUrl}
+                            keywords={`${blog.category}, finance careers, accounting jobs, professional development, Finwise`}
+                        />
+                    )}
 
             {/* Top Progress Bar */}
             <motion.div className="fixed top-0 left-0 right-0 h-[5px] bg-indigo-600 z-[100] origin-left shadow-[0_0_15px_rgba(79,70,229,0.5)]" style={{ scaleX }} />
@@ -439,6 +441,8 @@ const BlogDetails = () => {
                     font-weight: 900;
                 }
             `}} />
+                </>
+            )}
         </div>
     );
 };

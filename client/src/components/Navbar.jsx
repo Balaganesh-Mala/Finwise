@@ -40,7 +40,7 @@ const Navbar = () => {
           <div className="flex justify-between items-center">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
-              {settings?.logoUrl ? (
+              {settings?.logoUrl && settings.logoUrl.trim() !== "" ? (
                 <img
                   src={settings.logoUrl}
                   alt={siteTitle}

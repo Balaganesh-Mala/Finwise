@@ -31,12 +31,12 @@ const BlogSchema = new mongoose.Schema({
     },
     author: {
         type: String,
-        default: 'JobReady Team'
+        default: 'Finwise Career Solutions Team'
     },
     category: {
         type: String,
         required: [true, 'Please select a category'],
-        enum: ['Career Advice', 'Technology', 'Design', 'Development', 'Success Stories', 'Other']
+        enum: ['Career Advice', 'Technology', 'Success Stories', 'Other']
     },
     createdAt: {
         type: Date,

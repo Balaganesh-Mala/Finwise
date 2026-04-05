@@ -7,11 +7,11 @@ export const useSettings = () => useContext(SettingsContext);
 
 export const SettingsProvider = ({ children }) => {
     const defaultSettings = {
-        siteTitle: 'Finwise',
+        siteTitle: 'Finwise Career Solutions',
         logoUrl: '',
         contact: {
-            phone: '+91 9874563210',
-            whatsapp: '1234567890',
+            phone: '',
+            whatsapp: '',
             email: 'info@finwise.com',
             address: 'Finwise Location'
         },

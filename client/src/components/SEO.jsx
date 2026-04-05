@@ -7,14 +7,27 @@ const SEO = ({ title, description, keywords, image }) => {
 
     // Fallback/Default values
     const siteTitle = settings?.siteTitle || 'Finwise Career Solutions';
-    const defaultDescription = 'Master in-demand skills like Investment Banking, Finance, and Accounting with Finwise Career Solutions. Get career-ready with our expert-led courses.';
-    const defaultKeywords = 'Investment Banking, Finance, Accounting, Investment Banking Courses, Finance Courses, Accounting Courses';
-    const defaultImage = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80';
+    const defaultDescription = 'Bridging the gap between students and Industry with corporate-level training and real-world experience.';
+    const defaultKeywords = 'Investment Banking, Finance, Accounting, Corporate Training, Finwise Career Solutions';
+    const defaultImage = 'https://finwisecareers.com/logo.jpeg';
 
-    const metaTitle = title ? `${title} | ${siteTitle}` : siteTitle;
+    // Ensure image is an absolute URL if it exists
+    let metaImage = image || defaultImage;
+    if (metaImage && metaImage.startsWith('/')) {
+        // Use the site URL from settings or a reliable default
+        const siteUrl = settings?.siteUrl || 'https://finwisecareers.com';
+        metaImage = siteUrl + (metaImage.startsWith('/') ? '' : '/') + metaImage;
+    }
+
+    // Smart title combining logic
+    let metaTitle = siteTitle;
+    if (title && title !== siteTitle) {
+        // For products or blogs, show title followed by brand
+        metaTitle = `${title}`;
+    }
+
     const metaDescription = description || defaultDescription;
     const metaKeywords = keywords || defaultKeywords;
-    const metaImage = image || defaultImage;
 
     return (
         <Helmet>
@@ -22,18 +35,32 @@ const SEO = ({ title, description, keywords, image }) => {
             <title>{metaTitle}</title>
             <meta name="description" content={metaDescription} />
             <meta name="keywords" content={metaKeywords} />
+            <link rel="canonical" href={window.location.href} />
 
-            {/* Open Graph / Facebook */}
-            <meta property="og:type" content="website" />
+            {/* Dynamic Favicon (Shows blog image in tab) */}
+            <link key="favicon" rel="icon" href={metaImage} />
+            <link key="apple-icon" rel="apple-touch-icon" href={metaImage} />
+
+            {/* Open Graph / Facebook / WhatsApp */}
+            <meta property="og:type" content="article" />
+            <meta property="og:site_name" content={siteTitle} />
+            <meta property="og:url" content={window.location.href} />
             <meta property="og:title" content={metaTitle} />
             <meta property="og:description" content={metaDescription} />
             <meta property="og:image" content={metaImage} />
+            <meta property="og:image:secure_url" content={metaImage} />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:type" content="image/jpeg" />
 
             {/* Twitter */}
             <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:site" content="@finwise" />
+            <meta name="twitter:url" content={window.location.href} />
             <meta name="twitter:title" content={metaTitle} />
             <meta name="twitter:description" content={metaDescription} />
             <meta name="twitter:image" content={metaImage} />
+            <meta name="twitter:image:alt" content={metaTitle} />
         </Helmet>
     );
 };

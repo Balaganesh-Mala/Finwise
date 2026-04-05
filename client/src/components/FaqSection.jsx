@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { Plus, Minus, ArrowRight, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../context/SettingsContext';
 
 const FaqSection = () => {
   const [activeIndex, setActiveIndex] = useState(null);
   const navigate = useNavigate();
+  const { getContactInfo } = useSettings();
+  const contactWhatsApp = getContactInfo('whatsapp');
+  const phoneNumber = contactWhatsApp ? contactWhatsApp.replace(/\D/g, '') : '';
 
   const faqs = [
     {
@@ -51,15 +55,17 @@ const FaqSection = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <a
-                  href={`https://wa.me/1234567890?text=${whatsappMessage}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
-                >
-                  <MessageCircle className="mr-2" size={20} />
-                  Chat with us
-                </a>
+                {contactWhatsApp && (
+                  <a
+                    href={`https://wa.me/${phoneNumber}?text=${whatsappMessage}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+                  >
+                    <MessageCircle className="mr-2" size={20} />
+                    Chat with us
+                  </a>
+                )}
                 <button
                   onClick={() => navigate('/courses')}
                   className="inline-flex items-center justify-center px-6 py-3 border border-gray-200 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all"

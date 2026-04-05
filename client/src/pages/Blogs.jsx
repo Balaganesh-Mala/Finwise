@@ -157,7 +157,7 @@ const Blogs = () => {
                             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                             className="group bg-white rounded-[2.5rem] overflow-hidden shadow-lg shadow-slate-200/30 border border-slate-50 hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-500 flex flex-col"
                         >
-                            <Link to={`/blogs/${blog._id}`} className="block relative aspect-[16/10] overflow-hidden">
+                            <Link to={`/blogs/${blog._id}`} state={{ blog }} className="block relative aspect-[16/10] overflow-hidden">
                                 <img 
                                     src={blog.imageUrl} 
                                     alt={blog.title} 
@@ -188,7 +188,7 @@ const Blogs = () => {
                                 </div>
 
                                 <h3 className="text-2xl font-black text-slate-900 mb-5 leading-tight group-hover:text-indigo-600 transition-colors">
-                                    <Link to={`/blogs/${blog._id}`}>{blog.title}</Link>
+                                    <Link to={`/blogs/${blog._id}`} state={{ blog }}>{blog.title}</Link>
                                 </h3>
                                 
                                 <p className="text-slate-500 mb-10 line-clamp-2 text-sm leading-relaxed flex-grow">
@@ -198,6 +198,7 @@ const Blogs = () => {
                                 <div className="pt-8 border-t border-slate-50 mt-auto flex items-center justify-between">
                                     <Link 
                                         to={`/blogs/${blog._id}`} 
+                                        state={{ blog }}
                                         className="flex items-center gap-3 text-slate-900 font-black text-[11px] uppercase tracking-[0.2em] group/btn"
                                     >
                                         Full Story

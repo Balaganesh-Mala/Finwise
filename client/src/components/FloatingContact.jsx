@@ -71,9 +71,9 @@ const FloatingContact = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    const whatsappNumber = getContactInfo('whatsapp') || "1234567890";
-    const phoneNumber = getContactInfo('phone') || "+1 (555) 123-4567";
-    const emailAddress = getContactInfo('email') || "info@jobreadyskills.com";
+    const whatsappNumber = getContactInfo('whatsapp');
+    const phoneNumber = getContactInfo('phone');
+    const emailAddress = getContactInfo('email');
 
     const contactOptions = [
         {
@@ -82,7 +82,8 @@ const FloatingContact = () => {
             sub: "Average reply: 2 mins",
             color: "text-green-600",
             bg: "bg-green-50",
-            action: () => window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`, "_blank")
+            action: () => window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`, "_blank"),
+            show: !!whatsappNumber
         },
         {
             icon: Phone,
@@ -90,7 +91,8 @@ const FloatingContact = () => {
             sub: phoneNumber,
             color: "text-blue-600",
             bg: "bg-blue-50",
-            action: () => window.open(`tel:${phoneNumber.replace(/\D/g, '')}`)
+            action: () => window.open(`tel:${phoneNumber.replace(/\D/g, '')}`),
+            show: !!phoneNumber
         },
         {
             icon: Mail,
@@ -98,9 +100,10 @@ const FloatingContact = () => {
             sub: emailAddress,
             color: "text-orange-600",
             bg: "bg-orange-50",
-            action: () => window.open(`mailto:${emailAddress}`)
+            action: () => window.open(`mailto:${emailAddress}`),
+            show: !!emailAddress
         }
-    ];
+    ].filter(opt => opt.show);
 
     return (
         <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4">
