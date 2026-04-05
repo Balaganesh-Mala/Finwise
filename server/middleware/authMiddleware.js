@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const Trainer = require('../models/Trainer');
+const Admin = require('../models/Admin');
 
 exports.protect = async (req, res, next) => {
     let token;
@@ -9,16 +10,24 @@ exports.protect = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             
-            req.user = await Trainer.findById(decoded.id).select('-password');
-            if (!req.user) {
-                 return res.status(401).json({ message: 'Not authorized, user not found' });
+            // Try to find in Trainer first
+            let user = await Trainer.findById(decoded.id).select('-password');
+            
+            // If not found in Trainer, check Admin
+            if (!user) {
+                user = await Admin.findById(decoded.id).select('-password');
             }
 
-            // Status Check: Block access if rejected or on hold
-            if (req.user.status === 'rejected' || req.user.status === 'hold') {
+            if (!user) {
+                return res.status(401).json({ message: 'Not authorized, user not found' });
+            }
+
+            // Status Check: Block access if rejected or on hold (Only for Trainers)
+            if (user.role !== 'Admin' && (user.status === 'rejected' || user.status === 'hold')) {
                 return res.status(403).json({ message: 'Access denied. Account is deactivated.' });
             }
 
+            req.user = user;
             next();
         } catch (error) {
             console.error(error);
@@ -32,9 +41,6 @@ exports.protect = async (req, res, next) => {
 };
 
 exports.admin = (req, res, next) => {
-    // Assuming Admin has a role or a separate Admin model check. 
-    // For now, if we use Trainer model for admins too or just check role
-    // This is placeholder logic, adjust if Admin is separate collection
     if (req.user && req.user.role === 'Admin') { 
         next();
     } else {

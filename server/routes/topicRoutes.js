@@ -25,11 +25,11 @@ const cpUpload = upload.fields([
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // Admin Routes (Secured)
-// Temporary: Removing protect/admin middleware because Admin frontend uses Supabase Auth
-router.post('/admin/topic/create', cpUpload, createTopic);
-router.put('/admin/topic/:id', cpUpload, updateTopic);
-router.delete('/admin/topic/:id', deleteTopic);
-router.delete('/admin/topic/:id/note/:noteId', deleteTopicNote);
+// Admin Routes (Secured)
+router.post('/admin/topic/create', protect, admin, cpUpload, createTopic);
+router.put('/admin/topic/:id', protect, admin, cpUpload, updateTopic);
+router.delete('/admin/topic/:id', protect, admin, deleteTopic);
+router.delete('/admin/topic/:id/note/:noteId', protect, admin, deleteTopicNote);
 
 // Trainer Routes (Secured)
 router.post('/trainer/topic/create', protect, cpUpload, createTopic);

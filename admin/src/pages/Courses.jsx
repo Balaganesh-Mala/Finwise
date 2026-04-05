@@ -21,9 +21,12 @@ const Courses = () => {
         skillLevel: 'Beginner',
         image: null,
         syllabusPdf: null,
+        syllabusLink: '',
         brochurePdf: null,
+        brochureLink: '',
         highlights: [],
-        syllabus: []
+        syllabus: [],
+        isBonus: false
     };
 
     const [formData, setFormData] = useState(initialFormState);
@@ -71,6 +74,9 @@ const Courses = () => {
                 duration: course.duration,
                 fee: course.fee,
                 skillLevel: course.skillLevel,
+                isBonus: course.isBonus || false,
+                syllabusLink: course.syllabusLink || '',
+                brochureLink: course.brochureLink || '',
                 highlights: course.highlights || [],
                 syllabus: course.syllabus || []
             });
@@ -88,7 +94,8 @@ const Courses = () => {
     };
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        setFormData({ ...formData, [e.target.name]: value });
     };
 
     const handleFileChange = (e) => {
@@ -137,6 +144,9 @@ const Courses = () => {
             data.append('duration', formData.duration);
             data.append('fee', formData.fee);
             data.append('skillLevel', formData.skillLevel);
+            data.append('isBonus', formData.isBonus);
+            data.append('syllabusLink', formData.syllabusLink);
+            data.append('brochureLink', formData.brochureLink);
             data.append('highlights', JSON.stringify(formData.highlights));
             data.append('syllabus', JSON.stringify(formData.syllabus));
 
@@ -219,10 +229,15 @@ const Courses = () => {
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
-                                <div className="absolute bottom-2 left-2">
+                                <div className="absolute bottom-2 left-2 flex gap-2">
                                     <span className="bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
                                         {course.skillLevel}
                                     </span>
+                                    {course.isBonus && (
+                                        <span className="bg-purple-600/80 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                                            Bonus Course
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -309,6 +324,19 @@ const Courses = () => {
                                         <option value="Advanced">Advanced</option>
                                     </select>
                                 </div>
+                                <div className="flex items-center mt-6">
+                                    <input
+                                        type="checkbox"
+                                        id="isBonus"
+                                        name="isBonus"
+                                        checked={formData.isBonus}
+                                        onChange={handleChange}
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    />
+                                    <label htmlFor="isBonus" className="ml-2 block text-sm text-gray-900 font-medium">
+                                        Mark as Bonus Course (Hides from landing page)
+                                    </label>
+                                </div>
 
                                 {/* File Inputs */}
                                 <div>
@@ -317,14 +345,20 @@ const Courses = () => {
                                         className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Syllabus PDF</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Syllabus PDF File</label>
                                     <input type="file" name="syllabusPdf" onChange={handleFileChange} accept="application/pdf"
-                                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mb-2" />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">OR Syllabus External Link (Google Doc, Drive)</label>
+                                    <input type="url" name="syllabusLink" value={formData.syllabusLink} onChange={handleChange}
+                                        className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-indigo-500" placeholder="https://docs.google.com/..." />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Brochure PDF</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Brochure PDF File</label>
                                     <input type="file" name="brochurePdf" onChange={handleFileChange} accept="application/pdf"
-                                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mb-2" />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">OR Brochure External Link (Google Doc, Drive)</label>
+                                    <input type="url" name="brochureLink" value={formData.brochureLink} onChange={handleChange}
+                                        className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-indigo-500" placeholder="https://docs.google.com/..." />
                                 </div>
                             </div>
 

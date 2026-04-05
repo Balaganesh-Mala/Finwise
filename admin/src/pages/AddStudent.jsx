@@ -24,12 +24,13 @@ const AddStudent = () => {
         courseCategory: '',
         batchTiming: 'Morning',
         startDate: new Date().toISOString().split('T')[0],
+        totalFee: '',
+        totalInstallments: 1,
         access: {
             dashboard: true,
             myCourses: true,
             myQR: true,
             attendance: true,
-            playground: false,
             typingPractice: false,
             aiMockInterview: false,
             profile: true,
@@ -54,6 +55,8 @@ const AddStudent = () => {
                         ...student,
                         startDate: formattedDate,
                         dob: formattedDob,
+                        totalFee: student.feeDetails?.totalFee || '',
+                        totalInstallments: student.feeDetails?.totalInstallments || 1,
                         access: student.access || formData.access // fallback
                     });
                 } catch (err) {
@@ -109,7 +112,6 @@ const AddStudent = () => {
         // Reset course-specifics
         newAccess.typingPractice = false;
         newAccess.aiMockInterview = false;
-        newAccess.playground = false;
 
         // Apply Logic
         if (selectedCourse === 'Computer Fundamentals') {
@@ -120,7 +122,6 @@ const AddStudent = () => {
             newAccess.typingPractice = true;
             newAccess.aiMockInterview = true;
         } else if (selectedCourse === 'Web Development') {
-            newAccess.playground = true;
             newAccess.aiMockInterview = true;
         }
 
@@ -204,45 +205,81 @@ const AddStudent = () => {
                         </div>
                     </section>
 
-                    {/* Course Details */}
-                    <section>
-                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs">2</span>
-                            Course Assignment
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Course Name</label>
-                                <select value={formData.courseName} onChange={handleCourseChange} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                                    {courses.length === 0 && <option value="">Loading courses...</option>}
-                                    {courses.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                                <input type="text" readOnly value={formData.courseCategory} className="w-full p-2.5 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Batch Timing</label>
-                                <select value={formData.batchTiming} onChange={e => setFormData({ ...formData, batchTiming: e.target.value })} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                                    <option value="Morning">Morning (8AM - 12PM)</option>
-                                    <option value="Afternoon">Afternoon (12PM - 4PM)</option>
-                                    <option value="Evening">Evening (4PM - 8PM)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                                <input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white" />
-                            </div>
+                {/* Course Details */}
+                <section>
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs">2</span>
+                        Course Assignment
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Course Name</label>
+                            <select value={formData.courseName} onChange={handleCourseChange} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                {courses.length === 0 && <option value="">Loading courses...</option>}
+                                {courses.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                            </select>
                         </div>
-                    </section>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <input type="text" readOnly value={formData.courseCategory} className="w-full p-2.5 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Batch Timing</label>
+                            <select value={formData.batchTiming} onChange={e => setFormData({ ...formData, batchTiming: e.target.value })} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                <option value="Morning">Morning (8AM - 12PM)</option>
+                                <option value="Afternoon">Afternoon (12PM - 4PM)</option>
+                                <option value="Evening">Evening (4PM - 8PM)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                            <input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white" />
+                        </div>
+                    </div>
+                </section>
 
-                    {/* Access Control */}
-                    <section>
-                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs">3</span>
-                            Feature Access
-                        </h3>
+                {/* Fee Information */}
+                <section>
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs">3</span>
+                        Fee Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-emerald-50/50 p-6 rounded-xl border border-emerald-100">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Total Fee (₹)</label>
+                            <input 
+                                type="number" 
+                                required={!isEditMode}
+                                value={formData.totalFee} 
+                                onChange={e => setFormData({ ...formData, totalFee: e.target.value })} 
+                                className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white" 
+                                placeholder="0.00" 
+                                disabled={isEditMode}
+                            />
+                            {isEditMode && <p className="text-[10px] text-gray-400 mt-1 italic">Fee can only be set during registration</p>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Total Installments</label>
+                            <select 
+                                value={formData.totalInstallments} 
+                                onChange={e => setFormData({ ...formData, totalInstallments: parseInt(e.target.value) })} 
+                                className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                disabled={isEditMode}
+                            >
+                                {[1, 2, 3, 4, 5, 6].map(num => (
+                                    <option key={num} value={num}>{num} {num === 1 ? 'Installment' : 'Installments'}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Access Control */}
+                <section>
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs">4</span>
+                        Feature Access
+                    </h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {Object.keys(formData.access).map(key => (
                                 <label key={key} className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer select-none ${formData.access[key] ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'}`}>

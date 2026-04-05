@@ -42,7 +42,9 @@ const CoursesSection = () => {
   const fetchCourses = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/courses`);
-      setCourses(res.data);
+      // Filter out any courses marked explicitly as Bonus Courses
+      const filteredCourses = res.data.filter(course => !course.isBonus);
+      setCourses(filteredCourses);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching courses:', err);
@@ -63,8 +65,34 @@ const CoursesSection = () => {
 
   if (loading) {
     return (
-      <section className="py-20 bg-gray-50 min-h-[400px] flex items-center justify-center">
-        <div className="text-gray-500 text-lg">Loading courses...</div>
+      <section className="py-20 bg-gray-50 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="h-4 w-32 bg-gray-200 rounded mx-auto mb-4 animate-pulse"></div>
+            <div className="h-10 w-64 md:w-96 bg-gray-200 rounded mx-auto mt-2 animate-pulse"></div>
+            <div className="mt-4 max-w-2xl mx-auto h-6 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:px-10">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-pulse min-h-[420px]">
+                <div className="w-full h-[200px] bg-gray-200"></div>
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="w-20 h-5 bg-gray-100 rounded-full"></div>
+                    <div className="w-12 h-5 bg-gray-100 rounded"></div>
+                  </div>
+                  <div className="w-full h-6 bg-gray-200 rounded mb-3"></div>
+                  <div className="w-3/4 h-6 bg-gray-200 rounded mb-6"></div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-20 h-4 bg-gray-100 rounded"></div>
+                    <div className="w-20 h-4 bg-gray-100 rounded"></div>
+                  </div>
+                  <div className="w-full h-10 bg-gray-100 rounded-xl"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     );
   }

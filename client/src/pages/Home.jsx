@@ -17,7 +17,7 @@ const Home = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <SEO
-        title="Home"
+        title="Finwise Career Solutions - Launch Your Career in Finance"
         description="Launch your career with Finwise Career Solutions. Expert-led courses in Global Accounting, Investment Banking, Fund Accounting, R2R, P2P, KYC/AML, AP/AR, Data Skills, Excel, Power BI, MS Office."
       />
 

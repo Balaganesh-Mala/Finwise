@@ -15,9 +15,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Import Supabase Admin
-const supabaseAdmin = require('../config/supabase');
-
 // @route   POST /api/qr/generate/:studentId
 // @desc    Generate or Regenerate QR Token for a student
 // @access  Admin (or Student if allowed)
@@ -30,36 +27,14 @@ router.post('/generate/:studentId', async (req, res) => {
         if (studentId.match(/^[0-9a-fA-F]{24}$/)) {
             query._id = studentId;
         } else {
+            // Keep support for any remaining supabaseId lookups temporarily if they are in the DB
             query.supabaseId = studentId;
         }
         
         let student = await Student.findOne(query);
 
-        // 2. If not found, try to sync from Supabase
         if (!student) {
-             console.log(`Student not found locally. Attempting sync for ID: ${studentId}`);
-             try {
-                 const { data, error } = await supabaseAdmin.auth.admin.getUserById(studentId);
-                 
-                 if (error || !data.user) {
-                     console.error("Supabase User Fetch Error:", error);
-                     return res.status(404).json({ message: 'Student not found in Auth System' });
-                 }
-
-                 // Create local student record
-                 student = await Student.create({
-                     supabaseId: data.user.id,
-                     email: data.user.email,
-                     name: data.user.user_metadata?.full_name || data.user.email.split('@')[0],
-                     createdAt: new Date()
-                 });
-
-                 console.log("Synced Student Record:", student._id);
-
-             } catch (syncErr) {
-                 console.error("Sync Error:", syncErr);
-                 return res.status(404).json({ message: 'Student not found and Sync failed' });
-             }
+            return res.status(404).json({ message: 'Student not found in native database' });
         }
 
         if (!student) {

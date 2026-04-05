@@ -3,7 +3,7 @@ const router = express.Router();
 const Course = require('../models/Course');
 const Inquiry = require('../models/Inquiry');
 const Job = require('../models/Job');
-const supabaseAdmin = require('../config/supabase');
+const Student = require('../models/Student');
 
 // @route   GET /api/analytics
 // @desc    Get dashboard analytics stats
@@ -16,26 +16,16 @@ router.get('/', async (req, res) => {
             activeJobs,
             newInquiries,
             totalInquiries,
-            recentInquiries
+            recentInquiries,
+            totalStudents
         ] = await Promise.all([
             Course.countDocuments({}),
             Job.countDocuments({ isActive: true }),
             Inquiry.countDocuments({ status: 'new' }),
             Inquiry.countDocuments({}),
-            Inquiry.find().sort({ createdAt: -1 }).limit(5)
+            Inquiry.find().sort({ createdAt: -1 }).limit(5),
+            Student.countDocuments({})
         ]);
-
-        // Fetch User count from Supabase
-        let totalStudents = 0;
-        try {
-            const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
-            if (!error && users) {
-                totalStudents = users.length;
-            }
-        } catch (supabaseError) {
-            console.error('Supabase Analytics Error:', supabaseError);
-            // Fallback to 0 or handled gracefully
-        }
 
         // Aggregation for Charts
         const sixMonthsAgo = new Date();

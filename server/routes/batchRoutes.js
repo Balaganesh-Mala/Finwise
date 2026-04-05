@@ -41,7 +41,12 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const { courseId } = req.query;
-        const filter = courseId ? { courseId } : {};
+        let filter = {};
+        
+        // Prevent CastError if courseId is string "undefined" or null
+        if (courseId && courseId !== 'undefined' && courseId !== 'null') {
+            filter.courseId = courseId;
+        }
 
         const batches = await Batch.find(filter)
             .populate('courseId', 'title')
@@ -163,10 +168,31 @@ router.post('/:id/assign', async (req, res) => {
 // @access  Admin
 router.post('/assign-bonus', async (req, res) => {
     try {
-        const { courseId, targetBatchId, studentIds } = req.body;
+        let { courseId, targetBatchId, studentIds } = req.body;
 
-        if (!courseId || !targetBatchId || !studentIds || !Array.isArray(studentIds)) {
-            return res.status(400).json({ message: 'courseId, targetBatchId, and studentIds array are required' });
+        if (!courseId || !studentIds || !Array.isArray(studentIds)) {
+            return res.status(400).json({ message: 'courseId and studentIds array are required' });
+        }
+
+        // Auto-create/Find a general Bonus Batch if none is provided
+        if (!targetBatchId) {
+            const course = await Course.findById(courseId);
+            if (!course) return res.status(404).json({ message: 'Course not found' });
+            
+            let genericBatch = await Batch.findOne({ courseId: course._id, name: /Bonus/i });
+            if (!genericBatch) {
+                genericBatch = new Batch({
+                    name: `Auto Bonus Batch - ${course.title.substring(0, 15)}`,
+                    courseId: course._id,
+                    startDate: new Date(),
+                    endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 5)),
+                    maxStudents: 5000,
+                    description: 'Auto-generated batch for bonus course access',
+                    status: 'active'
+                });
+                await genericBatch.save();
+            }
+            targetBatchId = genericBatch._id;
         }
 
         const results = await Promise.all(studentIds.map(async (studentId) => {

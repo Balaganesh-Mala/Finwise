@@ -98,14 +98,25 @@ const CourseDetails = () => {
                             <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
                                 <div className="flex justify-between items-center mb-6">
                                     <h2 className="text-2xl font-bold text-gray-900">Course Syllabus</h2>
-                                    {course.syllabusPdf && course.syllabusPdf.url && (
-                                        <button
-                                            onClick={() => { setModalIntent('syllabus'); setIsModalOpen(true); }}
-                                            className="flex items-center text-indigo-600 font-semibold hover:text-indigo-800"
-                                        >
-                                            <Download size={20} className="mr-2" /> Download Syllabus
-                                        </button>
-                                    )}
+                                    <div className="flex items-center gap-4">
+                                        {course.syllabusPdf && course.syllabusPdf.url && (
+                                            <button
+                                                onClick={() => { setModalIntent('syllabus'); setIsModalOpen(true); }}
+                                                className="flex items-center text-indigo-600 font-semibold hover:text-indigo-800"
+                                            >
+                                                <Download size={20} className="mr-2" /> Download Syllabus PDF
+                                            </button>
+                                        )}
+                                        {course.syllabusLink && (
+                                            <a
+                                                href={course.syllabusLink.startsWith('http') ? course.syllabusLink : `https://${course.syllabusLink}`}
+                                                target="_blank" rel="noreferrer"
+                                                className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800"
+                                            >
+                                                <FileText size={20} className="mr-2" /> View Syllabus Online
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="space-y-4">
@@ -170,8 +181,17 @@ const CourseDetails = () => {
                                         onClick={() => { setModalIntent('brochure'); setIsModalOpen(true); }}
                                         className="block w-full border border-indigo-600 text-indigo-600 text-center font-bold py-3 rounded-lg hover:bg-indigo-50 transition-colors"
                                     >
-                                        Download Brochure
+                                        Download Brochure PDF
                                     </button>
+                                )}
+                                {course.brochureLink && (
+                                    <a
+                                        href={course.brochureLink.startsWith('http') ? course.brochureLink : `https://${course.brochureLink}`}
+                                        target="_blank" rel="noreferrer"
+                                        className="block w-full border border-emerald-600 text-emerald-600 text-center font-bold py-3 rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <FileText size={20} /> View Brochure Online
+                                    </a>
                                 )}
                             </div>
 

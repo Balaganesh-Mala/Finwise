@@ -1,32 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
 import { Lock, Mail, UserPlus, AlertTriangle } from 'lucide-react';
 
 const Register = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  // Check if registration is allowed (0 users exist)
-  useEffect(() => {
-    const checkUsers = async () => {
-      // Intentionally using a hacky way to check user count indirectly or assume pure client-side first-run
-      // Since 'auth.users' table is not directly accessible usually without service role, 
-      // we might rely on the user trying to sign up. 
-      // However, for a "One-Time" setup, we can try to just proceed.
-      // Ideally, this check should be server-side, but client-side is okay for this simplified requirement.
-      
-      // Better approach: We will just try to register. If it's the *developer* running this, they know to use it.
-      // Real "One-Time" logic is hard without backend admin functions.
-      // We will assume if you are here, you are the first one.
-      setLoading(false); 
-    };
-    checkUsers();
-  }, [navigate]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -34,19 +18,21 @@ const Register = () => {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await axios.post(`${apiUrl}/api/admin/setup`, {
+        name,
         email,
         password,
       });
 
-      if (error) throw error;
-      
-      // Auto login or success message
-      alert('Admin account created! You can now login.');
-      navigate('/login');
-
+      if (res.data.success) {
+        alert('Admin account created successfully! You can now login.');
+        navigate('/login');
+      } else {
+        setError(res.data.message || 'Setup failed');
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Error occurred during setup');
     } finally {
       setRegistering(false);
     }
@@ -85,6 +71,27 @@ const Register = () => {
           <form className="space-y-6" onSubmit={handleRegister}>
             {error && <p className="text-red-600 text-sm text-center">{error}</p>}
             
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Full Name
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserPlus className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
+                  placeholder="Your Name"
+                />
+              </div>
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address

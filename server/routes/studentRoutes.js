@@ -11,10 +11,10 @@ const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Topic = require('../models/Topic');
 const Progress = require('../models/Progress');
+const FeeStructure = require('../models/FeeStructure');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
-const FeeStructure = require('../models/FeeStructure');
 const Installment = require('../models/Installment');
 
 // Configure Multer
@@ -216,6 +216,22 @@ router.post('/create', async (req, res) => {
         await student.save();
         console.log(`Student created: ${student.email}`);
 
+        // Initialize Fee Structure if provided
+        const { totalFee, totalInstallments } = req.body;
+        if (totalFee) {
+            try {
+                await FeeStructure.create({
+                    student_id: student._id,
+                    total_fee: totalFee,
+                    total_installments: totalInstallments || 1
+                });
+                console.log(`Fee structure initialized for student: ${student._id}`);
+            } catch (feeErr) {
+                console.error('Error initializing fee structure:', feeErr);
+                // We don't fail the whole registration if only fee setup fails, but we log it
+            }
+        }
+
         // Fetch Global Settings for Branding
         let settings = {};
         try {
@@ -225,7 +241,8 @@ router.post('/create', async (req, res) => {
             console.error('Error fetching settings (using defaults):', settingErr);
         }
 
-        // Send Email with Dynamic Branding
+        let emailSent = false;
+        let emailErrorMsg = null;
         try {
             console.log(`Attempting to send registration email to ${email}...`);
             await sendEmail(
@@ -234,14 +251,17 @@ router.post('/create', async (req, res) => {
                 studentRegistrationTemplate(name, email, plainPassword, settings)
             );
             console.log('Registration email sent successfully.');
+            emailSent = true;
         } catch (emailErr) {
             console.error('FAILED to send registration email:', emailErr);
-            // We don't block the response, but we log the error
+            emailErrorMsg = emailErr.message || 'Unknown email error';
         }
 
         res.status(201).json({ 
             success: true, 
-            message: 'Student created (Email attempt finished)', 
+            message: emailSent ? 'Student created and email sent successfully!' : 'Student created, BUT email failed to send.', 
+            emailStatus: emailSent ? 'sent' : 'failed',
+            emailError: emailErrorMsg,
             student: { ...student._doc, passwordHash: undefined } 
         });
 

@@ -15,6 +15,15 @@ connectDB();
 const { startCronJobs } = require('./services/cronJobs');
 startCronJobs();
 
+// Auto-create uploads directory for multer if it doesn't exist (Hostinger deploy fix)
+const fs = require('fs');
+const path = require('path');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('✅ Created uploads directory for multer/image uploads');
+}
+
 const app = express();
 
 // Middleware
@@ -52,6 +61,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
+app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/students', require('./routes/studentRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/settings', require('./routes/settingRoutes'));

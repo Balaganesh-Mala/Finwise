@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Job = require('../models/Job');
 const StudentJobApplication = require('../models/StudentJobApplication');
+const Student = require('../models/Student');
 
 // @desc    Get all active student jobs with application status for a student
 // @route   GET /api/student-jobs?studentId=xxx
@@ -9,9 +10,19 @@ const StudentJobApplication = require('../models/StudentJobApplication');
 router.get('/', async (req, res) => {
     try {
         const { studentId } = req.query;
+        // Fetch student to check enrollment date
+        const student = studentId ? await Student.findById(studentId).catch(() => null) : null;
+        const enrollmentDate = student?.startDate || new Date(0);
 
-        // Fetch all active student-only jobs
-        const jobs = await Job.find({ isActive: true, isStudentOnly: true }).sort({ postedAt: -1 });
+        // Fetch all active student-only jobs (only those posted after/active during enrollment)
+        const jobs = await Job.find({ 
+            isActive: true, 
+            isStudentOnly: true,
+            $or: [
+                { postedAt: { $gte: enrollmentDate } },
+                { deadline: { $gte: enrollmentDate } }
+            ]
+        }).sort({ postedAt: -1 });
 
         if (!studentId) return res.json(jobs);
 
@@ -43,12 +54,26 @@ router.get('/missed', async (req, res) => {
         const { studentId } = req.query;
         if (!studentId) return res.status(400).json({ msg: 'studentId required' });
 
-        // Jobs that are inactive OR past deadline
+        // Fetch student to get enrollment date
+        const student = await Student.findById(studentId);
+        const enrollmentDate = student?.startDate || new Date(0);
+
+        // Jobs that are inactive OR past deadline AND were open during/after enrollment
         const missedJobs = await Job.find({
             isStudentOnly: true,
-            $or: [
-                { isActive: false },
-                { deadline: { $lt: new Date() } }
+            $and: [
+                {
+                    $or: [
+                        { isActive: false },
+                        { deadline: { $lt: new Date() } }
+                    ]
+                },
+                {
+                    $or: [
+                        { deadline: { $gte: enrollmentDate } },
+                        { postedAt: { $gte: enrollmentDate } }
+                    ]
+                }
             ]
         }).sort({ postedAt: -1 }).limit(20);
 

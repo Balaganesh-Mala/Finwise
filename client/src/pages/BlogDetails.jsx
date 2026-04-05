@@ -196,7 +196,7 @@ const BlogDetails = () => {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
-                                className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tight mb-12"
+                                className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.05] tracking-tight mb-12"
                             >
                                 {blog.title}
                             </motion.h1>
@@ -348,7 +348,7 @@ const BlogDetails = () => {
                                     </form>
 
                                     <p className="mt-8 text-slate-500 text-xs font-bold uppercase tracking-[0.3em]">
-                                        Join 2,500+ ambitious professionals
+                                        Join ambitious professionals
                                     </p>
                                 </div>
                             </motion.div>

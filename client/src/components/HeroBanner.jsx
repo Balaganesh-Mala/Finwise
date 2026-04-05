@@ -21,17 +21,9 @@ const HeroBanner = () => {
     const { getContactInfo } = useSettings();
     const phone = getContactInfo('phone') || '+919963624087';
 
-    // Default hardcoded banners as fallback
-    const defaultBanners = [
-        { fileUrl: img01, title: "Alex Johnson", description: "Placed at Google", _id: 'd1' },
-        { fileUrl: img02, title: "Sarah Smith", description: "Works as SDE-II", _id: 'd2' },
-        { fileUrl: img03, title: "Michael Brown", description: "Data Scientist", _id: 'd3' },
-        { fileUrl: img04, title: "Emily Davis", description: "Product Manager", _id: 'd4' },
-        { fileUrl: img05, title: "James Wilson", description: "Full Stack Dev", _id: 'd5' }
-    ];
-
-    const [banners, setBanners] = useState(defaultBanners);
+    const [banners, setBanners] = useState([]);
     const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchBanners = async () => {
@@ -46,6 +38,8 @@ const HeroBanner = () => {
                 }
             } catch (err) {
                 console.error("Error fetching hero banners:", err);
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -179,10 +173,28 @@ const HeroBanner = () => {
 
                     </motion.div>
                 </div>
-
                 {/* Visual Content (Right) - Student Carousel */}
                 <div className="relative h-full w-full min-h-[400px] md:min-h-[500px] flex items-center justify-center mt-8 lg:mt-0">
                     <div className="w-full max-w-sm md:max-w-lg lg:max-w-xl">
+                        {isLoading ? (
+                            <div className="w-full flex gap-4 md:gap-6 items-center justify-center overflow-hidden px-2">
+                                {[1, 2, 3].map((item) => (
+                                    <div key={item} className={`relative flex flex-col bg-white/60 border border-gray-100 rounded-[12px] h-[550px] md:h-[400px] w-full max-w-[280px] md:max-w-full animate-pulse ${item > 1 ? 'hidden md:flex flex-1' : 'flex-1'} ${item > 2 ? 'md:hidden xl:flex' : ''}`}>
+                                        <div className="h-[35%] p-4 md:p-6 flex flex-col justify-between">
+                                            <div className="w-20 md:w-24 h-5 md:h-6 bg-gray-200 rounded-md"></div>
+                                            <div>
+                                                <div className="w-full h-2 md:h-3 bg-gray-200 rounded mt-1"></div>
+                                                <div className="w-4/5 h-2 md:h-3 bg-gray-200 rounded mt-2"></div>
+                                                <div className="w-16 h-3 md:h-4 bg-gray-200 rounded mt-3"></div>
+                                            </div>
+                                        </div>
+                                        <div className="h-[65%] w-full bg-gray-200 flex items-end p-4 md:p-6 rounded-b-[12px]">
+                                            <div className="w-3/4 h-4 md:h-5 bg-gray-300 rounded"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : banners.length > 0 ? (
                         <Slider key={slidesToShow} {...settings}>
                             {banners.map((item) => (
                                 <div key={item._id} className="px-2 pb-8 pt-4 cursor-grab active:cursor-grabbing">
@@ -230,6 +242,7 @@ const HeroBanner = () => {
                                 </div>
                             ))}
                         </Slider>
+                        ) : null}
                     </div>
 
                     {/* Decorative Background Elements behind carousel */}

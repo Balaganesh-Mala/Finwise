@@ -8,7 +8,7 @@ const SEO = ({ title, description, keywords, image }) => {
     // Fallback/Default values
     const siteTitle = settings?.siteTitle || 'Finwise Career Solutions';
     const defaultDescription = 'Master in-demand skills like Investment Banking, Finance, and Accounting with Finwise Career Solutions. Get career-ready with our expert-led courses.';
-    const defaultKeywords = 'Investment Banking, Finance, Accounting, Taxation';
+    const defaultKeywords = 'Investment Banking, Finance, Accounting, Investment Banking Courses, Finance Courses, Accounting Courses';
     const defaultImage = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80';
 
     const metaTitle = title ? `${title} | ${siteTitle}` : siteTitle;

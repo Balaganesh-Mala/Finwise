@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
 import axios from 'axios';
 import MobileScannerModal from './MobileScannerModal';
 import {
@@ -137,6 +136,7 @@ const Layout = () => {
 
   const [activeCategory, setActiveCategory] = useState(getInitialCategory());
   const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   // Update active category when route changes
   useEffect(() => {
@@ -150,10 +150,9 @@ const Layout = () => {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
         // Parallel fetch for efficiency
-        const [settingsRes, inquiriesRes, authRes] = await Promise.all([
+        const [settingsRes, inquiriesRes] = await Promise.all([
           axios.get(`${apiUrl}/api/settings`),
-          axios.get(`${apiUrl}/api/inquiries`),
-          supabase.auth.getUser()
+          axios.get(`${apiUrl}/api/inquiries`)
         ]);
 
         if (settingsRes.data) {
@@ -165,8 +164,10 @@ const Layout = () => {
         const newCount = allInquiries.filter(i => i.status === 'new').length;
         setInquiryCount(newCount);
 
-        if (authRes.data.user) {
-          setUser(authRes.data.user);
+        // Load user from localStorage instead of Supabase
+        const storedUser = localStorage.getItem('adminUser');
+        if (storedUser) {
+           setUser(JSON.parse(storedUser));
         }
 
       } catch (err) {
@@ -177,13 +178,14 @@ const Layout = () => {
     fetchData();
   }, [location.pathname]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
     navigate('/login');
   };
 
 
-  const userName = user?.user_metadata?.full_name || 'Administrator';
+  const userName = user?.name || 'Administrator';
   const userEmail = user?.email || 'admin@finwisecs.com';
   const userInitial = userName.charAt(0).toUpperCase();
 
@@ -348,30 +350,6 @@ const Layout = () => {
             )
           })}
         </nav>
-
-        {/* Sidebar Footer */}
-        <div className="p-4 mx-4 mb-6 mt-2 bg-gradient-to-b from-white to-slate-50 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl -mr-10 -mt-10 transition-all duration-500 group-hover:bg-indigo-500/10 group-hover:scale-150"></div>
-
-          <div className="flex items-center gap-3 mb-4 relative z-10">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20 ring-2 ring-white/80">
-              <span className="drop-shadow-sm">{userInitial}</span>
-            </div>
-            <div className="overflow-hidden flex-1">
-              <p className="text-sm font-bold text-slate-800 truncate">{userName}</p>
-              <p className="text-[11px] font-medium text-slate-500 truncate">{userEmail}</p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="w-full relative z-10 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-transparent hover:text-white hover:shadow-md hover:shadow-rose-500/20 transition-all duration-300 text-sm font-bold group/btn overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-red-500 translate-y-[100%] group-hover/btn:translate-y-[0%] transition-transform duration-300 ease-out z-0"></div>
-            <LogOut size={16} className="relative z-10 transition-colors duration-300 group-hover/btn:text-white" />
-            <span className="relative z-10 transition-colors duration-300 group-hover/btn:text-white">Sign Out</span>
-          </button>
-        </div>
       </aside>
 
       {/* Main Content Wrapper */}
@@ -455,12 +433,51 @@ const Layout = () => {
 
               <div className="h-8 w-[1px] bg-gray-200 mx-1"></div>
 
-              <button className="flex items-center gap-2 p-1.5 pr-3 text-gray-600 hover:bg-gray-50 rounded-full transition-colors border border-transparent hover:border-gray-200">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                  {userInitial}
-                </div>
-                <span className="text-sm font-medium hidden sm:block">{userName}</span>
-              </button>
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="flex items-center gap-3 p-1.5 pr-4 text-gray-600 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-200 group"
+                >
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-indigo-100 ring-2 ring-white group-hover:scale-105 transition-transform">
+                    {userInitial}
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-xs font-bold text-slate-800 leading-tight">{userName}</p>
+                    <p className="text-[10px] font-medium text-slate-400">Administrator</p>
+                  </div>
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showProfileDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowProfileDropdown(false)}></div>
+                    <div className="absolute top-full right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden z-50 transform origin-top-right transition-all animate-in fade-in slide-in-from-top-4 duration-200">
+                      <div className="p-4 border-b border-slate-50 bg-slate-50/30">
+                        <p className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">Signed in as</p>
+                        <p className="text-sm font-bold text-slate-800 truncate">{userEmail}</p>
+                      </div>
+                      <div className="p-2">
+                        <Link 
+                          to="/settings" 
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                        >
+                          <Settings size={18} />
+                          Admin Settings
+                        </Link>
+                        <button 
+                          onClick={() => { handleLogout(); setShowProfileDropdown(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+                        >
+                          <LogOut size={18} />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </header>

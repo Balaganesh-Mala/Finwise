@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
 import { Lock, Mail, AlertCircle } from 'lucide-react';
 
 const Login = () => {
@@ -34,16 +33,21 @@ const Login = () => {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await axios.post(`${apiUrl}/api/admin/login`, {
         email,
         password,
       });
 
-      if (error) throw error;
-
-      navigate('/'); // Redirect to Dashboard
+      if (res.data.success) {
+        localStorage.setItem('adminToken', res.data.token);
+        localStorage.setItem('adminUser', JSON.stringify(res.data.user));
+        navigate('/'); // Redirect to Dashboard
+      } else {
+        setError(res.data.message || 'Login failed');
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Error connecting to server');
     } finally {
       setLoading(false);
     }

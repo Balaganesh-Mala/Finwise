@@ -34,6 +34,10 @@ const CourseSchema = new mongoose.Schema({
         enum: ['Beginner', 'Intermediate', 'Advanced'],
         default: 'Beginner'
     },
+    isBonus: {
+        type: Boolean,
+        default: false
+    },
     imageUrl: {
         type: String,
         default: 'no-photo.jpg'
@@ -45,9 +49,17 @@ const CourseSchema = new mongoose.Schema({
         url: String,
         publicId: String
     },
+    syllabusLink: {
+        type: String,
+        default: ''
+    },
     brochurePdf: {
         url: String,
         publicId: String
+    },
+    brochureLink: {
+        type: String,
+        default: ''
     },
     createdAt: {
         type: Date,

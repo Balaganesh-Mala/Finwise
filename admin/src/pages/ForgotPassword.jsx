@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { supabase } from '../lib/supabaseClient';
 import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -33,15 +32,16 @@ const ForgotPassword = () => {
     setError(null);
 
     try {
-      const appUrl = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${appUrl}/update-password`,
-      });
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await axios.post(`${apiUrl}/api/admin/request-reset`, { email });
 
-      if (error) throw error;
-      setSubmitted(true);
+      if (res.data.success) {
+        setSubmitted(true);
+      } else {
+        setError(res.data.message || 'Request failed');
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Error connecting to server');
     } finally {
       setLoading(false);
     }

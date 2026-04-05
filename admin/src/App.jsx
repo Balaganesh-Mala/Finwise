@@ -50,7 +50,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/update-password" element={<UpdatePassword />} />
+        <Route path="/update-password/:token" element={<UpdatePassword />} />
 
         {/* Protected Routes */}
         <Route path="/" element={

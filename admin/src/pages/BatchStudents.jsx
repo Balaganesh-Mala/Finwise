@@ -136,7 +136,7 @@ const BatchStudents = () => {
             setFn(res.data.batches || []);
         } catch (err) {
             console.error('Failed to load batches', err);
-            toast.error('Could not load available batches');
+            toast.error(err.response?.data?.message || err.message || 'Could not load available batches');
         }
     };
 
@@ -191,15 +191,15 @@ const BatchStudents = () => {
 
     const handleAssignBonus = async (e) => {
         e.preventDefault();
-        if (!bonusCourseId || !bonusTargetBatchId || selectedBonusStudents.length === 0) {
-            toast.error('Please select a course, batch, and at least one student');
+        if (!bonusCourseId || selectedBonusStudents.length === 0) {
+            toast.error('Please select a course and at least one student');
             return;
         }
         setSaving(true);
         try {
             await axios.post(`${import.meta.env.VITE_API_URL}/api/batches/assign-bonus`, {
                 courseId: bonusCourseId,
-                targetBatchId: bonusTargetBatchId,
+                targetBatchId: bonusTargetBatchId || null,
                 studentIds: selectedBonusStudents
             });
             toast.success(`Bonus course gifted to ${selectedBonusStudents.length} students!`);
@@ -555,10 +555,9 @@ const BatchStudents = () => {
                                         value={bonusTargetBatchId}
                                         onChange={(e) => setBonusTargetBatchId(e.target.value)}
                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-500 outline-none text-sm bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
-                                        required
                                         disabled={!bonusCourseId}
                                     >
-                                        <option value="">{bonusCourseId ? 'Select target batch...' : 'Select course first'}</option>
+                                        <option value="">{bonusCourseId ? 'Auto-create new batch (Recommended)' : 'Select course first'}</option>
                                         {bonusTargetBatches.map(b => (
                                             <option key={b._id} value={b._id}>{b.name} ({b.studentCount || 0}/{b.maxStudents})</option>
                                         ))}
@@ -614,7 +613,7 @@ const BatchStudents = () => {
 
                             <div className="flex gap-3 pt-2">
                                 <button type="button" onClick={() => setIsBonusOpen(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">Cancel</button>
-                                <button type="submit" disabled={saving || !bonusCourseId || !bonusTargetBatchId || selectedBonusStudents.length === 0} className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 disabled:opacity-50 shadow-lg shadow-purple-100 flex items-center justify-center gap-2 transition-all">
+                                <button type="submit" disabled={saving || !bonusCourseId || selectedBonusStudents.length === 0} className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 disabled:opacity-50 shadow-lg shadow-purple-100 flex items-center justify-center gap-2 transition-all">
                                     {saving ? 'Processing...' : <><Gift size={18} /> Gift Course</>}
                                 </button>
                             </div>

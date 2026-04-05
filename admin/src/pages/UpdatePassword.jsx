@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { supabase } from '../lib/supabaseClient';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Lock, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
 
 const UpdatePassword = () => {
+    const { token } = useParams();
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -27,19 +27,10 @@ const UpdatePassword = () => {
         };
         fetchSettings();
 
-        // Check for errors in URL (e.g., link expired)
-        const hash = window.location.hash;
-        if (hash && hash.includes('error=')) {
-            const params = new URLSearchParams(hash.substring(1)); // remove #
-            const errorDescription = params.get('error_description');
-            const errorCode = params.get('error_code');
-            if (errorDescription) {
-                setError(errorDescription.replace(/\+/g, ' '));
-            } else if (errorCode) {
-                 setError('Invalid or expired password reset link.');
-            }
+        if (!token) {
+            setError('Invalid or missing reset token.');
         }
-    }, []);
+    }, [token]);
 
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
@@ -47,15 +38,20 @@ const UpdatePassword = () => {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.updateUser({
-                password: password
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await axios.post(`${apiUrl}/api/admin/reset-password`, {
+                token,
+                newPassword: password
             });
 
-            if (error) throw error;
-            setSuccess(true);
-            setTimeout(() => navigate('/login'), 3000);
+            if (res.data.success) {
+                setSuccess(true);
+                setTimeout(() => navigate('/login'), 3000);
+            } else {
+                setError(res.data.message || 'Update failed');
+            }
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.message || err.message || 'Error occurred while updating password');
         } finally {
             setLoading(false);
         }

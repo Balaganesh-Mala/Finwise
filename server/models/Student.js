@@ -25,7 +25,6 @@ const StudentSchema = new mongoose.Schema({
     myCourses: { type: Boolean, default: true },
     myQR: { type: Boolean, default: true },
     attendance: { type: Boolean, default: true },
-    playground: { type: Boolean, default: false },
     typingPractice: { type: Boolean, default: false },
     aiMockInterview: { type: Boolean, default: false },
     profile: { type: Boolean, default: true },

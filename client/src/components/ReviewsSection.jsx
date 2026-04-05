@@ -169,7 +169,41 @@ const ReviewsSection = () => {
     };
 
     if (loading) {
-        return <div className="py-20 text-center text-gray-400">Loading reviews...</div>;
+        return (
+            <section className="py-8 bg-gray-50 overflow-hidden">
+                <div className="container mx-auto px-6 mb-16 text-center animate-pulse">
+                    <div className="h-6 w-32 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                    <div className="h-12 w-3/4 max-w-lg bg-gray-200 rounded mx-auto mb-6"></div>
+                    <div className="h-6 w-2/3 max-w-md bg-gray-200 rounded mx-auto"></div>
+                </div>
+                <div className="container mx-auto px-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        {[1, 2, 3].map((item) => (
+                            <div key={item} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[220px] flex flex-col justify-between animate-pulse">
+                                <div>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="w-[44px] h-[44px] bg-gray-100 rounded-xl"></div>
+                                        <div className="flex gap-1">
+                                            {[1, 2, 3, 4, 5].map(s => <div key={s} className="w-3 h-3 bg-gray-100 rounded-full"></div>)}
+                                        </div>
+                                    </div>
+                                    <div className="w-full h-3 bg-gray-100 rounded mb-2 mt-4"></div>
+                                    <div className="w-full h-3 bg-gray-100 rounded mb-2"></div>
+                                    <div className="w-5/6 h-3 bg-gray-100 rounded mb-4"></div>
+                                </div>
+                                <div className="flex items-center gap-3 border-t border-gray-50 pt-4 mt-4">
+                                    <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0"></div>
+                                    <div className="w-full">
+                                        <div className="w-24 h-4 bg-gray-200 rounded mb-2"></div>
+                                        <div className="w-16 h-3 bg-gray-100 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
     }
 
     if (reviews.row1.length === 0 && reviews.row2.length === 0) {
