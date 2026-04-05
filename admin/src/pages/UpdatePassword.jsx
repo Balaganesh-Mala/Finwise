@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Lock, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { Lock, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const UpdatePassword = () => {
     const { token } = useParams();
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -137,22 +138,29 @@ const UpdatePassword = () => {
                                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                                     New Password
                                 </label>
-                                <div className="relative rounded-lg shadow-sm">
+                                <div className="relative rounded-lg shadow-sm group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-gray-400" />
+                                        <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-all" />
                                     </div>
                                     <input
                                         id="password"
                                         name="password"
-                                        type="password"
+                                        type={showPassword ? 'text' : 'password'}
                                         autoComplete="new-password"
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         minLength={6}
-                                        className="block w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all outline-none"
+                                        className="block w-full pl-10 pr-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all outline-none"
                                         placeholder="Min 6 characters"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-600 transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
                                 </div>
                             </div>
 

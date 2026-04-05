@@ -167,7 +167,7 @@ const Layout = () => {
         // Load user from localStorage instead of Supabase
         const storedUser = localStorage.getItem('adminUser');
         if (storedUser) {
-           setUser(JSON.parse(storedUser));
+          setUser(JSON.parse(storedUser));
         }
 
       } catch (err) {
@@ -361,13 +361,6 @@ const Layout = () => {
             <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg">
               <Menu size={24} />
             </button>
-
-            {/* Breadcrumb / Title */}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
-                {navCategories.flatMap(c => c.links).find(i => i.path === location.pathname)?.name || 'Dashboard'}
-              </h2>
-            </div>
           </div>
 
           <div className="flex items-center gap-5">
@@ -435,7 +428,7 @@ const Layout = () => {
 
               {/* Profile Dropdown */}
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                   className="flex items-center gap-3 p-1.5 pr-4 text-gray-600 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-200 group"
                 >
@@ -458,15 +451,15 @@ const Layout = () => {
                         <p className="text-sm font-bold text-slate-800 truncate">{userEmail}</p>
                       </div>
                       <div className="p-2">
-                        <Link 
-                          to="/settings" 
+                        <Link
+                          to="/settings"
                           onClick={() => setShowProfileDropdown(false)}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
                         >
                           <Settings size={18} />
                           Admin Settings
                         </Link>
-                        <button 
+                        <button
                           onClick={() => { handleLogout(); setShowProfileDropdown(false); }}
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
                         >

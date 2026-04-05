@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   LayoutDashboard, 
   Image, 
@@ -16,12 +17,28 @@ import {
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [admin, setAdmin] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Mock Logout
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    const userData = localStorage.getItem('adminUser');
+
+    if (!token) {
+        navigate('/admin/login');
+        return;
+    }
+
+    if (userData) {
+        setAdmin(JSON.parse(userData));
+    }
+  }, [navigate]);
+
   const handleLogout = () => {
-    // Todo: Clear auth token
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    toast.success('Logged out successfully');
     navigate('/admin/login');
   };
 
@@ -86,10 +103,12 @@ const AdminLayout = () => {
           
           <div className="flex items-center space-x-4 ml-auto">
              <div className="flex items-center space-x-2">
-                 <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                     A
+                 <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold uppercase">
+                     {admin?.name?.charAt(0) || 'A'}
                  </div>
-                 <span className="text-sm font-medium text-gray-700">Admin User</span>
+                 <span className="text-sm font-medium text-gray-700">
+                     {admin?.name || 'Admin'}
+                 </span>
              </div>
           </div>
         </header>

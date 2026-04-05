@@ -643,15 +643,10 @@ export default function Dashboard() {
     const [activeTab, setActiveTab] = useState('overview');
 
     return (
-        <div className="space-y-6">
-
-            {/* Tab Bar */}
-            <div className="flex justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
-                    <p className="text-sm text-slate-500 mt-1">Your institute's real-time command center.</p>
-                </div>
-                <div className="flex items-center gap-1 bg-slate-100/70 p-1 rounded-2xl w-fit flex-wrap">
+        <div className="space-y-8">
+            {/* Main Header / Tab Navigation */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/60 pb-6 mb-2">
+                <div className="flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl w-full md:w-fit overflow-x-auto no-scrollbar">
                     {TABS.map(tab => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -659,12 +654,12 @@ export default function Dashboard() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
-                                    ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200/60'
-                                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'
+                                className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap shrink-0 ${isActive
+                                    ? 'bg-white text-indigo-700 shadow-md ring-1 ring-slate-200/50'
+                                    : 'text-slate-500 hover:text-indigo-600 hover:bg-white/40'
                                     }`}
                             >
-                                <Icon size={15} className={isActive ? 'text-indigo-500' : 'text-slate-400'} />
+                                <Icon size={18} className={isActive ? 'text-indigo-600' : 'text-slate-400'} />
                                 {tab.label}
                             </button>
                         );
