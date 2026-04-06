@@ -264,7 +264,7 @@ const Layout = () => {
     const [openMenus, setOpenMenus] = useState({});
 
     const toggleMenu = (label) => {
-        setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
+        setOpenMenus(prev => ({ [label]: !prev[label] }));
     };
 
     const fetchMobileQR = async () => {
@@ -358,8 +358,6 @@ const Layout = () => {
                             <div
                                 key={item.label}
                                 className="space-y-1"
-                                onMouseEnter={() => { if (!collapsed) setOpenMenus(prev => ({ ...prev, [item.label]: true })); }}
-                                onMouseLeave={() => { if (!collapsed) setOpenMenus(prev => ({ ...prev, [item.label]: false })); }}
                             >
                                 <button
                                     onClick={() => {

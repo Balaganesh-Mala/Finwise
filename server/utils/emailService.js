@@ -36,9 +36,13 @@ transporter.verify(function (error, success) {
 
 const sendEmail = async (to, subject, html) => {
   try {
+    const senderName = (process.env.MAIL_SENDER_NAME || 'wonew.in').replace(/^"|"$/g, '');
+    const senderEmail = process.env.MAIL_SENDER_EMAIL || 'info@wonew.in';
+    const fromAddress = `"${senderName}" <${senderEmail}>`;
+
     console.log(`Sending email to: ${to} via ${process.env.MAIL_HOST}`);
     const info = await transporter.sendMail({
-      from: `"${process.env.MAIL_SENDER_NAME}" <${process.env.MAIL_SENDER_EMAIL}>`,
+      from: fromAddress,
       to,
       subject,
       html,

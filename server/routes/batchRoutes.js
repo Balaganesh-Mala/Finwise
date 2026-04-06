@@ -262,7 +262,9 @@ router.get('/:id/students', async (req, res) => {
                     return { ...enrollment.toObject(), feeSummary: null };
                 }
 
-                const installments = await Installment.find({ fee_structure_id: feeStructure._id });
+                // Aggressive fix: Fetch ALL installments for this student regardless of which fee structure record they belong to.
+                // This fixes the "0 Rupee Paid" issue when duplicate fee structures exist.
+                const installments = await Installment.find({ student_id: studentId });
                 const paidInstallments = installments.filter(i => i.status === 'Paid');
                 const overdueInstallments = installments.filter(i => i.status === 'Overdue');
                 const paidAmount = paidInstallments.reduce((sum, i) => sum + i.amount, 0);

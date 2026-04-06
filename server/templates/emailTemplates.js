@@ -16,15 +16,9 @@ const getBranding = (settings) => ({
 const baseLayout = (content, settings) => {
     const brand = getBranding(settings);
     
-    // Logo HTML or Text Fallback with Company Details on Top
-    const headerContent = brand.logo 
-        ? `<div style="text-align: center;">
-             <img src="${brand.logo}" alt="${brand.name}" style="max-height: 60px; max-width: 250px; display: block; margin: 0 auto 10px auto;">
-             <div style="color: #bfdbfe; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;">${brand.name}</div>
-           </div>`
-        : `<div style="text-align: center;">
-             <div style="color: white; font-size: 26px; font-weight: 900; letter-spacing: 1.5px; margin-bottom: 5px; text-transform: uppercase;">${brand.name}</div>
-             <div style="color: #bfdbfe; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;">Premier Finance & Accounting Institute</div>
+    // Top banner image using Cloudinary URL for broad email client support
+    const headerContent = `<div style="text-align: center; padding: 0; line-height: 0; margin: 0; background-color: #ffffff;">
+             <img src="https://res.cloudinary.com/drzs556ss/image/upload/v1775472964/finwise_assets/mailtemplate.png" alt="Finwise Career Solutions" style="width: 100%; max-width: 600px; display: block; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: 0 auto; outline: none; border-bottom: 0;">
            </div>`;
 
     return `
@@ -37,7 +31,7 @@ const baseLayout = (content, settings) => {
   body { margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; }
   .wrapper { width: 100%; table-layout: fixed; background-color: #f1f5f9; padding-bottom: 40px; padding-top: 20px; }
   .main-table { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
-  .header { background-color: ${BRAND_COLOR}; padding: 35px 20px; text-align: center; border-bottom: 4px solid #3b82f6; }
+  .header { padding: 0; text-align: center; background-color: #ffffff; }
   .content { padding: 45px 35px; }
   .footer { background-color: #0f172a; padding: 30px 20px; text-align: center; font-size: 13px; color: #94a3b8; }
   .footer a { color: #38bdf8; text-decoration: none; }
@@ -186,7 +180,10 @@ const brochureDownloadTemplate = (name, courseName, brochureUrl, settings = {}) 
     </p>
 
     <div style="text-align: center; margin-bottom: 25px;">
-      <a href="${brochureUrl}" class="btn">Download Brochure Now</a>
+      ${brochureUrl 
+        ? `<a href="${brochureUrl}" class="btn">Download Brochure Now</a>` 
+        : `<p style="color: #64748b;">The digital brochure for this course is currently being updated. Please reply to this email to receive it directly from our counselor.</p>`
+      }
     </div>
 
     <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 5px;">
@@ -215,7 +212,10 @@ const syllabusDownloadTemplate = (name, courseName, syllabusUrl, settings = {}) 
     </p>
 
     <div style="text-align: center; margin-bottom: 25px;">
-      <a href="${syllabusUrl}" class="btn">Download Syllabus Now</a>
+      ${syllabusUrl 
+        ? `<a href="${syllabusUrl}" class="btn">Download Syllabus Now</a>` 
+        : `<p style="color: #64748b;">The detailed syllabus for this course is currently being updated. Please reply to this email for the latest version.</p>`
+      }
     </div>
 
     <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 5px;">
@@ -248,7 +248,10 @@ const feeAndCurriculumTemplate = (name, courseName, courseFee, curriculumUrl, se
     </p>
 
     <div style="text-align: center; margin-bottom: 25px;">
-      <a href="${curriculumUrl}" class="btn">Download Curriculum</a>
+      ${curriculumUrl 
+        ? `<a href="${curriculumUrl}" class="btn">Download Curriculum</a>` 
+        : `<p style="color: #64748b;">The curriculum document for this course is currently being updated. Our team will send it to you shortly.</p>`
+      }
     </div>
 
     <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 5px;">

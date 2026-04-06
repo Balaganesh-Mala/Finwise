@@ -14,6 +14,8 @@ const Students = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [feeFilter, setFeeFilter] = useState('All');
+    const [courseFilter, setCourseFilter] = useState('All');
+    const [batchFilter, setBatchFilter] = useState('All');
     const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
@@ -67,7 +69,8 @@ const Students = () => {
         if (!student.feeDetails) return 'none';
         if (student.feeDetails.overdueInstallments > 0) return 'overdue';
         if (student.feeDetails.pendingAmount > 0) return 'pending';
-        return 'clear';
+        if (student.feeDetails.paidAmount > 0) return 'clear'; // Has paid something
+        return 'none';
     };
 
     const filteredStudents = students.filter((s) => {
@@ -83,11 +86,18 @@ const Students = () => {
             feeFilter === 'All' ||
             (feeFilter === 'Overdue' && feeStatus === 'overdue') ||
             (feeFilter === 'Pending' && feeStatus === 'pending') ||
-            (feeFilter === 'Clear' && feeStatus === 'clear') ||
+            (feeFilter === 'Fully Paid' && feeStatus === 'clear' && s.feeDetails?.pendingAmount === 0) ||
+            (feeFilter === 'Partially Paid' && feeStatus === 'pending' && s.feeDetails?.paidAmount > 0) ||
             (feeFilter === 'No Data' && feeStatus === 'none');
 
-        return matchSearch && matchStatus && matchFee;
+        const matchCourse = courseFilter === 'All' || s.courseName === courseFilter;
+        const matchBatch = batchFilter === 'All' || s.batchTiming === batchFilter;
+
+        return matchSearch && matchStatus && matchFee && matchCourse && matchBatch;
     });
+
+    const uniqueCourses = [...new Set(students.map(s => s.courseName).filter(Boolean))].sort();
+    const uniqueBatches = [...new Set(students.map(s => s.batchTiming).filter(Boolean))].sort();
 
     const activeCount = students.filter(s => s.status === 'Active').length;
     const overdueCount = students.filter(s => getFeeStatus(s) === 'overdue').length;
@@ -96,9 +106,11 @@ const Students = () => {
         setSearchTerm('');
         setStatusFilter('All');
         setFeeFilter('All');
+        setCourseFilter('All');
+        setBatchFilter('All');
     };
 
-    const hasActiveFilters = searchTerm || statusFilter !== 'All' || feeFilter !== 'All';
+    const hasActiveFilters = searchTerm || statusFilter !== 'All' || feeFilter !== 'All' || courseFilter !== 'All' || batchFilter !== 'All';
 
     return (
         <div className="p-4 md:p-6 space-y-5">
@@ -145,7 +157,7 @@ const Students = () => {
                         Filters
                         {hasActiveFilters && (
                             <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">
-                                {[statusFilter !== 'All', feeFilter !== 'All', !!searchTerm].filter(Boolean).length}
+                                {[statusFilter !== 'All', feeFilter !== 'All', !!searchTerm, courseFilter !== 'All', batchFilter !== 'All'].filter(Boolean).length}
                             </span>
                         )}
                     </button>
@@ -187,18 +199,18 @@ const Students = () => {
 
                         {/* Fee Status Filter */}
                         <div className="flex items-center gap-2">
-                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Fee Status</label>
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Fees</label>
                             <div className="flex gap-1 flex-wrap">
-                                {['All', 'Overdue', 'Pending', 'Clear', 'No Data'].map((opt) => (
+                                {['All', 'Overdue', 'Pending', 'Partially Paid', 'Fully Paid', 'No Data'].map((opt) => (
                                     <button
                                         key={opt}
                                         onClick={() => setFeeFilter(opt)}
                                         className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${feeFilter === opt
                                                 ? opt === 'Overdue'
                                                     ? 'bg-red-600 text-white'
-                                                    : opt === 'Pending'
+                                                    : opt === 'Pending' || opt === 'Partially Paid'
                                                         ? 'bg-amber-500 text-white'
-                                                        : opt === 'Clear'
+                                                        : opt === 'Fully Paid'
                                                             ? 'bg-emerald-600 text-white'
                                                             : 'bg-indigo-600 text-white'
                                                 : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
@@ -208,6 +220,36 @@ const Students = () => {
                                     </button>
                                 ))}
                             </div>
+                        </div>
+
+                        <div className="w-px h-5 bg-gray-200 hidden lg:block" />
+
+                        {/* Course Filter */}
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Course</label>
+                            <select
+                                value={courseFilter}
+                                onChange={(e) => setCourseFilter(e.target.value)}
+                                className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            >
+                                <option value="All">All Courses</option>
+                                {uniqueCourses.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="w-px h-5 bg-gray-200 hidden lg:block" />
+
+                        {/* Batch Timing Filter */}
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Batch</label>
+                            <select
+                                value={batchFilter}
+                                onChange={(e) => setBatchFilter(e.target.value)}
+                                className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            >
+                                <option value="All">All Timings</option>
+                                {uniqueBatches.map(b => <option key={b} value={b}>{b}</option>)}
+                            </select>
                         </div>
                     </div>
                 )}

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Inquiry = require('../models/Inquiry');
 const Course = require('../models/Course');
+const Setting = require('../models/Setting');
 const { sendEmail } = require('../utils/emailService');
 const { brochureDownloadTemplate, syllabusDownloadTemplate, feeAndCurriculumTemplate } = require('../templates/emailTemplates');
 
@@ -25,23 +26,44 @@ router.post('/', async (req, res) => {
 
         if (courseId && process.env.MAIL_SENDER_EMAIL) {
             try {
-                const course = await Course.findById(courseId);
+                const [course, settings] = await Promise.all([
+                    Course.findById(courseId),
+                    Setting.findOne()
+                ]);
+                
                 if (course) {
-                    if (source === 'brochure_download' && course.brochurePdf && course.brochurePdf.url) {
-                        const htmlContent = brochureDownloadTemplate(name, course.title, course.brochurePdf.url);
-                        await sendEmail(email, `Your Course Brochure: ${course.title} - Finwise`, htmlContent);
-                    } else if (source === 'syllabus_download' && course.syllabusPdf && course.syllabusPdf.url) {
-                        const htmlContent = syllabusDownloadTemplate(name, course.title, course.syllabusPdf.url);
-                        await sendEmail(email, `Your Course Syllabus: ${course.title} - Finwise`, htmlContent);
-                    } else if (source === 'quote_popup' && course.syllabusPdf && course.syllabusPdf.url) {
+                    let htmlContent = '';
+                    let subject = '';
+
+                    const templateSettings = settings || {};
+
+                    if (source === 'brochure_download') {
+                        subject = `Your Course Brochure: ${course.title} - Finwise`;
+                        htmlContent = brochureDownloadTemplate(name, course.title, course.brochurePdf?.url || '', templateSettings);
+                    } else if (source === 'syllabus_download') {
+                        subject = `Your Course Syllabus: ${course.title} - Finwise`;
+                        htmlContent = syllabusDownloadTemplate(name, course.title, course.syllabusPdf?.url || '', templateSettings);
+                    } else if (source === 'quote_popup') {
                         // Quote popup is for "Get Fee & Curriculum"
-                        const htmlContent = feeAndCurriculumTemplate(name, course.title, course.fee, course.syllabusPdf.url);
-                        await sendEmail(email, `Fee & Curriculum Details: ${course.title} - Finwise`, htmlContent);
+                        subject = `Fee & Curriculum Details: ${course.title} - Finwise`;
+                        htmlContent = feeAndCurriculumTemplate(name, course.title, course.fee, course.syllabusPdf?.url || course.brochurePdf?.url || '', templateSettings);
                     }
+
+                    if (htmlContent && subject) {
+                        await sendEmail(email, subject, htmlContent);
+                        console.log(`✅ Inquiry response email sent to ${email} for source: ${source}`);
+                    } else {
+                        console.log(`⚠️ No email sent for source: ${source}. Content or subject empty.`);
+                    }
+                } else {
+                    console.log(`⚠️ Course with ID ${courseId} not found. Skipping inquiry email.`);
                 }
             } catch (emailErr) {
-                console.error("Failed to send inquiry response email:", emailErr);
+                console.error("❌ Failed to send inquiry response email:", emailErr);
             }
+        } else {
+            if (!courseId) console.log(`⚠️ No courseId provided for inquiry. Skipping email.`);
+            if (!process.env.MAIL_SENDER_EMAIL) console.log(`⚠️ MAIL_SENDER_EMAIL not set in .env. Skipping email.`);
         }
 
         res.status(201).json(inquiry);

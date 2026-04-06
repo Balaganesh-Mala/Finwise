@@ -5,7 +5,9 @@ const {
   getInstallments,
   markInstallmentPaid,
   sendManualReminder,
-  getDashboardMetrics
+  getDashboardMetrics,
+  getPaymentDetails,
+  deleteInstallment
 } = require('../controllers/financeController');
 // const { protect, admin } = require('../middleware/authMiddleware'); // Uncomment and use as per your setup
 
@@ -19,8 +21,14 @@ router.route('/fee-structure')
 router.route('/installments')
   .get(getInstallments);
 
+router.route('/installments/:id')
+  .delete(deleteInstallment);
+
 router.route('/installments/:id/pay')
   .post(markInstallmentPaid);
+
+router.route('/installments/:id/payment')
+  .get(getPaymentDetails);
 
 router.route('/installments/:id/remind')
   .post(sendManualReminder);

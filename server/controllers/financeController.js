@@ -3,6 +3,7 @@ const Installment = require('../models/Installment');
 const PaymentHistory = require('../models/PaymentHistory');
 const Expense = require('../models/Expense');
 const Student = require('../models/Student');
+const Setting = require('../models/Setting');
 const { sendEmail } = require('../utils/emailService');
 const { generateFeeReminderTemplate } = require('../utils/emailTemplates');
 
@@ -143,6 +144,12 @@ exports.createFeeStructure = async (req, res) => {
       return res.status(400).json({ message: 'Invalid fee structure data provided.' });
     }
 
+    // Check if a FeeStructure already exists for this student
+    const existingFS = await FeeStructure.findOne({ student_id });
+    if (existingFS) {
+      return res.status(400).json({ message: 'A fee structure already exists for this student. Please update the existing one instead.' });
+    }
+
     const total_installments = installments_data.length;
 
     // Create the main Fee Structure record
@@ -183,7 +190,7 @@ exports.getInstallments = async (req, res) => {
     if (student_id) query.student_id = student_id;
 
     const installments = await Installment.find(query)
-      .populate('student_id', 'name email phone batch timing')
+      .populate('student_id', 'name email phone batch timing courseName')
       .sort({ due_date: 1 });
       
     res.status(200).json(installments);
@@ -232,6 +239,51 @@ exports.markInstallmentPaid = async (req, res) => {
   }
 };
 
+// @desc    Get payment details for an installment
+// @route   GET /api/finance/installments/:id/payment
+// @access  Private/Admin
+exports.getPaymentDetails = async (req, res) => {
+  try {
+    const payment = await PaymentHistory.findOne({ installment_id: req.params.id });
+    if (!payment) {
+      return res.status(404).json({ message: 'No payment record found for this installment' });
+    }
+    res.status(200).json(payment);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching payment details', error: error.message });
+  }
+};
+
+// @desc    Delete a specific installment
+// @route   DELETE /api/finance/installments/:id
+// @access  Private/Admin
+exports.deleteInstallment = async (req, res) => {
+  try {
+    const installment = await Installment.findById(req.params.id);
+    if (!installment) {
+      return res.status(404).json({ message: 'Installment not found' });
+    }
+    
+    // Check if the installment is paid - maybe warn or prevent? 
+    // For now, allow deletion but could add logic if needed.
+    
+    // Delete the installment
+    const fsId = installment.fee_structure_id;
+    await installment.deleteOne();
+    
+    // Check if any installments remain for this fee structure
+    const remainingCount = await Installment.countDocuments({ fee_structure_id: fsId });
+    if (remainingCount === 0) {
+      await FeeStructure.deleteOne({ _id: fsId });
+      console.log('Orphaned FeeStructure deleted after last installment removed.');
+    }
+
+    res.status(200).json({ message: 'Installment deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting installment', error: error.message });
+  }
+};
+
 // @desc    Send manual reminder for a specific installment
 // @route   POST /api/finance/installments/:id/remind
 // @access  Private/Admin
@@ -245,12 +297,16 @@ exports.sendManualReminder = async (req, res) => {
       return res.status(400).json({ message: 'Student does not have an email address on file.' });
     }
 
+    // Fetch site settings for branding
+    const settings = await Setting.findOne() || {};
+
     // Send email using our email service and template
     const emailHtml = generateFeeReminderTemplate(
       installment.student_id.name,
       installment.amount,
       installment.due_date,
-      installment.installment_no
+      installment.installment_no,
+      settings
     );
 
     const subject = `Fee Reminder: Installment #${installment.installment_no} is due soon`;

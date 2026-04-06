@@ -12,7 +12,8 @@ import {
     Plus,
     Mail,
     Loader,
-    Receipt
+    Receipt,
+    Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AddFeeStructureModal from '../components/AddFeeStructureModal';
@@ -104,6 +105,20 @@ export default function FeeManagement() {
         } catch (err) {
             console.error(err);
             toast.error('Failed to send reminder');
+        }
+    };
+
+    const handleDeleteInstallment = async (id) => {
+        if (!window.confirm("Are you sure you want to permanently delete this installment? This action cannot be undone.")) return;
+
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            await axios.delete(`${apiUrl}/api/finance/installments/${id}`);
+            toast.success("Installment deleted successfully");
+            fetchInstallments(); // Refresh list
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Failed to delete installment');
         }
     };
 
@@ -270,6 +285,13 @@ export default function FeeManagement() {
                                                             <Mail size={16} />
                                                         </button>
                                                         <button
+                                                            onClick={() => handleDeleteInstallment(inst._id)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors tooltip-trigger border border-transparent hover:border-red-100"
+                                                            title="Delete Installment"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleMarkPaid(inst._id)}
                                                             className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
                                                         >
@@ -278,12 +300,21 @@ export default function FeeManagement() {
                                                     </>
                                                 )}
                                                 {inst.status === 'Paid' && (
-                                                    <button
-                                                        onClick={() => setSelectedReceipt(inst)}
-                                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
-                                                    >
-                                                        <Receipt size={14} /> View Receipt
-                                                    </button>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setSelectedReceipt(inst)}
+                                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+                                                        >
+                                                            <Receipt size={14} /> View Receipt
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteInstallment(inst._id)}
+                                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                                                            title="Delete Record"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </td>

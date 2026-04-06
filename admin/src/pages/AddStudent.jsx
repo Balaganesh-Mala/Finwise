@@ -20,12 +20,10 @@ const AddStudent = () => {
         dob: '',
         address: '',
         city: '',
-        courseName: '', // will be set dynamically or left empty initially
+        courseName: '',
         courseCategory: '',
         batchTiming: 'Morning',
         startDate: new Date().toISOString().split('T')[0],
-        totalFee: '',
-        totalInstallments: 1,
         access: {
             dashboard: true,
             myCourses: true,
@@ -35,8 +33,10 @@ const AddStudent = () => {
             aiMockInterview: false,
             profile: true,
             settings: true
-        }
+        },
+        profilePicture: ''
     });
+    const [profileFile, setProfileFile] = useState(null);
 
     // Fetch Student Data if in Edit Mode
     useEffect(() => {
@@ -55,9 +55,8 @@ const AddStudent = () => {
                         ...student,
                         startDate: formattedDate,
                         dob: formattedDob,
-                        totalFee: student.feeDetails?.totalFee || '',
-                        totalInstallments: student.feeDetails?.totalInstallments || 1,
-                        access: student.access || formData.access // fallback
+                        access: student.access || formData.access,
+                        profilePicture: student.profilePicture || ''
                     });
                 } catch (err) {
                     console.error(err);
@@ -137,18 +136,39 @@ const AddStudent = () => {
         e.preventDefault();
         setLoading(true);
         try {
+            const formDataToSend = new FormData();
+            
+            // Append all non-object fields
+            Object.keys(formData).forEach(key => {
+                if (key !== 'access') {
+                    formDataToSend.append(key, formData[key]);
+                }
+            });
+
+            // Append access as string
+            formDataToSend.append('access', JSON.stringify(formData.access));
+
+            // Append file if selected
+            if (profileFile) {
+                formDataToSend.append('profilePicture', profileFile);
+            }
+
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const config = {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            };
+
             if (isEditMode) {
-                await axios.put(`${API_URL}/api/students/update/${id}`, formData);
+                await axios.put(`${API_URL}/api/students/update/${id}`, formDataToSend, config);
                 toast.success('Student updated successfully!');
             } else {
-                await axios.post(`${API_URL}/api/students/create`, formData);
+                await axios.post(`${API_URL}/api/students/create`, formDataToSend, config);
                 toast.success('Student created successfully!');
             }
             navigate('/students');
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data?.message || 'Failed to create student');
+            toast.error(err.response?.data?.message || 'Failed to process student');
         } finally {
             setLoading(false);
         }
@@ -195,6 +215,36 @@ const AddStudent = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
                                 <input type="date" value={formData.dob} onChange={e => setFormData({ ...formData, dob: e.target.value })} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                                <select 
+                                    value={formData.gender} 
+                                    onChange={e => setFormData({ ...formData, gender: e.target.value })} 
+                                    className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                >
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture (Optional)</label>
+                                <div className="flex items-center gap-4">
+                                    {(profileFile || formData.profilePicture) && (
+                                        <img 
+                                            src={profileFile ? URL.createObjectURL(profileFile) : formData.profilePicture} 
+                                            className="w-12 h-12 rounded-full object-cover border" 
+                                            alt="Preview" 
+                                        />
+                                    )}
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={e => setProfileFile(e.target.files[0])} 
+                                        className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" 
+                                    />
+                                </div>
+                            </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                                 <div className="grid grid-cols-3 gap-4">
@@ -238,46 +288,12 @@ const AddStudent = () => {
                     </div>
                 </section>
 
-                {/* Fee Information */}
-                <section>
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs">3</span>
-                        Fee Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-emerald-50/50 p-6 rounded-xl border border-emerald-100">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Total Fee (₹)</label>
-                            <input 
-                                type="number" 
-                                required={!isEditMode}
-                                value={formData.totalFee} 
-                                onChange={e => setFormData({ ...formData, totalFee: e.target.value })} 
-                                className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white" 
-                                placeholder="0.00" 
-                                disabled={isEditMode}
-                            />
-                            {isEditMode && <p className="text-[10px] text-gray-400 mt-1 italic">Fee can only be set during registration</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Total Installments</label>
-                            <select 
-                                value={formData.totalInstallments} 
-                                onChange={e => setFormData({ ...formData, totalInstallments: parseInt(e.target.value) })} 
-                                className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
-                                disabled={isEditMode}
-                            >
-                                {[1, 2, 3, 4, 5, 6].map(num => (
-                                    <option key={num} value={num}>{num} {num === 1 ? 'Installment' : 'Installments'}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                </section>
+
 
                 {/* Access Control */}
                 <section>
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs">4</span>
+                        <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs">3</span>
                         Feature Access
                     </h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

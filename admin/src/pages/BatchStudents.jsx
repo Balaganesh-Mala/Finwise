@@ -86,6 +86,9 @@ const BatchStudents = () => {
     const [enrollDate, setEnrollDate] = useState(new Date().toISOString().split('T')[0]);
     const [assignStudentId, setAssignStudentId] = useState('');
     const [saving, setSaving] = useState(false);
+    const [studentSearch, setStudentSearch] = useState('');
+    const [feeStatusFilter, setFeeStatusFilter] = useState('All'); 
+
 
     // Bonus Course Logic
     const [isBonusOpen, setIsBonusOpen] = useState(false);
@@ -243,11 +246,29 @@ const BatchStudents = () => {
     const enrolledIds = new Set(enrollments.map(e => e.studentId?._id));
 
     // Filtered students for assignment modal
-    const filteredStudents = allStudents.filter(s =>
+    const assignModalFiltered = allStudents.filter(s =>
         !enrolledIds.has(s._id) &&
         (s.name.toLowerCase().includes(search.toLowerCase()) ||
             s.email.toLowerCase().includes(search.toLowerCase()))
     );
+
+    // Main student list filtering
+    const filteredEnrollments = enrollments.filter(e => {
+        const s = e.studentId;
+        if (!s) return false;
+
+        const matchesSearch =
+            s.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+            s.email.toLowerCase().includes(studentSearch.toLowerCase());
+
+        const matchesFeeStatus =
+            feeStatusFilter === 'All' ||
+            (feeStatusFilter === 'Paid' && e.feeSummary?.paidInstallments >= e.feeSummary?.totalInstallments) ||
+            (feeStatusFilter === 'Pending' && e.feeSummary?.pendingAmount > 0 && e.feeSummary?.overdueInstallments === 0) ||
+            (feeStatusFilter === 'Overdue' && e.feeSummary?.overdueInstallments > 0);
+
+        return matchesSearch && matchesFeeStatus;
+    });
 
     // Fee totals for batch summary
     const feeStats = enrollments.reduce((acc, e) => {
@@ -323,6 +344,43 @@ const BatchStudents = () => {
                 </div>
             )}
 
+            {/* Filter Bar */}
+            <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-wrap items-center gap-4 shadow-sm">
+                <div className="relative flex-1 min-w-[240px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Search current batch by name or email..."
+                        value={studentSearch}
+                        onChange={(e) => setStudentSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                    />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Fee Status:</span>
+                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                        {['All', 'Paid', 'Pending', 'Overdue'].map((status) => (
+                            <button
+                                key={status}
+                                onClick={() => setFeeStatusFilter(status)}
+                                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${
+                                    feeStatusFilter === status
+                                        ? 'bg-white text-indigo-600 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="text-xs text-gray-500 ml-auto">
+                    Showing <strong>{filteredEnrollments.length}</strong> of {enrollments.length} students
+                </div>
+            </div>
+
             {/* Students Table */}
             {enrollments.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-300">
@@ -346,7 +404,14 @@ const BatchStudents = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {enrollments.map(enrollment => {
+                            {filteredEnrollments.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-400 text-sm italic">
+                                        No students match the current filters.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredEnrollments.map(enrollment => {
                                 const s = enrollment.studentId;
                                 if (!s) return null;
                                 return (
@@ -404,7 +469,8 @@ const BatchStudents = () => {
                                         </td>
                                     </tr>
                                 );
-                            })}
+                            })
+                        )}
                         </tbody>
                     </table>
                 </div>
@@ -430,10 +496,10 @@ const BatchStudents = () => {
                                 />
                             </div>
                             <div className="overflow-y-auto flex-1 rounded-lg border border-gray-200 divide-y divide-gray-50">
-                                {filteredStudents.length === 0 ? (
+                                {assignModalFiltered.length === 0 ? (
                                     <div className="py-8 text-center text-gray-400 text-sm">No available students found</div>
                                 ) : (
-                                    filteredStudents.map(s => (
+                                    assignModalFiltered.map(s => (
                                         <label key={s._id} className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors ${assignStudentId === s._id ? 'bg-indigo-50' : ''}`}>
                                             <input
                                                 type="radio"

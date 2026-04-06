@@ -16,6 +16,7 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const Installment = require('../models/Installment');
+const BatchStudent = require('../models/BatchStudent');
 
 // Configure Multer
 const upload = multer({ 
@@ -103,9 +104,9 @@ router.post('/request-reset', async (req, res) => {
         student.resetTokenExpiry = Date.now() + 30 * 60 * 1000; // 30 minutes
         await student.save();
 
-        // Create reset link
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-        const resetLink = `${clientUrl}/reset-password/${resetToken}`;
+        // Create reset link pointing exactly to the student portal (normally port 5174)
+        const studentUrl = process.env.STUDENT_URL || 'http://localhost:5174';
+        const resetLink = `${studentUrl}/reset-password/${resetToken}`;
 
         // Fetch Settings
         const settings = await Setting.findOne() || {};
@@ -126,9 +127,10 @@ router.post('/request-reset', async (req, res) => {
         res.json({ success: true, message: 'Reset link sent to email' });
 
     } catch (err) {
-        console.error('Request Reset Error:', err);
+        console.error('❌ Request Reset Error:', err);
         res.status(500).json({ 
-            message: 'Server Error', 
+            success: false,
+            message: 'Server Error during password reset request', 
             error: err.message,
             stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
         });
@@ -172,13 +174,36 @@ router.post('/reset-password', async (req, res) => {
 // @route   POST /api/students/create
 // @desc    Create a new student, generate password, and send email
 // @access  Admin
-router.post('/create', async (req, res) => {
+router.post('/create', upload.single('profilePicture'), async (req, res) => {
     try {
         const { 
             name, email, phone, gender, dob, address, city, 
             courseName, courseCategory, batchTiming, startDate, 
             access 
         } = req.body;
+        
+        let profilePictureUrl = "";
+
+        // Handle File Upload if present
+        if (req.file) {
+            try {
+                const result = await uploadToCloudinary(req.file.path, 'student_profiles');
+                profilePictureUrl = result.secure_url;
+            } catch (uploadErr) {
+                console.error("Cloudinary Upload Error during Create:", uploadErr);
+                // Continue without pic or return error? Let's just log and continue for now.
+            }
+        }
+        
+        // Parse access if it's a string (FormData sends objects as strings)
+        let parsedAccess = access;
+        if (typeof access === 'string') {
+            try {
+                parsedAccess = JSON.parse(access);
+            } catch (e) {
+                console.error("Error parsing access in create:", e);
+            }
+        }
 
         // Check if student exists
         let student = await Student.findOne({ email });
@@ -208,29 +233,16 @@ router.post('/create', async (req, res) => {
             courseCategory,
             batchTiming,
             startDate,
-            access, // Object containing boolean flags
+            access: parsedAccess, // Object containing boolean flags
             passwordHash,
+            profilePicture: profilePictureUrl,
             status: 'Active'
         });
 
         await student.save();
         console.log(`Student created: ${student.email}`);
 
-        // Initialize Fee Structure if provided
-        const { totalFee, totalInstallments } = req.body;
-        if (totalFee) {
-            try {
-                await FeeStructure.create({
-                    student_id: student._id,
-                    total_fee: totalFee,
-                    total_installments: totalInstallments || 1
-                });
-                console.log(`Fee structure initialized for student: ${student._id}`);
-            } catch (feeErr) {
-                console.error('Error initializing fee structure:', feeErr);
-                // We don't fail the whole registration if only fee setup fails, but we log it
-            }
-        }
+
 
         // Fetch Global Settings for Branding
         let settings = {};
@@ -292,7 +304,9 @@ router.get('/list', async (req, res) => {
                 return { ...student, feeDetails: null };
             }
 
-            const installments = await Installment.find({ fee_structure_id: feeStructure._id }).lean();
+            // Aggressive fix: Fetch ALL installments for this student regardless of which fee structure record they belong to.
+            // This fixes the "0 Rupee Paid" issue when duplicate fee structures exist.
+            const installments = await Installment.find({ student_id: student._id }).lean();
             
             let paidAmount = 0;
             let pendingAmount = 0;
@@ -408,7 +422,7 @@ router.put('/profile/:id', upload.single('profilePicture'), async (req, res) => 
 // @route   PUT /api/students/update/:id
 // @desc    Update student details
 // @access  Admin
-router.put('/update/:id', async (req, res) => {
+router.put('/update/:id', upload.single('profilePicture'), async (req, res) => {
     try {
         const { 
             name, phone, gender, dob, address, city, 
@@ -416,8 +430,30 @@ router.put('/update/:id', async (req, res) => {
             access, status 
         } = req.body;
 
+        let profilePictureUrl = null;
+
+        // Handle File Upload if present
+        if (req.file) {
+            try {
+                const result = await uploadToCloudinary(req.file.path, 'student_profiles');
+                profilePictureUrl = result.secure_url;
+            } catch (uploadErr) {
+                console.error("Cloudinary Upload Error during Update:", uploadErr);
+            }
+        }
+
         const student = await Student.findById(req.params.id);
         if (!student) return res.status(404).json({ message: 'Student not found' });
+
+        // Parse access if it's a string
+        let parsedAccess = access;
+        if (typeof access === 'string') {
+            try {
+                parsedAccess = JSON.parse(access);
+            } catch (e) {
+                console.error("Error parsing access in update:", e);
+            }
+        }
 
         // Update fields
         student.name = name || student.name;
@@ -426,13 +462,14 @@ router.put('/update/:id', async (req, res) => {
         student.dob = dob || student.dob;
         student.address = address || student.address;
         student.city = city || student.city;
+        if (profilePictureUrl) student.profilePicture = profilePictureUrl;
         
         student.courseName = courseName || student.courseName;
         student.courseCategory = courseCategory || student.courseCategory;
         student.batchTiming = batchTiming || student.batchTiming;
         student.startDate = startDate || student.startDate;
         
-        if (access) student.access = access;
+        if (parsedAccess) student.access = parsedAccess;
         if (status) student.status = status;
 
         // Password Update Logic
@@ -464,8 +501,21 @@ router.delete('/:id', async (req, res) => {
         const student = await Student.findById(req.params.id);
         if (!student) return res.status(404).json({ message: 'Student not found' });
 
+        // Cascade Delete all related records
+        await BatchStudent.deleteMany({ studentId: student._id });
+        
+        // Find fee structure to delete its installments too
+        const fsRec = await FeeStructure.findOne({ student_id: student._id });
+        if (fsRec) {
+            await Installment.deleteMany({ fee_structure_id: fsRec._id });
+            await fsRec.deleteOne();
+        }
+
+        // Delete any learning progress
+        await Progress.deleteMany({ studentId: student._id });
+
         await student.deleteOne();
-        res.json({ message: 'Student deleted successfully' });
+        res.json({ message: 'Student and all related records deleted successfully' });
     } catch (err) {
         console.error('Error deleting student:', err);
         res.status(500).json({ message: 'Server Error' });
