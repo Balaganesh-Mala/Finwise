@@ -9,7 +9,6 @@ const typingHistorySchema = new mongoose.Schema({
   },
   mode: {
     type: String,
-    enum: ['beginner', 'intermediate', 'advanced'],
     default: 'beginner'
   },
   lessonTitle: {
@@ -43,6 +42,10 @@ const typingHistorySchema = new mongoose.Schema({
     type: Map,
     of: Number,
     default: {}     // { "a": 3, "s": 5, "d": 2, ... }
+  },
+  pointsAwarded: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

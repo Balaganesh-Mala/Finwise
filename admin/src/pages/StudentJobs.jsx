@@ -50,15 +50,15 @@ const StudentJobs = () => {
     };
 
     return (
-        <div className="container mx-auto px-6 py-8">
-            <div className="flex justify-between items-center mb-8">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800">Student Jobs</h1>
-                    <p className="text-gray-500 mt-1">Manage internal job postings for students</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Student Jobs</h1>
+                    <p className="text-gray-500 text-sm mt-1">Manage internal job postings for students</p>
                 </div>
                 <button
                     onClick={openCreateModal}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-md transition-colors"
+                    className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium shadow-md transition-colors"
                 >
                     <Plus size={20} /> Add Student Job
                 </button>
@@ -97,7 +97,7 @@ const StudentJobs = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
                                 <button
                                     onClick={() => openEditModal(job)}
                                     className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"

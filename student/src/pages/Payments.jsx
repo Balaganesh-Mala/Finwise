@@ -50,9 +50,9 @@ export default function Payments() {
     };
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-12">
+        <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
             {/* Minimal Header */}
-            <div className="flex flex-col md:flex-row justify-between items-baseline gap-4 mb-12 border-b border-slate-100 pb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-baseline gap-4 mb-12 border-b border-slate-100 pb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900">Payments</h1>
                     <p className="text-slate-500 text-sm mt-1">Track your course installments and download receipts.</p>
@@ -72,7 +72,7 @@ export default function Payments() {
 
             {/* Simple Search */}
             <div className="mb-8 flex items-center gap-3">
-                <div className="relative flex-1 max-w-xs">
+                <div className="relative flex-1 w-full md:max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input 
                         type="text" 
@@ -83,15 +83,15 @@ export default function Payments() {
             </div>
 
             {/* Flat Table */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <table className="w-full text-left">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+                <table className="w-full text-left min-w-[600px]">
                     <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
-                            <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">No.</th>
-                            <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Due Date</th>
-                            <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Amount</th>
-                            <th className="px-6 py-4 text-right"></th>
+                            <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">No.</th>
+                            <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Due Date</th>
+                            <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                            <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Amount</th>
+                            <th className="px-6 py-4 text-right whitespace-nowrap"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -104,15 +104,15 @@ export default function Payments() {
                         ) : installments.length > 0 ? (
                             installments.map((item) => (
                                 <tr key={item._id} className="hover:bg-slate-50/50 transition-all">
-                                    <td className="px-6 py-6">
+                                    <td className="px-6 py-6 whitespace-nowrap">
                                         <span className="text-sm font-medium text-slate-500">#{item.installment_no}</span>
                                     </td>
-                                    <td className="px-6 py-6">
+                                    <td className="px-6 py-6 whitespace-nowrap">
                                         <p className="text-sm text-slate-900 font-medium">
                                             {new Date(item.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                         </p>
                                     </td>
-                                    <td className="px-6 py-6">
+                                    <td className="px-6 py-6 whitespace-nowrap">
                                         {item.status === 'Paid' ? (
                                             <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[11px] uppercase">
                                                 <CheckCircle2 size={14} /> Paid
@@ -127,13 +127,13 @@ export default function Payments() {
                                             </div>
                                         )}
                                     </td>
-                                    <td className="px-6 py-6">
+                                    <td className="px-6 py-6 whitespace-nowrap">
                                         <div className="flex items-center text-sm font-bold text-slate-900">
                                             <IndianRupee size={12} className="mr-0.5 text-slate-300" />
                                             {item.amount.toLocaleString('en-IN')}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-6 text-right">
+                                    <td className="px-6 py-6 text-right whitespace-nowrap">
                                         {item.status === 'Paid' && (
                                             <button 
                                                 onClick={() => openReceipt(item)}

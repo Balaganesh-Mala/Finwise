@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const Student = require('../models/Student');
 const Setting = require('../models/Setting'); // Import Settings Model
@@ -17,6 +18,7 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const Installment = require('../models/Installment');
 const BatchStudent = require('../models/BatchStudent');
+const Batch = require('../models/Batch');
 
 // Configure Multer
 const upload = multer({ 
@@ -299,13 +301,28 @@ router.get('/list', async (req, res) => {
             .lean();
 
         const studentsWithFees = await Promise.all(students.map(async (student) => {
+            // 1. Fetch Batch Assignments (Always do this first)
+            const batchAssignments = await BatchStudent.find({ 
+                studentId: new mongoose.Types.ObjectId(student._id) 
+            })
+            .populate('batchId', 'name')
+            .lean();
+            
+            const batchNames = batchAssignments.map(ba => ba.batchId?.name).filter(Boolean);
+
+            const studentWithBatch = {
+                ...student,
+                batchName: batchNames[0] || null,
+                batchNames: batchNames
+            };
+
+            // 2. Fetch Fee Data
             const feeStructure = await FeeStructure.findOne({ student_id: student._id }).lean();
             if (!feeStructure) {
-                return { ...student, feeDetails: null };
+                return { ...studentWithBatch, feeDetails: null };
             }
 
-            // Aggressive fix: Fetch ALL installments for this student regardless of which fee structure record they belong to.
-            // This fixes the "0 Rupee Paid" issue when duplicate fee structures exist.
+            // 3. Fetch Installments for detailed breakdown
             const installments = await Installment.find({ student_id: student._id }).lean();
             
             let paidAmount = 0;
@@ -327,7 +344,7 @@ router.get('/list', async (req, res) => {
             });
 
             return {
-                ...student,
+                ...studentWithBatch,
                 feeDetails: {
                     totalFee: feeStructure.total_fee,
                     totalInstallments: feeStructure.total_installments,

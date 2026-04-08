@@ -1,5 +1,6 @@
 const TypingHistory = require('../models/TypingHistory');
 const TypingProgress = require('../models/TypingProgress');
+const Student = require('../models/Student');
 
 // ── POST /api/typing/submit ────────────────────────────────────────────────────
 const saveTypingResult = async (req, res) => {
@@ -16,21 +17,55 @@ const saveTypingResult = async (req, res) => {
       errors   // { a: 3, s: 1, k: 12 }
     } = req.body;
 
-    if (!studentId || wpm === undefined || accuracy === undefined) {
-      return res.status(400).json({ message: 'Missing required fields: studentId, wpm, accuracy' });
+    const currentMode = mode || 'beginner';
+    const currentLesson = lessonTitle || 'Free Typing';
+
+    let pointsAwarded = 0;
+    let isFirstCompletion = false;
+
+    // Check for points condition BEFORE saving (cleaner logic)
+    if (accuracy > 95 && wpm >= 35) {
+      // Check if student already has a session for this lesson with >95% accuracy AND 35+ WPM
+      const previousSuccessful = await TypingHistory.findOne({
+        studentId,
+        mode: currentMode,
+        lessonTitle: currentLesson,
+        accuracy: { $gt: 95 },
+        wpm: { $gte: 35 }
+      });
+
+      if (!previousSuccessful) {
+        isFirstCompletion = true;
+        const pointMap = { 
+            'beginner': 20, 
+            'intermediate': 50, 
+            'advanced': 100, 
+            'office': 70, 
+            'dataEntry': 70,
+            'numbers': 70
+        };
+        pointsAwarded = pointMap[currentMode] || 0;
+        
+        if (pointsAwarded > 0) {
+          await Student.findByIdAndUpdate(studentId, {
+            $inc: { points: pointsAwarded }
+          });
+        }
+      }
     }
 
     // Save to new TypingHistory model (rich per-key errors)
     const record = new TypingHistory({
       studentId,
-      mode: mode || 'beginner',
-      lessonTitle: lessonTitle || 'Free Typing',
+      mode: currentMode,
+      lessonTitle: currentLesson,
       wpm,
       accuracy,
-      duration:   duration       || 60,
-      correctChars:   correctChars   || 0,
+      duration: duration || 60,
+      correctChars: correctChars || 0,
       incorrectChars: incorrectChars || 0,
-      errors: errors || {}
+      errors: errors || {},
+      pointsAwarded: pointsAwarded
     });
 
     const saved = await record.save();
@@ -42,13 +77,19 @@ const saveTypingResult = async (req, res) => {
         wpm,
         accuracy,
         errorCount: incorrectChars || 0,
-        mode: mode || 'beginner',
-        lesson: lessonTitle || 'Free Typing',
-        time: duration || 60
+        mode: currentMode,
+        lesson: currentLesson,
+        time: duration || 60,
+        pointsAwarded: pointsAwarded
       }).save();
-    } catch (_) { /* non-critical: don't fail the request if legacy save fails */ }
+    } catch (err) { /* non-critical */ }
 
-    res.status(201).json(saved);
+    res.status(201).json({
+      ...saved.toObject(),
+      pointsAwarded,
+      isFirstCompletion,
+      accuracyThresholdMet: accuracy > 95
+    });
   } catch (error) {
     console.error('saveTypingResult error:', error);
     res.status(500).json({ message: 'Server error' });

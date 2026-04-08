@@ -25,7 +25,6 @@ const typingProgressSchema = new mongoose.Schema({
   },
   mode: {
     type: String,
-    enum: ['time', 'words', 'quote', 'custom'],
     default: 'time'
   },
   lesson: {
@@ -35,6 +34,10 @@ const typingProgressSchema = new mongoose.Schema({
   time: {
     type: Number, // Duration in seconds
     required: true
+  },
+  pointsAwarded: {
+    type: Number,
+    default: 0
   },
   createdAt: {
     type: Date,

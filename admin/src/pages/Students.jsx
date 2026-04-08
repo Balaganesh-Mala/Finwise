@@ -16,10 +16,12 @@ const Students = () => {
     const [feeFilter, setFeeFilter] = useState('All');
     const [courseFilter, setCourseFilter] = useState('All');
     const [batchFilter, setBatchFilter] = useState('All');
+    const [allBatches, setAllBatches] = useState([]);
     const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
         fetchStudents();
+        fetchAllBatches();
     }, []);
 
     const fetchStudents = async () => {
@@ -32,6 +34,18 @@ const Students = () => {
             toast.error(`Error: ${msg}`);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchAllBatches = async () => {
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await axios.get(`${API_URL}/api/batches`);
+            if (res.data.success) {
+                setAllBatches(res.data.batches);
+            }
+        } catch (err) {
+            console.error('Error fetching batches for filter:', err);
         }
     };
 
@@ -79,8 +93,9 @@ const Students = () => {
             s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (s.courseName || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchStatus = statusFilter === 'All' || s.status === statusFilter;
-
+        const matchStatus = statusFilter === 'All' || 
+            (s.status && s.status.trim().toLowerCase() === statusFilter.trim().toLowerCase());
+        
         const feeStatus = getFeeStatus(s);
         const matchFee =
             feeFilter === 'All' ||
@@ -90,14 +105,23 @@ const Students = () => {
             (feeFilter === 'Partially Paid' && feeStatus === 'pending' && s.feeDetails?.paidAmount > 0) ||
             (feeFilter === 'No Data' && feeStatus === 'none');
 
-        const matchCourse = courseFilter === 'All' || s.courseName === courseFilter;
-        const matchBatch = batchFilter === 'All' || s.batchTiming === batchFilter;
+        const matchCourse = courseFilter === 'All' || 
+            (s.courseName && s.courseName.trim().toLowerCase() === courseFilter.trim().toLowerCase());
+
+        const matchBatch = batchFilter === 'All' || 
+            (s.batchNames && s.batchNames.some(bn => bn.trim().toLowerCase() === batchFilter.trim().toLowerCase())) || 
+            (s.batchName && s.batchName.trim().toLowerCase() === batchFilter.trim().toLowerCase()) || 
+            (s.batchTiming && s.batchTiming.trim().toLowerCase() === batchFilter.trim().toLowerCase());
 
         return matchSearch && matchStatus && matchFee && matchCourse && matchBatch;
     });
 
     const uniqueCourses = [...new Set(students.map(s => s.courseName).filter(Boolean))].sort();
-    const uniqueBatches = [...new Set(students.map(s => s.batchTiming).filter(Boolean))].sort();
+    
+    // Combine official batch names with existing student batch info
+    const studentBatchInfo = students.map(s => s.batchName || s.batchTiming).filter(Boolean);
+    const officialBatchNames = allBatches.map(b => b.name);
+    const uniqueBatches = [...new Set([...officialBatchNames, ...studentBatchInfo])].sort();
 
     const activeCount = students.filter(s => s.status === 'Active').length;
     const overdueCount = students.filter(s => getFeeStatus(s) === 'overdue').length;
@@ -239,15 +263,15 @@ const Students = () => {
 
                         <div className="w-px h-5 bg-gray-200 hidden lg:block" />
 
-                        {/* Batch Timing Filter */}
+                        {/* Batch Name Filter */}
                         <div className="flex items-center gap-2">
-                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Batch</label>
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Batch Name</label>
                             <select
                                 value={batchFilter}
                                 onChange={(e) => setBatchFilter(e.target.value)}
                                 className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 outline-none focus:ring-2 focus:ring-indigo-500/20"
                             >
-                                <option value="All">All Timings</option>
+                                <option value="All">All Batches</option>
                                 {uniqueBatches.map(b => <option key={b} value={b}>{b}</option>)}
                             </select>
                         </div>
@@ -309,9 +333,17 @@ const Students = () => {
                                             {/* Student Name & Email */}
                                             <td className="px-4 py-3.5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-bold text-sm border border-indigo-200 flex-shrink-0">
-                                                        {student.name?.charAt(0).toUpperCase()}
-                                                    </div>
+                                                    {student.profilePicture ? (
+                                                        <img 
+                                                            src={student.profilePicture} 
+                                                            alt={student.name} 
+                                                            className="w-9 h-9 rounded-full object-cover border border-gray-200 flex-shrink-0"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-bold text-sm border border-indigo-200 flex-shrink-0">
+                                                            {student.name?.charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
                                                     <div>
                                                         <p className="font-semibold text-gray-900 text-sm leading-tight">{student.name}</p>
                                                         <p className="text-xs text-gray-500 mt-0.5">{student.email}</p>
@@ -325,7 +357,7 @@ const Students = () => {
                                                     {student.courseName || <span className="text-gray-400 italic">No course</span>}
                                                 </p>
                                                 <p className="text-xs text-indigo-600 font-medium mt-0.5">
-                                                    {student.batchTiming || '—'}
+                                                    {student.batchName || student.batchTiming || '—'}
                                                 </p>
                                                 {student.startDate && (
                                                     <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-100">

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const TypingProgress = require('../models/TypingProgress');
+const TypingHistory = require('../models/TypingHistory');
 const Student = require('../models/Student');
 const {
   saveTypingResult,
@@ -18,43 +19,72 @@ router.post('/save', async (req, res) => {
     if (!studentId || wpm === undefined || accuracy === undefined) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
-    const newProgress = new TypingProgress({ studentId, wpm, accuracy, errorCount: errors, mode, lesson, time });
-    const savedProgress = await newProgress.save();
+    
+    const currentMode = mode || 'beginner';
+    const currentLesson = lesson || 'Free Typing';
 
-    // Award points and handle level progression if WPM >= 35
-    if (wpm >= 35) {
-      const student = await Student.findById(studentId);
-      if (student) {
-        // Award 100 points
-        student.points = (student.points || 0) + 100;
+    let pointsAwarded = 0;
+    let isFirstCompletion = false;
+
+    // Check for points condition BEFORE saving (cleaner logic)
+    if (accuracy > 95 && wpm >= 35) {
+      // Check if student already has a session for this lesson with >95% accuracy AND 35+ WPM
+      const previousSuccessful = await TypingHistory.findOne({
+        studentId,
+        mode: currentMode,
+        lessonTitle: currentLesson,
+        accuracy: { $gt: 95 },
+        wpm: { $gte: 35 }
+      });
+
+      if (!previousSuccessful) {
+        isFirstCompletion = true;
+        const pointMap = { 
+            'beginner': 20, 
+            'intermediate': 50, 
+            'advanced': 100,
+            'office': 70,
+            'dataEntry': 70,
+            'numbers': 70
+        };
+        pointsAwarded = pointMap[currentMode] || 0;
         
-        // Progression mapping based on current typing lessons
-        // 1: beginner, 2: intermediate, 3: advanced, 4: office, 5: dataEntry
-        const levelMap = { 'beginner': 1, 'intermediate': 2, 'advanced': 3, 'office': 4, 'dataEntry': 5 };
-        const currentCategoryLevel = levelMap[mode] || 1; // Assuming mode or lesson helps identify
-
-        // Simple progression: if they beat a level with 35+ WPM, we can increment their global typingLevel
-        // For simplicity, let's just use a threshold
-        if (student.typingLevel < 5) {
-           student.typingLevel += 1;
+        if (pointsAwarded > 0) {
+          await Student.findByIdAndUpdate(studentId, {
+            $inc: { points: pointsAwarded }
+          });
         }
-
-        // Persist lesson progress
-        // Calculate next lesson index
-        const totalLessonsInCat = 6; // Current lessonLessons structure has roughly 4-6
-        let nextIndex = (student.lastLessonIndex || 0) + 1;
-        
-        // If they finish the current category, maybe reset index and stay in same for now or handle category change
-        student.lastLessonIndex = nextIndex;
-        student.lastCategory = mode || 'beginner'; // mode is 'beginner', 'intermediate' etc.
-
-        await student.save();
       }
     }
 
-    res.status(201).json(savedProgress);
+    // Save to legacy TypingProgress model
+    const newProgress = new TypingProgress({ 
+        studentId, wpm, accuracy, errorCount: errors, 
+        mode: currentMode, lesson: currentLesson, time,
+        pointsAwarded: pointsAwarded
+    });
+    const savedProgress = await newProgress.save();
+
+    // Mirror to modern history model
+    try {
+        await new TypingHistory({
+            studentId, wpm, accuracy, 
+            mode: currentMode, lessonTitle: currentLesson, duration: time,
+            incorrectChars: errors || 0
+        }).save();
+    } catch (historyErr) {
+        console.error('Modern history mirror failed:', historyErr);
+        // Non-critical, continue
+    }
+
+    res.status(201).json({
+        ...savedProgress.toObject(),
+        pointsAwarded,
+        isFirstCompletion,
+        accuracyThresholdMet: accuracy > 95 && wpm >= 35
+    });
   } catch (error) {
-    console.error('Error saving typing progress:', error);
+    console.error('Error saving typing progress (legacy):', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

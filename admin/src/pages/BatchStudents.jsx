@@ -285,7 +285,7 @@ const BatchStudents = () => {
     return (
         <div className="p-6 max-w-6xl mx-auto">
             {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
                 <button onClick={() => navigate('/batches')} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
                     <ArrowLeft size={24} />
                 </button>
@@ -295,16 +295,16 @@ const BatchStudents = () => {
                         {batch?.courseId?.title} · {enrollments.length} / {batch?.maxStudents} students enrolled
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     <button
                         onClick={openBonusModal}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 font-medium transition-colors"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 font-medium transition-colors text-sm"
                     >
                         <Gift size={18} /> Gift Bonus Course
                     </button>
                     <button
                         onClick={() => { setAssignStudentId(''); setSearch(''); setIsAssignOpen(true); }}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm"
                     >
                         <UserPlus size={18} /> Assign Student
                     </button>
@@ -313,7 +313,7 @@ const BatchStudents = () => {
 
             {/* Fee Summary Cards */}
             {enrollments.length > 0 && (
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center">
                             <IndianRupee size={18} className="text-indigo-600" />
@@ -345,7 +345,7 @@ const BatchStudents = () => {
             )}
 
             {/* Filter Bar */}
-            <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-wrap items-center gap-4 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-col md:flex-row md:items-center gap-4 shadow-sm">
                 <div className="relative flex-1 min-w-[240px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
@@ -357,9 +357,9 @@ const BatchStudents = () => {
                     />
                 </div>
                 
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Fee Status:</span>
-                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">Fee Status:</span>
+                    <div className="flex bg-gray-100 p-1 rounded-lg shrink-0">
                         {['All', 'Paid', 'Pending', 'Overdue'].map((status) => (
                             <button
                                 key={status}
@@ -391,8 +391,8 @@ const BatchStudents = () => {
                     </button>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <table className="w-full">
+                <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto shadow-sm">
+                    <table className="w-full min-w-[900px]">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
                                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
@@ -596,7 +596,7 @@ const BatchStudents = () => {
                         </div>
                         
                         <form onSubmit={handleAssignBonus} className="p-6 flex flex-col gap-6 overflow-y-auto">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Step 1: Select Course</label>
                                     <select
@@ -645,7 +645,7 @@ const BatchStudents = () => {
                                         {selectedBonusStudents.length === enrollments.length ? 'Deselect All' : 'Select All In Batch'}
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 overflow-y-auto p-4 bg-gray-50 rounded-xl border border-gray-100 max-h-60">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto p-4 bg-gray-50 rounded-xl border border-gray-100 max-h-60">
                                     {enrollments.map(e => {
                                         const s = e.studentId;
                                         const isSelected = selectedBonusStudents.includes(s?._id);

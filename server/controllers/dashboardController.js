@@ -140,26 +140,42 @@ exports.getStudentDashboardStats = async (req, res) => {
             { name: 'Sun', hours: parseFloat(activityMap['Sun'].toFixed(2)) },
         ];
 
-        // ─── 8. Daily Progress (Topics completed today) ──────────────────────────
+        // ─── 8. Daily Points (Topics + Typing + Attendance) ──────────────────────
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
-        const topicsCompletedToday = await Progress.countDocuments({
-            studentId,
-            completed: true,
-            updatedAt: { $gte: startOfToday }
-        });
+
+        const [topicsToday, typingHistoryToday, attendanceToday] = await Promise.all([
+            Progress.countDocuments({
+                studentId,
+                completed: true,
+                updatedAt: { $gte: startOfToday }
+            }),
+            require('../models/TypingHistory').find({
+                studentId,
+                createdAt: { $gte: startOfToday }
+            }),
+            require('../models/Attendance').countDocuments({
+                studentId,
+                method: 'qr',
+                status: 'present',
+                date: { $gte: startOfToday }
+            })
+        ]);
+
+        const typingPointsToday = typingHistoryToday.reduce((acc, h) => acc + (h.pointsAwarded || 0), 0);
+        const dailyPoints = (topicsToday * 100) + typingPointsToday + (attendanceToday * 50);
 
         res.json({
             success: true,
             stats: {
                 enrolledCourses: enrolledCoursesCount,
-                hoursLearned,          // now uses topic.duration, not watchedDuration
+                hoursLearned,
                 attendance: attendanceCount,
-                batchProgress,         // now uses BatchStudent courseId lookup
+                batchProgress,
                 points: student.points || 0,
-                dailyPoints: topicsCompletedToday * 100,
-                dailyGoal: 100,        // Default goal: 1 topic (100 pts)
-                certificates: 0        // placeholder
+                dailyPoints: dailyPoints,
+                dailyGoal: 100,
+                certificates: 0
             },
             recentActivity,
             weeklyActivity
@@ -240,8 +256,11 @@ exports.getLeaderboard = async (req, res) => {
                             allTyping: { $concatArrays: ["$t1", "$t2"] }
                         }},
                         { $unwind: "$allTyping" },
-                        { $match: { "allTyping.wpm": { $gte: 35 }, "allTyping.createdAt": { $gte: startOfPeriod } } },
-                        { $group: { _id: "$_id", count: { $sum: 100 } } }
+                        { $match: { 
+                            "allTyping.createdAt": { $gte: startOfPeriod },
+                            "allTyping.pointsAwarded": { $exists: true, $gt: 0 }
+                        } },
+                        { $group: { _id: "$_id", count: { $sum: "$allTyping.pointsAwarded" } } }
                     ],
                     // Points from Attendance (50 pts each QR mark)
                     "attendancePoints": [

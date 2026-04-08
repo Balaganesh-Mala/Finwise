@@ -141,67 +141,62 @@ export default function ReceiptModal({ isOpen, onClose, installment }) {
                             <div className="px-8 py-6 md:px-12 md:py-8 relative z-10">
                                 
                                 {/* Unified Info Table */}
-                                <div className="mb-6">
-                                    <table className="w-full border-collapse">
-                                        <tbody>
-                                            <tr className="border-b border-gray-100">
-                                                <td className="py-6 w-1/2 align-top pr-8 border-r border-gray-100">
-                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Bill To:</span>
-                                                    <h3 className="text-xl font-bold text-gray-900 uppercase mb-1">{student?.name}</h3>
-                                                    <p className="text-xs font-semibold text-gray-500 lowercase">{student?.email}</p>
-                                                </td>
-                                                <td className="py-6 w-1/2 align-top pl-8">
-                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Payment Details:</span>
-                                                    <div className="space-y-2">
-                                                        <div className="flex justify-between text-[11px]">
-                                                            <span className="text-gray-400 font-semibold uppercase tracking-wide">Method:</span>
-                                                            <span className="font-bold text-gray-800 uppercase">{payment?.payment_mode || 'Online'}</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-[11px]">
-                                                            <span className="text-gray-400 font-semibold uppercase tracking-wide">Status:</span>
-                                                            <span className="text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                                <CheckCircle2 size={10} /> Paid
-                                                            </span>
-                                                        </div>
-                                                        {payment?.reference_id && (
-                                                            <div className="flex justify-between text-[11px] pt-1 border-t border-gray-100">
-                                                                <span className="text-gray-400 font-semibold uppercase tracking-wide">Ref ID:</span>
-                                                                <span className="font-mono text-[9px] text-gray-500 truncate max-w-[120px]">{payment.reference_id}</span>
-                                                            </div>
-                                                        )}
+                                {/* Unified Info Sections */}
+                                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 border-b border-gray-100">
+                                    <div className="py-6 align-top pr-0 md:pr-8 border-b md:border-b-0 md:border-r border-gray-100">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Bill To:</span>
+                                        <h3 className="text-xl font-bold text-gray-900 uppercase mb-1">{student?.name}</h3>
+                                        <p className="text-xs font-semibold text-gray-500 lowercase">{student?.email}</p>
+                                    </div>
+                                    <div className="py-6 align-top pl-0 md:pl-8">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Payment Details:</span>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[11px]">
+                                                <span className="text-gray-400 font-semibold uppercase tracking-wide">Method:</span>
+                                                <span className="font-bold text-gray-800 uppercase">{payment?.payment_mode || 'Online'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[11px]">
+                                                <span className="text-gray-400 font-semibold uppercase tracking-wide">Status:</span>
+                                                <span className="text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                                                    <CheckCircle2 size={10} /> Paid
+                                                </span>
+                                            </div>
+                                            {payment?.reference_id && (
+                                                <div className="flex justify-between text-[11px] pt-1 border-t border-gray-100">
+                                                    <span className="text-gray-400 font-semibold uppercase tracking-wide">Ref ID:</span>
+                                                    <span className="font-mono text-[9px] text-gray-500 truncate max-w-[120px]">{payment.reference_id}</span>
+                                                </div>
+                                            )}
 
-                                                        {/* Fee Summary Stats */}
-                                                        <div className="flex justify-between text-[11px] pt-1 pt-3 border-t-2 border-slate-100">
-                                                            <span className="text-slate-400 font-bold uppercase tracking-wide">Total Course Fee:</span>
-                                                            <span className="font-bold text-slate-800">₹{feeSummary.total.toLocaleString('en-IN')}</span>
-                                                        </div>
-                                                        {feeSummary.previousPaid > 0 && (
-                                                            <div className="flex justify-between text-[11px]">
-                                                                <span className="text-slate-400 font-bold uppercase tracking-wide">Amount Previously Paid:</span>
-                                                                <span className="font-bold text-slate-600">₹{feeSummary.previousPaid.toLocaleString('en-IN')}</span>
-                                                            </div>
-                                                        )}
-                                                        <div className="flex justify-between text-[11px] pb-1 border-b border-slate-100">
-                                                            <span className="text-slate-400 font-bold uppercase tracking-wide">This Installment:</span>
-                                                            <span className="font-bold text-indigo-600">₹{installment.amount.toLocaleString('en-IN')}</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-[11px] pt-1">
-                                                            <span className="text-slate-400 font-bold uppercase tracking-wide">Remaining Balance:</span>
-                                                            <span className="font-bold text-rose-500">₹{feeSummary.pending.toLocaleString('en-IN')}</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                            {/* Fee Summary Stats */}
+                                            <div className="flex justify-between text-[11px] pt-3 border-t-2 border-slate-100">
+                                                <span className="text-slate-400 font-bold uppercase tracking-wide">Total Course Fee:</span>
+                                                <span className="font-bold text-slate-800">₹{feeSummary.total.toLocaleString('en-IN')}</span>
+                                            </div>
+                                            {feeSummary.previousPaid > 0 && (
+                                                <div className="flex justify-between text-[11px]">
+                                                    <span className="text-slate-400 font-bold uppercase tracking-wide">Amount Previously Paid:</span>
+                                                    <span className="font-bold text-slate-600">₹{feeSummary.previousPaid.toLocaleString('en-IN')}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between text-[11px] pb-1 border-b border-slate-100">
+                                                <span className="text-slate-400 font-bold uppercase tracking-wide">This Installment:</span>
+                                                <span className="font-bold text-indigo-600">₹{installment.amount.toLocaleString('en-IN')}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[11px] pt-1">
+                                                <span className="text-slate-400 font-bold uppercase tracking-wide">Remaining Balance:</span>
+                                                <span className="font-bold text-rose-500">₹{feeSummary.pending.toLocaleString('en-IN')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Items Table - Simplified & Professional */}
-                                <div className="mb-6">
-                                    <table className="w-full">
+                                <div className="mb-6 overflow-x-auto">
+                                    <table className="w-full min-w-[500px]">
                                         <thead>
                                             <tr className="bg-gray-50 text-gray-500 text-[9px] font-bold uppercase tracking-[0.2em] border-y border-gray-100">
-                                                <th className="px-6 py-4 font-bold">Particulars of Settlement</th>
+                                                <th className="px-6 py-4 font-bold text-left">Particulars of Settlement</th>
                                                 <th className="px-6 py-4 text-right font-bold">Amount Paid</th>
                                             </tr>
                                         </thead>

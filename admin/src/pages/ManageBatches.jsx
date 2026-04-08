@@ -125,14 +125,14 @@ const ManageBatches = () => {
     return (
         <div className="p-6 max-w-6xl mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between items-start gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">Manage Batches</h1>
                     <p className="text-gray-500 mt-1">Create and manage student batches per course</p>
                 </div>
                 <button
                     onClick={openCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium w-full sm:w-auto justify-center"
                 >
                     <Plus size={18} /> New Batch
                 </button>
@@ -143,7 +143,7 @@ const ManageBatches = () => {
                 <select
                     value={filterCourse}
                     onChange={(e) => handleFilterChange(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 outline-none text-sm"
+                    className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:border-indigo-500 outline-none text-sm"
                 >
                     <option value="">All Courses</option>
                     {courses.map(c => (

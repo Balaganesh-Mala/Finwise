@@ -14,31 +14,9 @@ import {
 import { submitResult, getHistory, getLastResult } from '../api/typingApi';
 import toast, { Toaster } from 'react-hot-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { typingLessons as LESSONS } from '../data/typingLessons';
 
-// ─── Built-in lesson library ──────────────────────────────────────────────────
-const LESSONS = {
-    beginner: [
-        { title: 'Home Row — Left', content: 'asdf asdf asdf fads fdsa afsd asfd fads asdf sfda afds asfd dafa sasa fdfd asas dfdf' },
-        { title: 'Home Row — Right', content: 'jkl; jkl; ;lkj ;lkj lkjl jlkj kljl ljkl jkl; ;lkj jkl; ;kll jkjk lljj ;lkj' },
-        { title: 'Home Row — Both', content: 'asdf jkl; asdf jkl; fjdk slak fjas djsl askf jdsl fjak slfd jsak dlas fksl asdfjkl;' },
-        { title: 'All Fingers', content: 'qwer asdf zxcv tyui jkl; bnm qwerty asdfgh zxcvbn yuiop hjkl; nm qwer tyui asdf jkl;' },
-        { title: 'Simple Words', content: 'ask sad dad fall class all hall flask glad last grass flask sad hall all dad flash' },
-    ],
-    intermediate: [
-        { title: 'Common Words', content: 'the and for are but not you all can she was use one her his had from say each did' },
-        { title: 'Short Sentences', content: 'she was glad to help. the cup fell off the desk. he ran down the path fast. go left.' },
-        { title: 'Tech Words', content: 'data code file sort find array push pull merge build serve route update class type list' },
-        { title: 'Finance Words', content: 'audit debit credit profit margin account ledger budget capital revenue expense balance equity' },
-        { title: 'Mixed Practice', content: 'about which their there first would these things think could people other how then she was' },
-    ],
-    advanced: [
-        { title: 'Quick Paragraph', content: 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump.' },
-        { title: 'Finance Concepts', content: 'Financial accounting records and summarizes transactions. The balance sheet, income statement, and cash flow statement are the three primary financial statements used by analysts.' },
-        { title: 'Technology', content: 'React is a JavaScript library for building user interfaces. Developers create reusable components and efficiently update the DOM when data changes through a virtual DOM reconciliation process.' },
-        { title: 'Professional', content: 'Effective communication is essential in professional environments. Clear and concise writing helps convey ideas accurately. Proper punctuation and grammar contribute to readable documents.' },
-        { title: 'Speed Challenge', content: 'To be or not to be that is the question whether tis nobler in the mind to suffer the slings and arrows of outrageous fortune or to take arms against a sea of troubles.' },
-    ],
-};
+// Lesson data now imported from ../data/typingLessons.js
 
 // ─── Audio ────────────────────────────────────────────────────────────────────
 let _ctx = null;
@@ -105,6 +83,8 @@ const TypingTrainer = () => {
     const [showResults, setShowResults] = useState(false);
     const [user, setUser] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [lastSubmissionResult, setLastSubmissionResult] = useState(null);
+    const [completedLessons, setCompletedLessons] = useState(new Set());
 
     const inputRef = useRef(null);
     const containerRef = useRef(null);
@@ -134,8 +114,17 @@ const TypingTrainer = () => {
 
     const loadHistory = async (id) => {
         try {
-            const data = await getHistory(id, { limit: 30 });
+            const data = await getHistory(id, { limit: 100 });
             setHistory(data.sessions || []);
+            
+            // Extract completed lessons (accuracy >= 95 AND wpm >= 35)
+            const completed = new Set();
+            (data.sessions || []).forEach(s => {
+                if (s.accuracy >= 95 && s.wpm >= 35) {
+                    completed.add(`${s.mode}-${s.lessonTitle}`);
+                }
+            });
+            setCompletedLessons(completed);
         } catch { /* silent */ }
     };
 
@@ -191,7 +180,7 @@ const TypingTrainer = () => {
         if (user?._id) {
             setSaving(true);
             try {
-                await submitResult({
+                const response = await submitResult({
                     studentId: user._id,
                     mode: category,
                     lessonTitle: LESSONS[category][lessonIdx % LESSONS[category].length].title,
@@ -202,7 +191,17 @@ const TypingTrainer = () => {
                     incorrectChars: incorrect,
                     errors: errorMap,
                 });
-                toast.success(`✅ Result saved! ${finalWpm} WPM — ${finalAcc}% accuracy`);
+                
+                setLastSubmissionResult(response);
+                
+                if (response.pointsAwarded > 0) {
+                    toast.success(`🎉 +${response.pointsAwarded} Points Earned!`, { duration: 4000 });
+                } else if (response.accuracyThresholdMet && !response.isFirstCompletion) {
+                    toast.success(`✅ Lesson Refined! ${finalWpm} WPM`, { icon: '👏' });
+                } else if (response.accuracyThresholdMet) {
+                   toast.success('✅ Target Accuracy Met!');
+                }
+
                 if (user._id) loadHistory(user._id);
             } catch { toast.error('Could not save result'); }
             finally { setSaving(false); }
@@ -263,86 +262,110 @@ const TypingTrainer = () => {
     }));
 
     // ── Results modal ─────────────────────────────────────────────────────────
-    const ResultsModal = () => (
-        <AnimatePresence>
-            {showResults && (
-                <motion.div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                >
+    const ResultsModal = () => {
+        const accuracyColor = stats.accuracy >= 95 ? '#10b981' : stats.accuracy >= 90 ? '#f59e0b' : '#ef4444';
+        const strokeDasharray = 2 * Math.PI * 55; // radius 55
+        const strokeDashoffset = strokeDasharray * ((100 - stats.accuracy) / 100);
+
+        return (
+            <AnimatePresence>
+                {showResults && (
                     <motion.div
-                        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
-                        initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/10 backdrop-blur-md px-4"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     >
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5 text-white">
-                            <div className="flex items-center gap-3 mb-1">
-                                <Trophy size={24} />
-                                <h2 className="text-xl font-bold">Session Complete!</h2>
-                                {saving && <span className="ml-auto text-xs opacity-75 animate-pulse">Saving…</span>}
-                            </div>
-                            <p className="text-indigo-100 text-sm">
-                                {LESSONS[category][lessonIdx % LESSONS[category].length].title} — {category}
-                            </p>
-                        </div>
-
-                        <div className="p-6 space-y-5">
-                            {/* Stats grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                <StatCard icon={Zap} label="WPM" value={stats.wpm} color="text-indigo-600" bg="bg-indigo-50" />
-                                <StatCard icon={Target} label="Accuracy" value={`${stats.accuracy}%`} color="text-green-600" bg="bg-green-50" />
-                                <StatCard icon={Trophy} label="Correct" value={stats.correct} color="text-blue-600" bg="bg-blue-50" />
-                                <StatCard icon={Clock} label="Errors" value={stats.incorrect} color="text-red-600" bg="bg-red-50" />
-                            </div>
-
-                            {/* Heatmap */}
-                            {Object.keys(errorMap).length > 0 && (
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
-                                        <BarChart2 size={15} /> Error Heatmap
-                                    </p>
-                                    <TypingHeatmap errorMap={errorMap} />
+                        <motion.div
+                            className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden p-8 relative border border-slate-100"
+                            initial={{ scale: 0.98, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+                        >
+                            {/* Header */}
+                            <div className="flex items-center gap-4 mb-6 border-b border-slate-50 pb-4">
+                                <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                                    <Activity size={16} />
                                 </div>
-                            )}
-
-                            {/* Top missed keys */}
-                            {topErrors(errorMap).length > 0 && (
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-600 mb-2">Most Missed Keys</p>
-                                    <div className="flex gap-2 flex-wrap">
-                                        {topErrors(errorMap, 8).map(([k, v]) => (
-                                            <span key={k} className="px-3 py-1 rounded-lg bg-red-50 text-red-600 font-mono font-bold text-sm">
-                                                "{k.toUpperCase()}" × {v}
-                                            </span>
-                                        ))}
+                                    <h2 className="text-lg font-semibold text-slate-900 leading-tight">Session Summary</h2>
+                                </div>
+                                <div className="ml-auto text-right">
+                                    <span className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.2em] bg-indigo-50 px-2 py-1 rounded-md">{category} Level</span>
+                                </div>
+                            </div>
+
+                            {/* Hero Performance Section */}
+                            <div className="flex flex-col md:flex-row items-center justify-around gap-8 mb-8">
+                                {/* Accuracy Circle */}
+                                <div className="relative w-32 h-32 flex items-center justify-center">
+                                    <svg className="w-full h-full -rotate-90">
+                                        <circle cx="64" cy="64" r="55" fill="none" stroke="#f1f5f9" strokeWidth="5" />
+                                        <motion.circle 
+                                            cx="64" cy="64" r="55" fill="none" stroke={accuracyColor} strokeWidth="5" strokeLinecap="round" 
+                                            initial={{ strokeDashoffset: strokeDasharray }}
+                                            animate={{ strokeDashoffset }}
+                                            style={{ strokeDasharray }}
+                                            transition={{ duration: 1.5, ease: 'easeOut', delay: 0.2 }}
+                                        />
+                                    </svg>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span className="text-3xl font-bold text-slate-800 tracking-tighter">{stats.accuracy}%</span>
+                                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Accuracy</span>
                                     </div>
                                 </div>
-                            )}
 
-                            {/* Actions */}
-                            <div className="flex gap-3 pt-2">
+                                {/* Speed + Time Info */}
+                                <div className="flex flex-col md:flex-row gap-4 flex-1">
+                                    <div className="flex-1">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 text-center md:text-left">Net Speed</p>
+                                        <div className="bg-slate-50 p-3 rounded-xl flex items-baseline justify-center md:justify-start gap-2 border border-slate-100/50">
+                                            <span className="text-3xl font-mono font-semibold text-slate-800 leading-none">{stats.wpm}</span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase">WPM</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1 text-center md:text-left">Duration</p>
+                                        <div className="bg-slate-50 p-3 rounded-xl flex items-baseline justify-center md:justify-start gap-2 border border-slate-100/50">
+                                            <span className="text-3xl font-mono font-semibold text-slate-800 leading-none">
+                                                {mode === 'time' ? duration : Math.round((Date.now() - (startTime || Date.now())) / 1000)}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase">SEC</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Analysis Section */}
+                            <div className="mb-8">
+                                <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full" /> Performance Profile
+                                </h4>
+                                <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm overflow-x-auto">
+                                    <TypingHeatmap errorMap={errorMap} hideHeader hideMissedKeys />
+                                </div>
+                            </div>
+
+                            {/* Action Strip */}
+                            <div className="flex gap-3 items-center">
                                 <button
                                     onClick={() => { setShowResults(false); resetTest(); }}
-                                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors"
+                                    className="px-6 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-xs rounded-xl transition-all flex items-center gap-2 active:scale-95"
                                 >
-                                    <RotateCcw size={18} /> Try Again
+                                    <RotateCcw size={16} /> Retry
                                 </button>
                                 <button
                                     onClick={() => {
                                         setLessonIdx(p => (p + 1) % LESSONS[category].length);
                                         setShowResults(false);
                                     }}
-                                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border-2 border-indigo-600 text-indigo-600 font-bold rounded-xl transition-colors hover:bg-indigo-50"
+                                    className="flex-1 py-3.5 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2 active:scale-95"
                                 >
-                                    Next Lesson <ChevronRight size={18} />
+                                    Continue to Next Round <ChevronRight size={16} />
                                 </button>
                             </div>
-                        </div>
+                        </motion.div>
                     </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
+                )}
+            </AnimatePresence>
+        );
+    };
 
     // ── JSX ───────────────────────────────────────────────────────────────────
     return (
@@ -351,15 +374,16 @@ const TypingTrainer = () => {
             <ResultsModal />
 
             {/* ── Top Bar ────────────────────────────────────────────────────── */}
+            {/* ── Top Bar ────────────────────────────────────────────────────── */}
             <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
 
                 {/* Category tabs */}
-                <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+                <div className="flex gap-1 bg-gray-100 rounded-xl p-1 overflow-x-auto no-scrollbar">
                     {Object.keys(LESSONS).map(cat => (
                         <button
                             key={cat}
                             onClick={() => { setCategory(cat); setLessonIdx(0); }}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${category === cat
+                            className={`px-4 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${category === cat
                                 ? 'bg-white shadow text-indigo-600'
                                 : 'text-gray-400 hover:text-gray-600'
                                 }`}
@@ -369,74 +393,91 @@ const TypingTrainer = () => {
                     ))}
                 </div>
 
-                {/* Mode + Duration */}
-                <div className="flex flex-wrap items-center gap-3 text-sm">
-                    {/* Time / Words */}
-                    <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-                        {['time', 'words'].map(m => (
-                            <button key={m}
-                                onClick={() => setMode(m)}
-                                className={`px-3 py-1 rounded-md font-semibold transition-all ${mode === m ? 'bg-white shadow text-indigo-600' : 'text-gray-400'
-                                    }`}
-                            >{m.charAt(0).toUpperCase() + m.slice(1)}</button>
-                        ))}
+                <div className="flex flex-wrap items-center gap-4">
+                    {/* Mode + Duration */}
+                    <div className="flex items-center gap-3 text-sm">
+                        {/* Time / Words */}
+                        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                            {['time', 'words'].map(m => (
+                                <button key={m}
+                                    onClick={() => setMode(m)}
+                                    className={`px-3 py-1 rounded-md font-semibold transition-all ${mode === m ? 'bg-white shadow text-indigo-600' : 'text-gray-400'
+                                        }`}
+                                >{m.charAt(0).toUpperCase() + m.slice(1)}</button>
+                            ))}
+                        </div>
+
+                        {/* Duration (time mode) */}
+                        {mode === 'time' && (
+                            <div className="flex gap-1">
+                                {[15, 30, 60, 120].map(s => (
+                                    <button key={s}
+                                        onClick={() => { setDuration(s); setTimeLeft(s); }}
+                                        className={`px-2 py-1 rounded-lg font-bold text-xs transition-all ${duration === s ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                            }`}
+                                    >{s}s</button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {/* Duration (time mode) */}
-                    {mode === 'time' && (
-                        <div className="flex gap-1">
-                            {[15, 30, 60, 120].map(s => (
-                                <button key={s}
-                                    onClick={() => { setDuration(s); setTimeLeft(s); }}
-                                    className={`px-2 py-1 rounded-lg font-bold text-xs transition-all ${duration === s ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                                        }`}
-                                >{s}s</button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Lesson picker */}
-                    <div className="relative group">
-                        <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-lg text-gray-600 font-medium text-xs hover:bg-gray-200 transition-colors">
-                            <Play size={12} />
-                            {LESSONS[category][lessonIdx % LESSONS[category].length].title}
-                            <ChevronDown size={12} />
-                        </button>
-                        <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-20 overflow-hidden">
-                            {LESSONS[category].map((l, i) => (
-                                <button key={i}
-                                    onClick={() => setLessonIdx(i)}
-                                    className={`w-full text-left px-4 py-2.5 text-xs hover:bg-indigo-50 hover:text-indigo-600 ${lessonIdx % LESSONS[category].length === i ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-600'
-                                        }`}
-                                >{l.title}</button>
-                            ))}
-                        </div>
+                    {/* Controls */}
+                    <div className="flex items-center gap-2 border-l pl-3 border-gray-100">
+                        {category !== 'advanced' && (
+                            <button onClick={() => setShowKeyboard(!showKeyboard)}
+                                title="Toggle Keyboard"
+                                className={`p-2 rounded-lg transition-colors ${showKeyboard ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:bg-gray-100'}`}
+                            ><Keyboard size={18} /></button>
+                        )}
+                        {category === 'beginner' && (
+                            <button onClick={() => setShowHands(!showHands)}
+                                title="Toggle Hands"
+                                className={`p-2 rounded-lg transition-colors ${showHands ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:bg-gray-100'}`}
+                            ><HandIcon size={18} /></button>
+                        )}
+                        <button onClick={() => setSoundOn(!soundOn)}
+                            className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+                        >{soundOn ? <Volume2 size={18} /> : <VolumeX size={18} />}</button>
+                        <button onClick={() => setShowHistory(!showHistory)}
+                            className={`p-2 rounded-lg transition-colors ${showHistory ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:bg-gray-100'}`}
+                        ><History size={18} /></button>
+                        <button onClick={resetTest}
+                            className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                        ><RotateCcw size={18} /></button>
                     </div>
                 </div>
+            </div>
 
-                {/* Controls */}
-                <div className="flex items-center gap-2">
-                    {category !== 'advanced' && (
-                        <button onClick={() => setShowKeyboard(!showKeyboard)}
-                            title="Toggle Keyboard"
-                            className={`p-2 rounded-lg transition-colors ${showKeyboard ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:bg-gray-100'}`}
-                        ><Keyboard size={18} /></button>
-                    )}
-                    {category === 'beginner' && (
-                        <button onClick={() => setShowHands(!showHands)}
-                            title="Toggle Hands"
-                            className={`p-2 rounded-lg transition-colors ${showHands ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:bg-gray-100'}`}
-                        ><HandGuideIcon size={18} /></button>
-                    )}
-                    <button onClick={() => setSoundOn(!soundOn)}
-                        className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-                    >{soundOn ? <Volume2 size={18} /> : <VolumeX size={18} />}</button>
-                    <button onClick={() => setShowHistory(!showHistory)}
-                        className={`p-2 rounded-lg transition-colors ${showHistory ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:bg-gray-100'}`}
-                    ><History size={18} /></button>
-                    <button onClick={resetTest}
-                        className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                    ><RotateCcw size={18} /></button>
+            {/* ── Micro Round Navigation ────────────────────────────────────── */}
+            <div className="w-full max-w-5xl mb-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+                <div className="flex flex-wrap gap-2">
+                    {LESSONS[category].map((l, i) => {
+                        const isSelected = lessonIdx % LESSONS[category].length === i;
+                        const isDone = completedLessons.has(`${category}-${l.title}`);
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => setLessonIdx(i)}
+                                title={l.title}
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black transition-all relative ${
+                                    isSelected 
+                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 scale-110 z-10' 
+                                        : isDone 
+                                            ? 'bg-green-500 text-white shadow-sm' 
+                                            : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'
+                                }`}
+                            >
+                                {i + 1}
+                                {isDone && !isSelected && (
+                                    <div className="absolute -top-1 -right-1">
+                                        <div className="h-3 w-3 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                            <Award size={8} className="text-green-600" />
+                                        </div>
+                                    </div>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

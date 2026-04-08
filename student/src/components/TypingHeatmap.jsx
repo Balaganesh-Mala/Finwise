@@ -22,35 +22,37 @@ const errorToColor = (count, maxCount) => {
  * Props:
  *   errorMap {Object} — { a: 3, s: 1, k: 12, ... }
  */
-const TypingHeatmap = ({ errorMap = {} }) => {
+const TypingHeatmap = ({ errorMap = {}, hideHeader = false, hideMissedKeys = false }) => {
     const [tooltip, setTooltip] = useState(null);
 
     const maxErrors = Math.max(...Object.values(errorMap), 1);
     const totalErrors = Object.values(errorMap).reduce((a, b) => a + b, 0);
-    const topErrors = Object.entries(errorMap)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5);
+    const sortedErrors = Object.entries(errorMap)
+        .sort(([, a], [, b]) => b - a);
+    const topErrors = sortedErrors.slice(0, 5);
 
     return (
         <div className="w-full">
-            <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-bold text-gray-700">Error Heatmap</h4>
-                <div className="flex items-center gap-3 text-xs">
-                    <span className="text-gray-400">{totalErrors} total errors</span>
-                    <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-green-200 border border-green-300" />
-                        <span className="text-gray-400">Good</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-yellow-200 border border-yellow-300" />
-                        <span className="text-gray-400">Fair</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-red-200 border border-red-300" />
-                        <span className="text-gray-400">Weak</span>
+            {!hideHeader && (
+                <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-bold text-gray-700">Error Heatmap</h4>
+                    <div className="flex items-center gap-3 text-xs">
+                        <span className="text-gray-400">{totalErrors} total errors</span>
+                        <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-green-200 border border-green-300" />
+                            <span className="text-gray-400">Good</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-yellow-200 border border-yellow-300" />
+                            <span className="text-gray-400">Fair</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-red-200 border border-red-300" />
+                            <span className="text-gray-400">Weak</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Keyboard rows */}
             <div className="space-y-1.5 relative">
@@ -102,7 +104,7 @@ const TypingHeatmap = ({ errorMap = {} }) => {
             </div>
 
             {/* Top Weak Keys */}
-            {topErrors.length > 0 && topErrors[0][1] > 0 && (
+            {!hideMissedKeys && topErrors.length > 0 && topErrors[0][1] > 0 && (
                 <div className="mt-4 p-3 bg-red-50 rounded-xl border border-red-100">
                     <p className="text-xs font-bold text-red-700 mb-2">Most Missed Keys</p>
                     <div className="flex flex-wrap gap-2">
