@@ -4,6 +4,8 @@ const Job = require('../models/Job');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const stream = require('stream');
+const Student = require('../models/Student');
+const Notification = require('../models/Notification');
 
 // Configure Multer for memory storage
 const storage = multer.memoryStorage();
@@ -200,6 +202,26 @@ router.post('/', upload.single('companyLogo'), async (req, res) => {
 
         const newJob = new Job(jobData);
         const job = await newJob.save();
+
+        // Broadcast notification to all active students
+        try {
+            const students = await Student.find({ status: 'Active' }).select('_id');
+            if (students.length > 0) {
+                const notifications = students.map(student => ({
+                    recipient: student._id,
+                    recipientModel: 'Student',
+                    title: `New Job: ${job.title}`,
+                    message: `New opening at ${job.company}. Click to view details.`,
+                    type: 'alert',
+                    link: '/jobs'
+                }));
+                await Notification.insertMany(notifications, { ordered: false });
+                console.log(`Broadcasted job notification to ${students.length} students.`);
+            }
+        } catch (notifErr) {
+            console.error('Failed to broadcast job notification:', notifErr);
+        }
+
         res.json(job);
     } catch (err) {
         console.error(err.message);

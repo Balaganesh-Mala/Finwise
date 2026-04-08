@@ -87,6 +87,61 @@ const generateFeeReminderTemplate = (studentName, amount, dueDate, installmentNo
     `;
 };
 
+const generatePaymentConfirmationTemplate = (studentName, amount, installmentNo, settings = {}) => {
+    const brand = getBranding(settings);
+    const formattedAmount = amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+    const today = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Payment Received</title>
+        <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #374151; line-height: 1.6; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+            .header { padding: 0; text-align: center; }
+            .content { padding: 40px; }
+            .highlight-box { background-color: #f0fdf4; border: 1px solid #dcfce7; border-radius: 8px; padding: 25px; margin: 30px 0; text-align: center; }
+            .highlight-box h2 { margin: 0; font-size: 32px; color: #166534; }
+            .highlight-box p { margin: 5px 0 0; color: #15803d; font-size: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+            .footer { background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 25px 40px; text-align: center; font-size: 13px; color: #94a3b8; }
+            .action-button { display: inline-block; background-color: #2563eb; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: 600; margin-top: 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <img src="https://res.cloudinary.com/drzs556ss/image/upload/v1775472964/finwise_assets/mailtemplate.png" alt="Banner" style="width: 100%; display: block;">
+            </div>
+            <div class="content">
+                <p>Dear <strong>${studentName}</strong>,</p>
+                <p>We have successfully received your payment for <strong>Installment #${installmentNo}</strong>. Thank you for your continued commitment to your studies at Finwise.</p>
+                
+                <div class="highlight-box">
+                    <h2>${formattedAmount}</h2>
+                    <p>Payment Received on ${today}</p>
+                </div>
+                
+                <p>You can find your official receipt at <a href="https://learning.finwisecareers.com" style="color: #2563eb; font-weight: 600; text-decoration: none;">learning.finwisecareers.com</a> under the <strong>Payments</strong> tab.</p>
+                
+                <p style="text-align: center; margin-top: 30px;">
+                    <a href="https://learning.finwisecareers.com/payments" class="action-button">View Receipt in Portal</a>
+                </p>
+            </div>
+            <div class="footer">
+                <p style="color: #64748b; font-weight: 700;">${brand.name}</p>
+                <p>${brand.email} | ${brand.phone}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+};
+
 module.exports = {
-    generateFeeReminderTemplate
+    generateFeeReminderTemplate,
+    generatePaymentConfirmationTemplate
 };

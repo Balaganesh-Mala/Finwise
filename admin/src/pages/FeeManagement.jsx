@@ -18,6 +18,8 @@ import {
 import toast from 'react-hot-toast';
 import AddFeeStructureModal from '../components/AddFeeStructureModal';
 import ReceiptModal from '../components/ReceiptModal';
+import MarkPaidModal from '../components/MarkPaidModal';
+import { generateReceiptPdfBase64 } from '../utils/pdfGenerator';
 
 export default function FeeManagement() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -26,6 +28,8 @@ export default function FeeManagement() {
     const [filter, setFilter] = useState('All'); // All, Pending, Paid, Overdue
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedReceipt, setSelectedReceipt] = useState(null);
+    const [paymentModalData, setPaymentModalData] = useState(null);
+    const [recordingPayment, setRecordingPayment] = useState(false);
 
     const [stats, setStats] = useState({
         totalStudents: 0,
@@ -81,19 +85,62 @@ export default function FeeManagement() {
         }
     };
 
-    const handleMarkPaid = async (id) => {
-        if (!window.confirm("Are you sure you want to mark this installment as paid?")) return;
-
+    const handleMarkPaid = async (paymentData) => {
         try {
+            setRecordingPayment(true);
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-            await axios.post(`${apiUrl}/api/finance/installments/${id}/pay`, {
-                payment_mode: 'Cash', // Default mock until form is added
-            });
-            toast.success("Payment recorded!");
-            fetchInstallments(); // reload
+
+            // 1. Fetch data for PDF Generation
+            const [settingsRes, studentInstRes] = await Promise.all([
+                axios.get(`${apiUrl}/api/settings`),
+                axios.get(`${apiUrl}/api/finance/installments?student_id=${paymentModalData.student_id._id}`)
+            ]);
+
+            const allInst = studentInstRes.data;
+            const totalFee = allInst.reduce((sum, i) => sum + i.amount, 0);
+            
+            // Calculate point-in-time total paid (up to current installment)
+            const totalPaidAtTime = allInst
+                .filter(i => (i.status === 'Paid' || i._id === paymentModalData._id) && i.installment_no <= paymentModalData.installment_no)
+                .reduce((sum, i) => sum + i.amount, 0);
+            
+            const previousPaid = totalPaidAtTime - paymentModalData.amount;
+            
+            const feeSummary = {
+                total: totalFee,
+                pending: totalFee - totalPaidAtTime,
+                previousPaid
+            };
+
+            // 2. Generate PDF Base64
+            let receipt_base64 = null;
+            try {
+                receipt_base64 = await generateReceiptPdfBase64({
+                    installment: paymentModalData,
+                    payment: paymentData,
+                    settings: settingsRes.data,
+                    feeSummary
+                });
+            } catch (pdfErr) {
+                console.error("PDF generation failed, proceeding with payment only:", pdfErr);
+            }
+
+            // 3. Record Payment & Send Email
+            const finalPayload = {
+                ...paymentData,
+                receipt_base64
+            };
+
+            await axios.post(`${apiUrl}/api/finance/installments/${paymentModalData._id}/pay`, finalPayload);
+            
+            toast.success("Payment recorded and receipt emailed!");
+            setPaymentModalData(null);
+            fetchInstallments();
         } catch (err) {
             console.error(err);
             toast.error(err.response?.data?.message || 'Failed to record payment');
+        } finally {
+            setRecordingPayment(false);
         }
     };
 
@@ -129,15 +176,29 @@ export default function FeeManagement() {
         return true;
     });
 
-    const getStatusBadge = (status) => {
+    const getStatusBadge = (inst) => {
+        const status = inst.status;
+        const mode = inst.payment_mode || '';
+        
         switch (status) {
             case 'Paid':
-                return <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"><CheckCircle size={14} /> Paid</span>;
+                return (
+                    <div className="flex flex-col gap-1">
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 w-fit">
+                            <CheckCircle size={14} /> Paid
+                        </span>
+                        {mode && (
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight ml-1">
+                                via {mode}
+                            </span>
+                        )}
+                    </div>
+                );
             case 'Overdue':
-                return <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200"><AlertCircle size={14} /> Overdue</span>;
+                return <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200 w-fit"><AlertCircle size={14} /> Overdue</span>;
             case 'Pending':
             default:
-                return <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"><Clock size={14} /> Pending</span>;
+                return <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 w-fit"><Clock size={14} /> Pending</span>;
         }
     };
 
@@ -271,7 +332,7 @@ export default function FeeManagement() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {getStatusBadge(inst.status)}
+                                            {getStatusBadge(inst)}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
@@ -292,7 +353,7 @@ export default function FeeManagement() {
                                                             <Trash2 size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleMarkPaid(inst._id)}
+                                                            onClick={() => setPaymentModalData(inst)}
                                                             className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
                                                         >
                                                             <CheckCircle size={14} /> Mark Paid
@@ -345,6 +406,14 @@ export default function FeeManagement() {
                 isOpen={!!selectedReceipt}
                 onClose={() => setSelectedReceipt(null)}
                 installment={selectedReceipt}
+            />
+
+            <MarkPaidModal
+                isOpen={!!paymentModalData}
+                onClose={() => setPaymentModalData(null)}
+                onConfirm={handleMarkPaid}
+                installment={paymentModalData}
+                loading={recordingPayment}
             />
 
         </div>

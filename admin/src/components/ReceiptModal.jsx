@@ -5,7 +5,7 @@ import sigImg from '../assets/sig.jpeg';
 
 export default function ReceiptModal({ isOpen, onClose, installment }) {
     const [settings, setSettings] = useState(null);
-    const [payment, setPayment] = useState(null);
+    const [feeSummary, setFeeSummary] = useState({ total: 0, pending: 0, previousPaid: 0 });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -14,14 +14,26 @@ export default function ReceiptModal({ isOpen, onClose, installment }) {
                 setLoading(true);
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-                // Fetch Settings & Payment Details in parallel
-                const [settingsRes, paymentRes] = await Promise.all([
+                // Fetch Settings, Payment Details & All Installments for Student
+                const [settingsRes, paymentRes, installmentsRes] = await Promise.all([
                     axios.get(`${apiUrl}/api/settings`),
                     installment?.status === 'Paid'
                         ? axios.get(`${apiUrl}/api/finance/installments/${installment._id}/payment`).catch(() => ({ data: null }))
-                        : Promise.resolve({ data: null })
+                        : Promise.resolve({ data: null }),
+                    axios.get(`${apiUrl}/api/finance/installments?student_id=${installment.student_id._id || installment.student_id}`)
                 ]);
+                
+                const allInst = installmentsRes.data;
+                const totalFee = allInst.reduce((sum, i) => sum + i.amount, 0);
+                
+                // Calculate point-in-time total paid (up to this installment)
+                const totalPaidAtTime = allInst
+                    .filter(i => (i.status === 'Paid' || i._id === installment._id) && i.installment_no <= installment.installment_no)
+                    .reduce((sum, i) => sum + i.amount, 0);
+                
+                const previousPaid = totalPaidAtTime - installment.amount;
 
+                setFeeSummary({ total: totalFee, pending: totalFee - totalPaidAtTime, previousPaid });
                 setSettings(settingsRes.data);
                 if (paymentRes.data) setPayment(paymentRes.data);
             } catch (error) {
@@ -153,6 +165,26 @@ export default function ReceiptModal({ isOpen, onClose, installment }) {
                                         <div className="flex justify-between md:justify-end gap-10 pt-2">
                                             <span className="text-sm font-bold text-gray-400 uppercase">Status:</span>
                                             <span className="text-sm font-black text-emerald-600 uppercase">Successful</span>
+                                        </div>
+                                        
+                                        {/* New Fee Summary Section */}
+                                        <div className="flex justify-between md:justify-end gap-10 pt-4 mt-2 border-t border-gray-100">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Course Fee:</span>
+                                            <span className="text-xs font-bold text-gray-700">₹{feeSummary.total.toLocaleString('en-IN')}</span>
+                                        </div>
+                                        {feeSummary.previousPaid > 0 && (
+                                            <div className="flex justify-between md:justify-end gap-10">
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Amount Previously Paid:</span>
+                                                <span className="text-xs font-bold text-gray-600">₹{feeSummary.previousPaid.toLocaleString('en-IN')}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between md:justify-end gap-10">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">This Installment:</span>
+                                            <span className="text-xs font-bold text-blue-600">₹{installment.amount.toLocaleString('en-IN')}</span>
+                                        </div>
+                                        <div className="flex justify-between md:justify-end gap-10 pt-1 border-t border-gray-50">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Remaining Balance:</span>
+                                            <span className="text-xs font-bold text-rose-500">₹{feeSummary.pending.toLocaleString('en-IN')}</span>
                                         </div>
                                     </div>
                                 </div>

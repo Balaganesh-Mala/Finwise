@@ -31,6 +31,11 @@ const InstallmentSchema = new mongoose.Schema({
   paid_date: {
     type: Date,
     default: null,
+  },
+  payment_mode: {
+    type: String,
+    enum: ['UPI', 'Cash', 'Bank Transfer', 'Card', 'Other', null],
+    default: null,
   }
 }, { timestamps: true });
 

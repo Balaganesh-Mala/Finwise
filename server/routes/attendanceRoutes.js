@@ -74,6 +74,10 @@ router.post('/qr-mark', async (req, res) => {
             date: new Date()
         });
 
+        // 6. Award Points (50 points for QR Attendance)
+        student.points = (student.points || 0) + 50;
+        await student.save();
+
         res.json({
             success: true,
             message: 'Attendance Marked Successfully',

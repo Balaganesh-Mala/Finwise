@@ -20,6 +20,7 @@ import {
     Award,
     Activity,
     BarChart2,
+    ArrowRight
 } from 'lucide-react';
 
 // Inline hand icon — avoids lucide-react's Hand conflicting with browser XRHand API
@@ -92,6 +93,9 @@ const TypingPractice = () => {
     const [timeLeft, setTimeLeft] = useState(duration);
     const [isActive, setIsActive] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
+    const [testStarted, setTestStarted] = useState(false);
+    const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+    const [categoryCompleted, setCategoryCompleted] = useState(false);
 
     const [stats, setStats] = useState({
         wpm: 0, accuracy: 100, correctChars: 0, incorrectChars: 0,
@@ -158,14 +162,41 @@ const TypingPractice = () => {
     const handsVisible = showHands && category === 'beginner';
     const keyboardVisible = showKeyboard && (category === 'beginner' || category === 'intermediate');
 
-    // --- Initialization ---
     useEffect(() => {
-        const storedUser = localStorage.getItem('studentUser');
-        if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-            fetchHistory(parsedUser._id);
-        }
+        const fetchStudentData = async () => {
+            const storedUser = localStorage.getItem('studentUser');
+            if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                try {
+                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                    const res = await axios.get(`${API_URL}/api/students/${parsedUser._id}`);
+                    const latestUser = res.data;
+                    
+                    setUser(latestUser);
+                    localStorage.setItem('studentUser', JSON.stringify(latestUser));
+
+                    // Set initial lesson from persisted data with safety fallback
+                    const initialCat = latestUser.lastCategory || 'beginner';
+                    const safeCat = typingLessons[initialCat] ? initialCat : 'beginner';
+                    setCategory(safeCat);
+                    
+                    const initialIndex = latestUser.lastLessonIndex || 0;
+                    const lessonsArray = typingLessons[safeCat] || typingLessons['beginner'];
+                    setLessonIndex(initialIndex >= lessonsArray.length ? 0 : initialIndex);
+                } catch (err) {
+                    console.error('Failed to sync student data', err);
+                    setUser(parsedUser);
+                    const initialCat = parsedUser.lastCategory || 'beginner';
+                    const safeCat = typingLessons[initialCat] ? initialCat : 'beginner';
+                    setCategory(safeCat);
+                    
+                    const initialIndex = parsedUser.lastLessonIndex || 0;
+                    const lessonsArray = typingLessons[safeCat] || typingLessons['beginner'];
+                    setLessonIndex(initialIndex >= lessonsArray.length ? 0 : initialIndex);
+                }
+            }
+        };
+        fetchStudentData();
     }, []);
 
     const fetchHistory = async (studentId) => {
@@ -204,6 +235,7 @@ const TypingPractice = () => {
         setStartTime(null);
         setIsActive(false);
         setIsFinished(false);
+        setCategoryCompleted(false); // Reset completion state
         setTimeLeft(mode === 'time' ? duration : 0);
         setStats({ wpm: 0, accuracy: 100, correctChars: 0, incorrectChars: 0 });
         setTotalKeystrokes(0);
@@ -211,6 +243,12 @@ const TypingPractice = () => {
         setErrorMap({});
         setLastPressedKey('');
         setLastErrorKey('');
+        setTestStarted(false); // Reset to show start button
+        inputRef.current?.blur();
+    };
+
+    const startTest = () => {
+        setTestStarted(true);
         inputRef.current?.focus();
     };
 
@@ -228,9 +266,8 @@ const TypingPractice = () => {
         return () => clearInterval(interval);
     }, [isActive, isFinished, mode]);
 
-    // --- Typing Handler ---
     const handleInput = (e) => {
-        if (isFinished) return;
+        if (isFinished || !testStarted) return; 
         const value = e.target.value;
 
         if (!isActive) {
@@ -325,6 +362,47 @@ const TypingPractice = () => {
                     lesson: typingLessons[category][lessonIndex]?.title || 'Unknown',
                     time: Math.round(durationInMinutes * 60),
                 });
+                
+                if (finalWpm >= 35) {
+                    toast.success('GOAL REACHED! +100 Points Awarded', { 
+                        icon: '🏆', 
+                        duration: 5000,
+                        style: { borderRadius: '15px', background: '#333', color: '#fff' }
+                    });
+
+                    // Progress lesson index for next time with boundary check
+                    const nextIndex = (lessonIndex + 1);
+                    const lessonsArray = typingLessons[category] || typingLessons['beginner'];
+                    const isEndOfCategory = nextIndex >= lessonsArray.length;
+                    
+                    // When completed, don't update local index immediately if it triggers completion UI
+                    const safeNextIndex = isEndOfCategory ? 0 : nextIndex;
+
+                    const updatedUser = { 
+                        ...u, 
+                        points: (u.points || 0) + 100,
+                        lastLessonIndex: safeNextIndex 
+                    };
+                    localStorage.setItem('studentUser', JSON.stringify(updatedUser));
+                    setUser(updatedUser);
+                    if (isEndOfCategory) {
+                        setCategoryCompleted(true);
+                        setLessonIndex(0);
+                    } else {
+                        setLessonIndex(nextIndex);
+                    }
+                    
+                    // Logic to suggest next category
+                    const levelMap = { 'beginner': 1, 'intermediate': 2, 'advanced': 3 };
+                    const currentLevelValue = levelMap[category] || 1;
+                    if (currentLevelValue < 3 && isEndOfCategory) {
+                         toast('New Level Unlocked!', { icon: '🔓', duration: 4000 });
+                    }
+                }
+
+                // Dispatch global sync event for real-time Navbar update
+                window.dispatchEvent(new CustomEvent('finwise-activity-sync'));
+
                 toast.success('Progress Saved!', { id: 'save-success' });
                 fetchHistory(u._id);
             }
@@ -358,25 +436,47 @@ const TypingPractice = () => {
                 {/* Lesson selector */}
                 <div className="flex items-center justify-between md:justify-start gap-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-gray-500 text-sm font-medium uppercase tracking-wider hidden sm:inline">Lesson</span>
-                        <div className="relative group">
-                            <button className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition-colors">
-                                {category.charAt(0).toUpperCase() + category.slice(1)} <ChevronDown size={14} />
+                        <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Category</span>
+                        <div className="relative">
+                            <button 
+                                onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+                                className={`flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${showCategoryMenu ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100'}`}
+                            >
+                                {category} <ChevronDown size={14} className={`transition-transform duration-300 ${showCategoryMenu ? 'rotate-180' : ''}`} />
                             </button>
-                            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-20 overflow-hidden">
-                                {Object.keys(typingLessons).map(cat => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => { setCategory(cat); setLessonIndex(0); inputRef.current?.focus(); }}
-                                        className={`w-full text-left px-4 py-3 text-sm hover:bg-indigo-50 hover:text-indigo-600 ${category === cat ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'}`}
-                                    >
-                                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                                        {cat === 'beginner' && <span className="ml-2 text-xs text-indigo-400">with hints</span>}
-                                        {cat === 'intermediate' && <span className="ml-2 text-xs text-blue-400">keyboard</span>}
-                                        {cat === 'advanced' && <span className="ml-2 text-xs text-gray-400">no hints</span>}
-                                    </button>
-                                ))}
-                            </div>
+                            
+                            <AnimatePresence>
+                                {showCategoryMenu && (
+                                    <>
+                                        {/* Invisible backdrop to close menu on outside click */}
+                                        <div className="fixed inset-0 z-10" onClick={() => setShowCategoryMenu(false)}></div>
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute top-full left-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 z-20 overflow-hidden py-2"
+                                        >
+                                            {Object.keys(typingLessons).map(cat => (
+                                                <button
+                                                    key={cat}
+                                                    onClick={() => { 
+                                                        setCategory(cat); 
+                                                        setLessonIndex(0); 
+                                                        setShowCategoryMenu(false);
+                                                        resetTest();
+                                                    }}
+                                                    className={`w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all hover:pl-7 ${category === cat ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <span>{cat}</span>
+                                                        {category === cat && <div className="w-1.5 h-1.5 rounded-full bg-indigo-600"></div>}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                     <button onClick={() => setLessonIndex(prev => (prev + 1) % typingLessons[category].length)} className="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors">
@@ -631,7 +731,7 @@ const TypingPractice = () => {
 
                     {/* ── Typing Area ────────────────────────────────── */}
                     <div
-                        className="relative w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-8 min-h-[200px] md:min-h-[250px] flex flex-col justify-center cursor-text"
+                        className={`relative w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-8 flex flex-col justify-center cursor-text transition-all duration-500 ${!testStarted && !isFinished ? 'min-h-[380px]' : 'min-h-[200px] md:min-h-[250px]'}`}
                         onClick={() => inputRef.current?.focus()}
                     >
                         <div className="absolute top-4 left-6 text-xs font-bold text-gray-300 uppercase tracking-widest pointer-events-none">
@@ -659,11 +759,71 @@ const TypingPractice = () => {
                             {renderText()}
                         </div>
 
-                        {!isActive && !isFinished && input.length === 0 && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-2xl">
-                                <div className="flex flex-col items-center gap-3 text-gray-400 animate-pulse">
-                                    <Keyboard size={32} className="md:w-12 md:h-12" />
-                                    <span className="text-sm md:text-lg font-medium">Start typing to begin</span>
+                        {!testStarted && !isFinished && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-xl rounded-2xl z-20 animate-in fade-in duration-500">
+                                {/* Decorative elements */}
+                                <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                                
+                                <div className="flex flex-col items-center p-6 md:p-8 bg-white rounded-[2rem] border border-slate-100 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.08)] relative z-10 max-w-sm w-full mx-4 transform animate-in zoom-in duration-300">
+                                    <div className="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-100 mb-4 transform hover:rotate-12 transition-transform duration-500 cursor-pointer" onClick={startTest}>
+                                        <Play size={24} className="fill-current ml-1" />
+                                    </div>
+                                    
+                                    <div className="text-center mb-6">
+                                        <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase leading-none">Ready to Practice?</h3>
+                                        <div className="mt-3 flex flex-col items-center gap-1.5">
+                                            <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-[0.15em] border border-indigo-100/30">
+                                                Goal: 35+ WPM
+                                            </div>
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center">To unlock the next level</p>
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={startTest}
+                                        className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-200 group"
+                                    >
+                                        Start Session
+                                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                    </button>
+
+                                    <p className="mt-6 text-[9px] text-slate-300 font-bold uppercase tracking-[0.3em] text-center">Focus on accuracy first</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {!testStarted && !isFinished && categoryCompleted && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-2xl rounded-2xl z-30 overflow-hidden animate-in fade-in zoom-in duration-500">
+                                <div className="text-center p-8 text-white max-w-sm w-full mx-4">
+                                    <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-[2rem] flex items-center justify-center mx-auto mb-8 animate-bounce transition-transform hover:scale-110">
+                                        <Award size={40} className="text-yellow-400 fill-current" />
+                                    </div>
+                                    <h3 className="text-3xl font-black uppercase tracking-tighter mb-2 leading-none">Level Mastered!</h3>
+                                    <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[9px] mb-8">You have completed all {category} rounds</p>
+                                    
+                                    <div className="space-y-3">
+                                        <button 
+                                            onClick={() => {
+                                                const levels = ['beginner', 'intermediate', 'advanced'];
+                                                const currentIdx = levels.indexOf(category);
+                                                const nextLevel = levels[Math.min(currentIdx + 1, levels.length - 1)];
+                                                setCategory(nextLevel);
+                                                setLessonIndex(0);
+                                                resetTest();
+                                            }}
+                                            className="w-full flex items-center justify-center gap-2 py-5 bg-white text-slate-900 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-950/20"
+                                        >
+                                            Next Category: {category === 'beginner' ? 'Intermediate' : 'Advanced'}
+                                            <ArrowRight size={14} />
+                                        </button>
+                                        <button 
+                                            onClick={resetTest}
+                                            className="w-full py-4 bg-slate-800 text-slate-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] hover:text-white transition-all"
+                                        >
+                                            Restart Curriculm
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -748,7 +908,11 @@ const TypingPractice = () => {
                                         <RotateCcw size={20} /> Retry
                                     </button>
                                     <button
-                                        onClick={() => { setLessonIndex(prev => (prev + 1) % typingLessons[category].length); resetTest(); }}
+                                        onClick={() => { 
+                                            const lessonsArray = typingLessons[category] || typingLessons['beginner'] || [];
+                                            setLessonIndex(prev => (prev + 1) % (lessonsArray.length || 1)); 
+                                            resetTest(); 
+                                        }}
                                         className="flex items-center justify-center gap-2 px-8 py-3 md:py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all text-base transform hover:-translate-y-1"
                                     >
                                         <Play size={20} /> Next Lesson

@@ -5,7 +5,7 @@ const Expense = require('../models/Expense');
 const Student = require('../models/Student');
 const Setting = require('../models/Setting');
 const { sendEmail } = require('../utils/emailService');
-const { generateFeeReminderTemplate } = require('../utils/emailTemplates');
+const { generateFeeReminderTemplate, generatePaymentConfirmationTemplate } = require('../utils/emailTemplates');
 
 // @desc    Get dashboard metrics (total fees, pending, expenses, chart data)
 // @route   GET /api/finance/dashboard
@@ -219,6 +219,7 @@ exports.markInstallmentPaid = async (req, res) => {
 
     installment.status = 'Paid';
     installment.paid_date = new Date();
+    installment.payment_mode = payment_mode;
     await installment.save();
 
     // 2. Create the payment history record
@@ -231,9 +232,47 @@ exports.markInstallmentPaid = async (req, res) => {
     });
     await paymentRecord.save();
 
-    // TODO: Trigger PDF/Email receipt generation here
+    // 3. Trigger Email receipt generation
+    if (installment.student_id?.email) {
+      try {
+        const settings = await Setting.findOne() || {};
+        const emailHtml = generatePaymentConfirmationTemplate(
+          installment.student_id.name,
+          paid_amount || installment.amount,
+          installment.installment_no,
+          settings
+        );
 
-    res.status(200).json({ message: 'Payment recorded successfully', payment: paymentRecord });
+        const attachments = [];
+        if (req.body.receipt_base64) {
+          // Robustly extract base64 data by splitting at the comma
+          const base64Parts = req.body.receipt_base64.split(',');
+          const base64Data = base64Parts.length > 1 ? base64Parts[1] : base64Parts[0];
+          
+          attachments.push({
+            filename: `Receipt_REC-${installment._id.toString().slice(-6).toUpperCase()}.pdf`,
+            content: base64Data,
+            encoding: 'base64',
+            contentType: 'application/pdf'
+          });
+          console.log(`PDF receipt prepared for attachment. Size: ${Math.round(base64Data.length / 1024)} KB`);
+        } else {
+          console.warn("No receipt_base64 found in request body for installment:", installment._id);
+        }
+
+        await sendEmail(
+          installment.student_id.email,
+          `Payment Received: Official Receipt #[REC-${installment._id.toString().slice(-6).toUpperCase()}]`,
+          emailHtml,
+          attachments
+        );
+        console.log(`Receipt email sent to ${installment.student_id.email}`);
+      } catch (emailErr) {
+        console.error('Failed to send receipt email:', emailErr);
+      }
+    }
+
+    res.status(200).json({ message: 'Payment recorded and receipt sent successfully', payment: paymentRecord });
   } catch (error) {
     res.status(500).json({ message: 'Error recording payment', error: error.message });
   }

@@ -1,7 +1,8 @@
 const cron = require('node-cron');
 const Installment = require('../models/Installment');
-// const mongoose = require('mongoose');
-// const { sendEmail } = require('./emailService'); // Assume you have some email service like nodemailer or SendGrid
+const Setting = require('../models/Setting');
+const { sendEmail } = require('../utils/emailService');
+const { generateFeeReminderTemplate } = require('../utils/emailTemplates');
 
 const startCronJobs = () => {
   console.log('Finance cron jobs initialized...');
@@ -13,6 +14,8 @@ const startCronJobs = () => {
       
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+
+      const settings = await Setting.findOne() || {};
 
       // 1. Check for installments due in exactly 3 days
       const threeDaysFromNow = new Date(today);
@@ -26,11 +29,24 @@ const startCronJobs = () => {
         }
       }).populate('student_id', 'name email');
 
-      upcomingInstallments.forEach(inst => {
-        // Mock email dispatch
-        console.log(`[REMINDER] Sending 3-day reminder to ${inst.student_id.email} for Rs. ${inst.amount} due on ${inst.due_date}`);
-        // sendEmail(inst.student_id.email, 'Upcoming Fee Reminder', `Your fee of ${inst.amount} is due on ${inst.due_date}`);
-      });
+      for (const inst of upcomingInstallments) {
+        if (inst.student_id?.email) {
+          const emailHtml = generateFeeReminderTemplate(
+            inst.student_id.name,
+            inst.amount,
+            inst.due_date,
+            inst.installment_no,
+            settings
+          );
+          const subject = `Fee Reminder: Installment #${inst.installment_no} is due in 3 days`;
+          try {
+            await sendEmail(inst.student_id.email, subject, emailHtml);
+            console.log(`[REMINDER] Sent 3-day reminder to ${inst.student_id.email} for Rs. ${inst.amount}`);
+          } catch (mailError) {
+            console.error(`Failed to send reminder to ${inst.student_id.email}:`, mailError.message);
+          }
+        }
+      }
 
       // 2. Check for installments due TODAY
       const dueTodayInstallments = await Installment.find({
@@ -41,10 +57,12 @@ const startCronJobs = () => {
         }
       }).populate('student_id', 'name email');
 
-      dueTodayInstallments.forEach(inst => {
-         // Mock email dispatch
-         console.log(`[DUE TODAY] Sending due today notice to ${inst.student_id.email}`);
-      });
+      for (const inst of dueTodayInstallments) {
+         if (inst.student_id?.email) {
+           // We can also send emails here if desired, but 3-day was specifically requested.
+           console.log(`[DUE TODAY] Logging due today notice for ${inst.student_id.email}`);
+         }
+      }
 
       // 3. Check for overdue installments (Due date was yesterday or before, and still pending)
       const overdueInstallments = await Installment.find({
@@ -61,8 +79,7 @@ const startCronJobs = () => {
         );
 
         overdueInstallments.forEach(inst => {
-          // Mock email dispatch
-          console.log(`[OVERDUE] Sending overdue alert to ${inst.student_id.email}`);
+          console.log(`[OVERDUE] Status updated to Overdue for ${inst.student_id?.email || 'Unknown'}`);
         });
       }
 

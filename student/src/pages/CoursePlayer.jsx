@@ -477,6 +477,8 @@ const CoursePlayer = () => {
             setProgress(prev => ({ ...prev, [activeTopic._id]: { ...prev[activeTopic._id], completed, watchedDuration } }));
             if (completed && !progress[activeTopic._id]?.completed) {
                 toast.success('Lesson Completed!');
+                // Dispatch global sync event for real-time Navbar update
+                window.dispatchEvent(new CustomEvent('finwise-activity-sync'));
             }
         } catch (err) {
             console.error('Progress sync failed', err);

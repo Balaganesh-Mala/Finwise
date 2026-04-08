@@ -24,7 +24,8 @@ import {
     Shield,
     ExternalLink,
     Briefcase,
-    AlertCircle
+    AlertCircle,
+    CreditCard
 } from 'lucide-react';
 
 
@@ -45,6 +46,8 @@ const Layout = () => {
     const [mobileQRData, setMobileQRData] = useState(null);
     const [mobileQRLoading, setMobileQRLoading] = useState(false);
     const [newJobsCount, setNewJobsCount] = useState(0);
+    const [dailyRank, setDailyRank] = useState(null);
+    const [weeklyRank, setWeeklyRank] = useState(null);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -107,7 +110,7 @@ const Layout = () => {
                             navigate('/login', { state: { error: 'Your account is inactive. Please contact support.' } });
                             return;
                         }
-                        
+
                         const updatedUser = {
                             _id: data._id,
                             name: data.name,
@@ -200,10 +203,45 @@ const Layout = () => {
                 }
             } catch (err) { console.error(err); }
         };
+
+        const fetchRanks = async () => {
+            if (!user?._id) return;
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const [weeklyRes, dailyRes] = await Promise.all([
+                    axios.get(`${API_URL}/api/students/leaderboard?studentId=${user._id}&period=weekly`),
+                    axios.get(`${API_URL}/api/students/leaderboard?studentId=${user._id}&period=daily`)
+                ]);
+
+                if (weeklyRes.data.success) {
+                    const myInfo = weeklyRes.data.leaderboard.find(s => s.id === user._id);
+                    if (myInfo) setWeeklyRank(myInfo);
+                }
+                if (dailyRes.data.success) {
+                    const myInfo = dailyRes.data.leaderboard.find(s => s.id === user._id);
+                    if (myInfo) setDailyRank(myInfo);
+                }
+            } catch (err) { console.error("Failed to fetch ranks:", err); }
+        };
+
         checkNewJobs();
-        const interval = setInterval(checkNewJobs, 60000 * 5); // Check every 5 mins
-        return () => clearInterval(interval);
-    }, []);
+        fetchRanks();
+
+        // Real-time synchronization event listener
+        const handleSync = () => {
+            fetchRanks();
+        };
+        window.addEventListener('finwise-activity-sync', handleSync);
+        
+        const interval = setInterval(() => {
+            checkNewJobs();
+            fetchRanks();
+        }, 60000 * 5); // Check every 5 mins
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('finwise-activity-sync', handleSync);
+        };
+    }, [user?._id]);
 
     const handleLogout = async () => {
         localStorage.removeItem('studentUser'); // Clear local session
@@ -237,6 +275,7 @@ const Layout = () => {
             ]
         },
         { icon: Briefcase, label: 'Jobs', path: '/jobs', accessKey: 'dashboard' }, // Accessible to everyone who has dashboard access
+        { icon: CreditCard, label: 'Payments', path: '/payments', accessKey: 'payments' },
         { icon: User, label: 'Profile', path: '/profile', accessKey: 'profile' },
         { icon: Settings, label: 'Settings', path: '/settings', accessKey: 'settings' },
     ];
@@ -255,7 +294,8 @@ const Layout = () => {
         if (item.children) {
             return item.children.length > 0;
         }
-        return user.access[item.accessKey];
+        // Fallback for new features: if key is missing, default to true
+        return user.access[item.accessKey] !== false;
     });
 
     const flatNavItems = allNavItems.flatMap(item => item.children ? item.children : [item]);
@@ -489,29 +529,74 @@ const Layout = () => {
                 {/* Navbar (Top Header) */}
                 <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30">
 
-                    {/* Left Side: Mobile Menu Toggle & Title/Breadcrumb */}
-                    <div className="flex items-center gap-4">
+                    {/* Left Side: Mobile Menu Toggle & Title/Date */}
+                    <div className="flex items-center gap-6">
                         <button
                             className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                             onClick={() => setSidebarOpen(true)}
                         >
                             <Menu size={24} />
                         </button>
-                        <h2 className="hidden md:block text-xl font-semibold text-gray-800">
-                            {flatNavItems.find(i => i.path === location.pathname)?.label || 'Dashboard'}
-                        </h2>
+                        <div className="flex flex-col">
+                            <h2 className="hidden md:block text-xl font-semibold text-gray-800 leading-tight">
+                                {flatNavItems.find(i => i.path === location.pathname)?.label || 'Dashboard'}
+                            </h2>
+                            <div className="hidden md:flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mt-0.5">
+                                <Calendar size={10} className="text-indigo-400" />
+                                <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Right Side: Search & Profile */}
-                    <div className="flex items-center gap-6">
+                    {/* Right Side: Search & Ranking & Profile */}
+                    <div className="flex items-center gap-8">
+                        {/* Ranking Section - Fitted Horizontal Design */}
+                        <div className="hidden lg:flex items-center gap-4">
+                            {/* Today Ranking */}
+                            <div className="flex flex-col items-center">
+                                <div className="text-[8px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-1 leading-none">Current Ranking</div>
+                                <div className="flex items-center gap-3 bg-white border border-gray-100 pl-3 pr-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-all cursor-default group relative overflow-hidden">
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">Today</span>
+                                        <span className="text-[13px] font-black text-gray-900 leading-none">#{dailyRank?.rank || '-'}</span>
+                                    </div>
+                                    <div className="h-6 w-px bg-gray-100"></div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[12px] font-black text-indigo-600 leading-none">{dailyRank?.points || 0}</span>
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase leading-none">Pts</span>
+                                    </div>
+                                    <Trophy size={14} className="text-yellow-400 opacity-20 group-hover:opacity-100 transition-opacity ml-1" />
+                                </div>
+                            </div>
+
+                            {/* Weekly Ranking */}
+                            <div className="flex flex-col items-center">
+                                <div className="text-[8px] font-black text-indigo-400 opacity-60 uppercase tracking-[0.2em] mb-1 leading-none">Current Ranking</div>
+                                <button 
+                                    onClick={() => navigate('/')}
+                                    className="flex items-center gap-3 bg-slate-900 border border-slate-800 pl-3 pr-4 py-2 rounded-xl shadow-lg hover:bg-slate-800 transition-all group relative overflow-hidden"
+                                >
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase leading-none mb-1">This Week</span>
+                                        <span className="text-[13px] font-black text-white leading-none">#{weeklyRank?.rank || '-'}</span>
+                                    </div>
+                                    <div className="h-6 w-px bg-slate-700"></div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[12px] font-black text-indigo-400 leading-none">{weeklyRank?.points || 0}</span>
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase leading-none">Pts</span>
+                                    </div>
+                                    <Sparkles size={14} className="text-indigo-400 opacity-30 group-hover:opacity-100 transition-opacity ml-1" />
+                                </button>
+                            </div>
+                        </div>
 
                         {/* Search Bar (Desktop) */}
-                        <div className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2.5 w-64 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
-                            <Search size={18} className="text-gray-400" />
+                        <div className="hidden xl:flex items-center bg-gray-50 border border-gray-100 rounded-full px-4 py-2.5 w-44 focus-within:w-60 focus-within:ring-2 focus-within:ring-indigo-100 transition-all duration-300">
+                            <Search size={14} className="text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search courses..."
-                                className="bg-transparent border-none outline-none text-sm ml-2 w-full text-gray-700 placeholder-gray-400"
+                                placeholder="Search..."
+                                className="bg-transparent border-none outline-none text-xs ml-2 w-full text-gray-700 placeholder-gray-400"
                             />
                         </div>
 
@@ -624,12 +709,20 @@ const Layout = () => {
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-2 mb-4">
+                                            <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
+                                                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Points</p>
+                                                <p className="text-lg font-black text-emerald-700">{user?.points || 0}</p>
+                                            </div>
+                                            <div className="bg-indigo-50 rounded-xl p-3 text-center border border-indigo-100">
+                                                <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">Type Level</p>
+                                                <p className="text-lg font-black text-indigo-700">{user?.typingLevel || 1}</p>
+                                            </div>
                                             <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
-                                                <p className="text-xs text-gray-500 font-medium">Attendance</p>
+                                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Attendance</p>
                                                 <p className="text-lg font-bold text-gray-900">{attendanceCount} Days</p>
                                             </div>
                                             <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
-                                                <p className="text-xs text-gray-500 font-medium">Tasks Done</p>
+                                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Tasks Done</p>
                                                 <p className="text-lg font-bold text-gray-900">{completedTasks}</p>
                                             </div>
                                         </div>

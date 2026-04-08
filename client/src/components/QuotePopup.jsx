@@ -12,14 +12,25 @@ const QuotePopup = () => {
     const [error, setError] = useState('');
 
     const [courses, setCourses] = useState([]);
+    const [coursesLoading, setCoursesLoading] = useState(true);
 
     useEffect(() => {
         const fetchCourses = async () => {
             try {
+                setCoursesLoading(true);
                 const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/courses`);
-                setCourses(res.data);
+
+                // Filter out non-finance/technical related courses
+                const technicalKeywords = ['Accounting', 'Finance', 'Investment Banking', 'Fund Accounting'];
+                const filteredCourses = res.data.filter(course =>
+                    technicalKeywords.some(key => course.title.toLowerCase().includes(key))
+                );
+
+                setCourses(filteredCourses);
             } catch (err) {
                 console.error('Error fetching courses:', err);
+            } finally {
+                setCoursesLoading(false);
             }
         };
         fetchCourses();
@@ -163,29 +174,43 @@ const QuotePopup = () => {
                                                 required
                                             />
                                         </div>
-                                        <div>
+                                        <div className="relative">
                                             <select
                                                 name="courseInterested"
                                                 value={formData.courseInterested}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-gray-500"
+                                                className={`w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-gray-500 appearance-none ${coursesLoading ? 'opacity-50' : ''}`}
+                                                disabled={coursesLoading}
                                             >
-                                                <option value="">Select Interested Course</option>
-                                                {courses.length > 0 ? (
+                                                <option value="">{coursesLoading ? 'Loading Courses...' : 'Select Interested Course'}</option>
+                                                {!coursesLoading && courses.length > 0 ? (
                                                     courses.map(course => (
                                                         <option key={course._id} value={course.title}>
                                                             {course.title}
                                                         </option>
                                                     ))
-                                                ) : (
-                                                    // Fallback options if API fails or no courses
+                                                ) : !coursesLoading && (
+                                                    // Fallback options (Finance Oriented)
                                                     <>
-                                                        <option value="Full Stack Development">Full Stack Development</option>
-                                                        <option value="Data Science">Data Science</option>
+                                                        <option value="Global Accounting">Global Accounting</option>
+                                                        <option value="Investment Banking">Investment Banking</option>
+                                                        <option value="Fund Accounting">Fund Accounting</option>
                                                     </>
                                                 )}
-                                                <option value="Other">Other</option>
+                                                {!coursesLoading && <option value="Other">Other</option>}
                                             </select>
+                                            {coursesLoading && (
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                    <Loader size={16} className="animate-spin text-indigo-500" />
+                                                </div>
+                                            )}
+                                            {!coursesLoading && (
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 

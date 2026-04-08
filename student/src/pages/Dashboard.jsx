@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Award, Clock, TrendingUp, Calendar, CheckCircle, UserCheck, Trophy, Medal, Crown, Share2, Linkedin, MessageCircle, Star, X, Copy, Download, Check, Sparkles, Zap, Flame, Loader2, ArrowLeft, Target } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -570,6 +570,9 @@ const Dashboard = () => {
     const [recentActivity, setRecentActivity] = useState([]);
     const [weeklyActivity, setWeeklyActivity] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
+    const [dailyLeaderboard, setDailyLeaderboard] = useState([]);
+    const [weeklyLeaderboard, setWeeklyLeaderboard] = useState([]);
+    const [leaderboardPeriod, setLeaderboardPeriod] = useState('weekly');
     const [loading, setLoading] = useState(true);
     const [showRankCard, setShowRankCard] = useState(false);
     const [settings, setSettings] = useState(null);
@@ -580,65 +583,83 @@ const Dashboard = () => {
     const [activitySummary, setActivitySummary] = useState({ totalHours: 0, topicCount: 0, activeDays: 0 });
     const [activityLoading, setActivityLoading] = useState(false);
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                const storedUser = localStorage.getItem('studentUser');
-                if (storedUser) {
-                    const parsedUser = JSON.parse(storedUser);
-                    setUser(parsedUser);
+    const fetchDashboardData = useCallback(async () => {
+        try {
+            const storedUser = localStorage.getItem('studentUser');
+            if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
 
-                    if (parsedUser._id) {
-                        const results = await Promise.allSettled([
-                            axios.get(`${import.meta.env.VITE_API_URL}/api/students/dashboard/${parsedUser._id}`),
-                            axios.get(`${import.meta.env.VITE_API_URL}/api/students/leaderboard?studentId=${parsedUser._id}`),
-                            axios.get(`${import.meta.env.VITE_API_URL}/api/settings`)
-                        ]);
+                if (parsedUser._id) {
+                    const results = await Promise.allSettled([
+                        axios.get(`${import.meta.env.VITE_API_URL}/api/students/dashboard/${parsedUser._id}`),
+                        axios.get(`${import.meta.env.VITE_API_URL}/api/students/leaderboard?studentId=${parsedUser._id}&period=weekly`),
+                        axios.get(`${import.meta.env.VITE_API_URL}/api/students/leaderboard?studentId=${parsedUser._id}&period=daily`),
+                        axios.get(`${import.meta.env.VITE_API_URL}/api/settings`)
+                    ]);
 
-                        const dashboardRes = results[0].status === 'fulfilled' ? results[0].value : null;
-                        const leaderboardRes = results[1].status === 'fulfilled' ? results[1].value : null;
-                        const settingsRes = results[2].status === 'fulfilled' ? results[2].value : null;
+                    const dashboardRes = results[0].status === 'fulfilled' ? results[0].value : null;
+                    const weeklyRes = results[1].status === 'fulfilled' ? results[1].value : null;
+                    const dailyRes = results[2].status === 'fulfilled' ? results[2].value : null;
+                    const settingsRes = results[3].status === 'fulfilled' ? results[3].value : null;
 
-                        if (dashboardRes && dashboardRes.data.success) {
-                            setStats(dashboardRes.data.stats);
-                            setRecentActivity(dashboardRes.data.recentActivity);
-                            setWeeklyActivity(dashboardRes.data.weeklyActivity);
-                        } else {
-                            console.error("Dashboard fetch failed:", results[0].reason);
+                    if (dashboardRes && dashboardRes.data.success) {
+                        setStats(dashboardRes.data.stats);
+                        setRecentActivity(dashboardRes.data.recentActivity);
+                        setWeeklyActivity(dashboardRes.data.weeklyActivity);
+                    }
+
+                    if (settingsRes) {
+                        setSettings(settingsRes.data);
+                    }
+
+                    if (weeklyRes && weeklyRes.data.success) {
+                        setWeeklyLeaderboard(weeklyRes.data.leaderboard);
+                        if (leaderboardPeriod === 'weekly') {
+                            setLeaderboard(weeklyRes.data.leaderboard);
                         }
-
-                        if (settingsRes) {
-                            setSettings(settingsRes.data);
-                        }
-
-                        if (leaderboardRes && leaderboardRes.data.success) {
-                            setLeaderboard(leaderboardRes.data.leaderboard);
-                            // Check Rank and Auto-Show Card (Once Per Day)
-                            const myRankIndex = leaderboardRes.data.leaderboard.findIndex(s => s.id === parsedUser._id);
-                            if (myRankIndex !== -1 && myRankIndex < 3) {
-                                const todayStr = new Date().toDateString();
-                                const lastShown = localStorage.getItem(`rankCardLastShown_${parsedUser._id}`);
-
-                                if (lastShown !== todayStr) {
-                                    setShowRankCard(true);
-                                    localStorage.setItem(`rankCardLastShown_${parsedUser._id}`, todayStr);
-                                }
+                        
+                        // Ranking Logic
+                        const myRankIndex = weeklyRes.data.leaderboard.findIndex(s => s.id === parsedUser._id);
+                        if (myRankIndex !== -1 && myRankIndex < 3) {
+                            const todayStr = new Date().toDateString();
+                            const lastShown = localStorage.getItem(`rankCardLastShown_${parsedUser._id}`);
+                            if (lastShown !== todayStr) {
+                                setShowRankCard(true);
+                                localStorage.setItem(`rankCardLastShown_${parsedUser._id}`, todayStr);
                             }
-                        } else {
-                            console.error("Leaderboard fetch failed:", results[1].reason);
                         }
                     }
-                } // Close if (storedUser)
-            } catch (err) {
-                console.error("Error loading dashboard:", err);
-                toast.error("Failed to load dashboard data");
-            } finally {
-                setLoading(false);
-            }
-        };
 
+                    if (dailyRes && dailyRes.data.success) {
+                        setDailyLeaderboard(dailyRes.data.leaderboard);
+                        if (leaderboardPeriod === 'daily') {
+                            setLeaderboard(dailyRes.data.leaderboard);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error loading dashboard:", err);
+            // toast.error("Failed to load dashboard data");
+        } finally {
+            setLoading(false);
+        }
+    }, [leaderboardPeriod]);
+
+    useEffect(() => {
         fetchDashboardData();
-    }, []);
+
+        // Real-time synchronization event listener
+        const handleSync = () => {
+            fetchDashboardData();
+        };
+        window.addEventListener('finwise-activity-sync', handleSync);
+        
+        return () => {
+            window.removeEventListener('finwise-activity-sync', handleSync);
+        };
+    }, [fetchDashboardData]);
 
     // Fetch activity chart data when range tab changes
     const fetchActivity = async (range, studentId) => {
@@ -677,16 +698,18 @@ const Dashboard = () => {
     ];
 
     // Helper to find user rank safely
-    const getUserRank = () => {
-        if (!user || !leaderboard || leaderboard.length === 0) return null;
-        const index = leaderboard.findIndex(s => s.id === user._id);
-        if (index !== -1 && index < 10) { // Check top 10
-            return { rank: index + 1, points: leaderboard[index].points };
+    const getUserRank = (type = 'weekly') => {
+        const targetLeaderboard = type === 'weekly' ? weeklyLeaderboard : dailyLeaderboard;
+        if (!user || !targetLeaderboard || targetLeaderboard.length === 0) return null;
+        const index = targetLeaderboard.findIndex(s => s.id === user._id);
+        if (index !== -1) {
+            return { rank: index + 1, points: targetLeaderboard[index].points };
         }
         return null;
     };
 
-    const userRankInfo = getUserRank();
+    const userRankInfo = getUserRank('weekly');
+    const dailyRankInfo = getUserRank('daily');
 
     return (
         <div>
@@ -703,17 +726,8 @@ const Dashboard = () => {
                     onClose={() => setShowRankCard(false)}
                 />
             )}
-            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">
-                        Welcome back, {user?.name || 'Student'}! 👋
-                    </h1>
-                    <p className="text-gray-500 mt-1">Here is an overview of your learning progress.</p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500 bg-white px-4 py-2 rounded-lg border border-gray-200">
-                    <Calendar size={16} />
-                    <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                </div>
+            <div className="mb-6">
+                {/* Date removed, moved to navbar */}
             </div>
 
             {/* Stats Grid */}
@@ -818,18 +832,34 @@ const Dashboard = () => {
                 {/* Leaderboard Widget - Executive Grid Refined v4.2 */}
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-xl flex flex-col h-full overflow-hidden">
                     <div className="p-4 pb-3 flex items-center justify-between bg-white border-b border-gray-50">
-                        <div>
-                            <h2 className="text-lg font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-                                <Trophy className="text-amber-500" size={20} /> Top Learners
-                            </h2>
-                            <p className="text-[10px] font-medium text-gray-400">Weekly Rankings • Batch</p>
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <h2 className="text-lg font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+                                    <Trophy className="text-amber-500" size={20} /> Top Learners
+                                </h2>
+                            </div>
+                            {/* Period Toggle */}
+                            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100">
+                                <button 
+                                    onClick={() => { setLeaderboardPeriod('daily'); setLeaderboard(dailyLeaderboard); }}
+                                    className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${leaderboardPeriod === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    Day
+                                </button>
+                                <button 
+                                    onClick={() => { setLeaderboardPeriod('weekly'); setLeaderboard(weeklyLeaderboard); }}
+                                    className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${leaderboardPeriod === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    Week
+                                </button>
+                            </div>
                         </div>
                         {userRankInfo && (
                             <button
                                 onClick={() => setShowRankCard(true)}
                                 className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-xl transition-all duration-300 border border-indigo-100/50"
                             >
-                                My Status
+                                Status
                             </button>
                         )}
                     </div>

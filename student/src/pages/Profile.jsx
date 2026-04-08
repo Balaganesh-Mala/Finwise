@@ -15,8 +15,9 @@ const Profile = () => {
     const [formData, setFormData] = useState({
         headline: '',
         bio: '',
-        socials: { linkedin: '', github: '', portfolio: '', instagram: '' },
-        education: []
+        socials: { linkedin: '', naukri: '' },
+        education: [],
+        certifications: []
     });
     const [profilePreview, setProfilePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -38,8 +39,9 @@ const Profile = () => {
                 setFormData({
                     headline: res.data.headline || '',
                     bio: res.data.bio || '',
-                    socials: res.data.socials || { linkedin: '', github: '', portfolio: '', instagram: '' },
-                    education: res.data.education || []
+                    socials: res.data.socials || { linkedin: '', naukri: '' },
+                    education: res.data.education || [],
+                    certifications: res.data.certifications || []
                 });
                 setProfilePreview(res.data.profilePicture);
             } catch (err) {
@@ -93,6 +95,24 @@ const Profile = () => {
         setFormData(prev => ({ ...prev, education: newEducation }));
     };
 
+    const handleCertificationChange = (index, field, value) => {
+        const newCerts = [...formData.certifications];
+        newCerts[index][field] = value;
+        setFormData(prev => ({ ...prev, certifications: newCerts }));
+    };
+
+    const addCertification = () => {
+        setFormData(prev => ({
+            ...prev,
+            certifications: [...prev.certifications, { name: '', organization: '', year: '' }]
+        }));
+    };
+
+    const removeCertification = (index) => {
+        const newCerts = formData.certifications.filter((_, i) => i !== index);
+        setFormData(prev => ({ ...prev, certifications: newCerts }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -104,6 +124,7 @@ const Profile = () => {
             data.append('bio', formData.bio);
             data.append('socials', JSON.stringify(formData.socials));
             data.append('education', JSON.stringify(formData.education));
+            data.append('certifications', JSON.stringify(formData.certifications));
 
             if (selectedFile) {
                 data.append('profilePicture', selectedFile);
@@ -167,7 +188,7 @@ const Profile = () => {
                             name="headline"
                             value={formData.headline}
                             onChange={handleInputChange}
-                            placeholder="Add a headline (e.g. Frontend Developer)"
+                            placeholder="Add a headline (e.g. Financial Analyst or Accountant)"
                             className="text-sm text-center text-gray-500 mt-1 py-1 w-full border-b border-gray-300 hover:border-gray-400 focus:border-indigo-500 focus:outline-none bg-transparent"
                         />
 
@@ -191,8 +212,8 @@ const Profile = () => {
                 {/* Right: Tabs & Forms */}
                 <div className="md:w-2/3 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     {/* Tabs */}
-                    <div className="flex border-b border-gray-100">
-                        {['about', 'socials', 'education'].map(tab => (
+                    <div className="flex border-b border-gray-100 overflow-x-auto">
+                        {['about', 'socials', 'education', 'certifications'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -239,25 +260,13 @@ const Profile = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                                        <Github size={16} className="text-gray-900" /> GitHub URL
+                                        <Briefcase size={16} className="text-blue-500" /> Naukri Profile URL
                                     </label>
                                     <input
-                                        name="github"
-                                        value={formData.socials.github}
+                                        name="naukri"
+                                        value={formData.socials.naukri}
                                         onChange={(e) => handleInputChange(e, 'socials')}
-                                        placeholder="https://github.com/..."
-                                        className="w-full rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                                        <Globe size={16} className="text-indigo-600" /> Portfolio Website
-                                    </label>
-                                    <input
-                                        name="portfolio"
-                                        value={formData.socials.portfolio}
-                                        onChange={(e) => handleInputChange(e, 'socials')}
-                                        placeholder="https://..."
+                                        placeholder="https://naukri.com/mnj/..."
                                         className="w-full rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2"
                                     />
                                 </div>
@@ -275,7 +284,7 @@ const Profile = () => {
                                             <input
                                                 value={edu.degree}
                                                 onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
-                                                placeholder="Degree (e.g. B.Tech CSE)"
+                                                placeholder="Degree (e.g. B.Com Accounting)"
                                                 className="w-full bg-white rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold focus:border-indigo-500 focus:ring-indigo-500 outline-none placeholder-gray-400"
                                             />
                                             <input
@@ -297,6 +306,43 @@ const Profile = () => {
                                 ))}
                                 <button onClick={addEducation} className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:border-indigo-500 hover:text-indigo-600 flex items-center justify-center gap-2 transition-colors">
                                     <Plus size={18} /> Add Education
+                                </button>
+                            </div>
+                        )}
+
+                        {activeTab === 'certifications' && (
+                            <div className="space-y-4 animate-in fade-in duration-300">
+                                {formData.certifications.map((cert, index) => (
+                                    <div key={index} className="flex flex-col md:flex-row gap-3 p-4 bg-gray-50 rounded-xl relative group">
+                                        <button onClick={() => removeCertification(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Trash2 size={16} />
+                                        </button>
+                                        <div className="flex-1 flex flex-col gap-2">
+                                            <input
+                                                value={cert.name}
+                                                onChange={(e) => handleCertificationChange(index, 'name', e.target.value)}
+                                                placeholder="Certification Name (e.g. Tally Prime Professional)"
+                                                className="w-full bg-white rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold focus:border-indigo-500 focus:ring-indigo-500 outline-none placeholder-gray-400"
+                                            />
+                                            <input
+                                                value={cert.organization}
+                                                onChange={(e) => handleCertificationChange(index, 'organization', e.target.value)}
+                                                placeholder="Issuing Organization (e.g. Tally Education)"
+                                                className="w-full bg-white rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 focus:border-indigo-500 focus:ring-indigo-500 outline-none placeholder-gray-400"
+                                            />
+                                        </div>
+                                        <div className="w-full md:w-32">
+                                            <input
+                                                value={cert.year}
+                                                onChange={(e) => handleCertificationChange(index, 'year', e.target.value)}
+                                                placeholder="Year"
+                                                className="w-full bg-white rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                                <button onClick={addCertification} className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:border-indigo-500 hover:text-indigo-600 flex items-center justify-center gap-2 transition-colors">
+                                    <Plus size={18} /> Add Certification
                                 </button>
                             </div>
                         )}

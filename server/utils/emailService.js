@@ -34,7 +34,7 @@ transporter.verify(function (error, success) {
   }
 });
 
-const sendEmail = async (to, subject, html) => {
+const sendEmail = async (to, subject, html, reqAttachments = []) => {
   try {
     const senderName = (process.env.MAIL_SENDER_NAME || 'wonew.in').replace(/^"|"$/g, '');
     const senderEmail = process.env.MAIL_SENDER_EMAIL || 'info@wonew.in';
@@ -46,6 +46,7 @@ const sendEmail = async (to, subject, html) => {
       to,
       subject,
       html,
+      attachments: reqAttachments || [], // Support for PDF receipts
     });
     console.log("Email sent successfully: %s", info.messageId);
     return info;

@@ -171,15 +171,15 @@ exports.getStudentDashboardStats = async (req, res) => {
     }
 };
 
-// @desc    Get Student Leaderboard (Top 10 of the week by completed topics)
-// @route   GET /api/students/leaderboard?studentId=...
+// @desc    Get Student Leaderboard (Top 10 of the week by unified points)
+// @route   GET /api/students/leaderboard?studentId=...&period=daily|weekly
 // @access  Public
 exports.getLeaderboard = async (req, res) => {
     try {
-        const { studentId } = req.query;
+        const { studentId, period = 'weekly' } = req.query;
         let studentIdsInBatch = null;
 
-        // If studentId is provided, filter by their batch
+        // 1. Determine Cohort (Batch)
         if (studentId) {
             const myBatchEntry = await BatchStudent.findOne({ studentId });
             if (myBatchEntry) {
@@ -188,75 +188,102 @@ exports.getLeaderboard = async (req, res) => {
             }
         }
 
-        const today = new Date();
-        const diffToMon = (today.getDay() + 6) % 7;
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - diffToMon);
-        startOfWeek.setHours(0, 0, 0, 0);
-
-        // Build Match Stage
-        const matchStage = {
-            completed: true,
-            updatedAt: { $gte: startOfWeek }
-        };
-
-        // Apply Batch Filter if applicable
-        if (studentIdsInBatch) {
-            matchStage.studentId = { $in: studentIdsInBatch };
+        // 2. Determine Timeframe
+        const now = new Date();
+        const startOfPeriod = new Date(now);
+        if (period === 'daily') {
+            startOfPeriod.setHours(0, 0, 0, 0);
+        } else {
+            // Weekly: Start from Monday
+            const diffToMon = (now.getDay() + 6) % 7;
+            startOfPeriod.setDate(now.getDate() - diffToMon);
+            startOfPeriod.setHours(0, 0, 0, 0);
         }
 
-        // Aggregate completed topics this week, join topic duration
-        const leaderboard = await Progress.aggregate([
+        // 3. Unified Points Calculation (Topics + Typing + Attendance)
+        // We iterate through students in the batch (or all students if no batch)
+        const filter = studentIdsInBatch ? { _id: { $in: studentIdsInBatch } } : {};
+        
+        const leaderboard = await Student.aggregate([
+            { $match: filter },
             {
-                $match: matchStage
-            },
-            {
-                // Join with topics to get their duration
-                $lookup: {
-                    from: 'topics',
-                    localField: 'topicId',
-                    foreignField: '_id',
-                    as: 'topic'
+                $facet: {
+                    // Points from Course Topics (100 pts each)
+                    "topicPoints": [
+                        { $lookup: {
+                            from: 'progresses',
+                            localField: '_id',
+                            foreignField: 'studentId',
+                            as: 'p'
+                        }},
+                        { $unwind: "$p" },
+                        { $match: { "p.completed": true, "p.updatedAt": { $gte: startOfPeriod } } },
+                        { $group: { _id: "$_id", count: { $sum: 100 } } }
+                    ],
+                    // Points from Typing Practice (100 pts each 35+ WPM)
+                    "typingPoints": [
+                        { $lookup: {
+                            from: 'typinghistories',
+                            localField: '_id',
+                            foreignField: 'studentId',
+                            as: 't1'
+                        }},
+                        { $lookup: {
+                            from: 'typingprogresses',
+                            let: { sid: { $toString: "$_id" } },
+                            pipeline: [
+                                { $match: { $expr: { $eq: ["$studentId", "$$sid"] } } }
+                            ],
+                            as: 't2'
+                        }},
+                        { $project: {
+                            allTyping: { $concatArrays: ["$t1", "$t2"] }
+                        }},
+                        { $unwind: "$allTyping" },
+                        { $match: { "allTyping.wpm": { $gte: 35 }, "allTyping.createdAt": { $gte: startOfPeriod } } },
+                        { $group: { _id: "$_id", count: { $sum: 100 } } }
+                    ],
+                    // Points from Attendance (50 pts each QR mark)
+                    "attendancePoints": [
+                        { $lookup: {
+                            from: 'attendances',
+                            localField: '_id',
+                            foreignField: 'studentId',
+                            as: 'a'
+                        }},
+                        { $unwind: "$a" },
+                        { $match: { "a.method": 'qr', "a.status": 'present', "a.date": { $gte: startOfPeriod } } },
+                        { $group: { _id: "$_id", count: { $sum: 50 } } }
+                    ]
                 }
             },
             {
-                $unwind: {
-                    path: '$topic',
-                    preserveNullAndEmptyArrays: true
+                $project: {
+                    combined: { $concatArrays: ["$topicPoints", "$typingPoints", "$attendancePoints"] }
                 }
             },
-            {
-                $group: {
-                    _id: '$studentId',
-                    // Earned Points this week: 100 points per completed topic
-                    totalPoints: { $sum: 100 }
-                }
-            },
+            { $unwind: "$combined" },
+            { $group: { _id: "$combined._id", totalPoints: { $sum: "$combined.count" } } },
+            { $sort: { totalPoints: -1 } },
+            { $limit: 20 }, // Get top 20 to be safe
             {
                 $lookup: {
                     from: 'students',
                     localField: '_id',
                     foreignField: '_id',
-                    as: 'studentInfo'
+                    as: 'info'
                 }
             },
-            {
-                $unwind: {
-                    path: '$studentInfo',
-                    preserveNullAndEmptyArrays: false
-                }
-            },
+            { $unwind: "$info" },
             {
                 $project: {
                     _id: 1,
-                    name: '$studentInfo.name',
-                    email: '$studentInfo.email',
-                    profilePicture: '$studentInfo.profilePicture',
-                    points: '$totalPoints'
+                    name: "$info.name",
+                    email: "$info.email",
+                    profilePicture: "$info.profilePicture",
+                    points: "$totalPoints"
                 }
-            },
-            { $sort: { points: -1 } },
-            { $limit: 10 }
+            }
         ]);
 
         const formattedLeaderboard = leaderboard.map((entry, index) => ({
@@ -268,7 +295,7 @@ exports.getLeaderboard = async (req, res) => {
             points: entry.points || 0
         }));
 
-        res.json({ success: true, leaderboard: formattedLeaderboard });
+        res.json({ success: true, period, leaderboard: formattedLeaderboard });
 
     } catch (err) {
         console.error('Error fetching leaderboard:', err);

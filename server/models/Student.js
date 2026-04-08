@@ -18,6 +18,9 @@ const StudentSchema = new mongoose.Schema({
   startDate: { type: Date },
   progress: { type: Number, default: 0 }, // Overall course progress percentage
   points: { type: Number, default: 0 },
+  typingLevel: { type: Number, default: 1 },
+  lastCategory: { type: String, default: 'beginner' },
+  lastLessonIndex: { type: Number, default: 0 },
 
   // Feature Access Controls
   access: {
@@ -28,7 +31,8 @@ const StudentSchema = new mongoose.Schema({
     typingPractice: { type: Boolean, default: false },
     aiMockInterview: { type: Boolean, default: false },
     profile: { type: Boolean, default: true },
-    settings: { type: Boolean, default: true }
+    settings: { type: Boolean, default: true },
+    payments: { type: Boolean, default: true }
   },
 
   // Account Status
@@ -51,10 +55,15 @@ const StudentSchema = new mongoose.Schema({
   
   socials: {
     linkedin: { type: String, default: "" },
-    github: { type: String, default: "" },
-    portfolio: { type: String, default: "" },
+    naukri: { type: String, default: "" },
     instagram: { type: String, default: "" }
   },
+
+  certifications: [{
+    name: { type: String },
+    organization: { type: String },
+    year: { type: String }
+  }],
 
   education: [{
     degree: { type: String },
