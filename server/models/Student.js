@@ -74,7 +74,11 @@ const StudentSchema = new mongoose.Schema({
   preferences: {
     emailUpdates: { type: Boolean, default: true },
     newCourseAlerts: { type: Boolean, default: false },
-    assignmentNotifs: { type: Boolean, default: true }
+    assignmentNotifs: { type: Boolean, default: true },
+    showOnLeaderboard: { type: Boolean, default: true },
+    publicProfile: { type: Boolean, default: true },
+    typingSounds: { type: Boolean, default: true },
+    compactMode: { type: Boolean, default: false }
   },
 
   createdAt: { type: Date, default: Date.now },

@@ -18,6 +18,7 @@ import WrittenTest from './pages/exam/WrittenTest'; // Planned
 import MyQR from './pages/MyQR';
 import MyCourses from './pages/MyCourses';
 import CourseContent from './pages/CourseContent';
+import MockInterviewForm from './pages/MockInterviewForm';
 import StudentSubmissions from './pages/StudentSubmissions';
 
 
@@ -58,6 +59,7 @@ function App() {
             <Route path="materials" element={<MyCourses />} />
             <Route path="materials/:courseId" element={<CourseContent />} />
             <Route path="submissions" element={<StudentSubmissions />} />
+            <Route path="mock-interview" element={<MockInterviewForm />} />
 
             <Route path="my-qr" element={<MyQR />} />
             <Route path="profile" element={<div>Profile Page</div>} />

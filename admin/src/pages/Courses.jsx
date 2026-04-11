@@ -26,7 +26,10 @@ const Courses = () => {
         brochureLink: '',
         highlights: [],
         syllabus: [],
-        isBonus: false
+        isBonus: false,
+        pricingType: 'free',
+        priceCoins: 0,
+        pricePoints: 0
     };
 
     const [formData, setFormData] = useState(initialFormState);
@@ -78,7 +81,10 @@ const Courses = () => {
                 syllabusLink: course.syllabusLink || '',
                 brochureLink: course.brochureLink || '',
                 highlights: course.highlights || [],
-                syllabus: course.syllabus || []
+                syllabus: course.syllabus || [],
+                pricingType: course.pricingType || 'free',
+                priceCoins: course.priceCoins || 0,
+                pricePoints: course.pricePoints || 0
             });
         } else {
             setEditingCourse(null);
@@ -149,6 +155,9 @@ const Courses = () => {
             data.append('brochureLink', formData.brochureLink);
             data.append('highlights', JSON.stringify(formData.highlights));
             data.append('syllabus', JSON.stringify(formData.syllabus));
+            data.append('pricingType', formData.pricingType);
+            data.append('priceCoins', formData.priceCoins);
+            data.append('pricePoints', formData.pricePoints);
 
             if (formData.image) data.append('image', formData.image);
             if (formData.syllabusPdf) data.append('syllabusPdf', formData.syllabusPdf);
@@ -337,6 +346,41 @@ const Courses = () => {
                                         Mark as Bonus Course (Hides from landing page)
                                     </label>
                                 </div>
+
+                                {formData.isBonus && (
+                                    <div className="md:col-span-2 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div>
+                                            <label className="block text-xs font-bold text-indigo-600 uppercase mb-1">Pricing Model</label>
+                                            <select 
+                                                name="pricingType" value={formData.pricingType} onChange={handleChange}
+                                                className="w-full p-2 border border-indigo-200 rounded-lg outline-none focus:border-indigo-500 bg-white text-sm"
+                                            >
+                                                <option value="free">Free</option>
+                                                <option value="coins_only">Coins Only</option>
+                                                <option value="points_only">Points Only</option>
+                                                <option value="coins_and_points">Coins & Points</option>
+                                            </select>
+                                        </div>
+                                        {(formData.pricingType === 'coins_only' || formData.pricingType === 'coins_and_points') && (
+                                            <div>
+                                                <label className="block text-xs font-bold text-indigo-600 uppercase mb-1">Price (Coins)</label>
+                                                <input 
+                                                    type="number" name="priceCoins" value={formData.priceCoins} onChange={handleChange}
+                                                    className="w-full p-2 border border-indigo-200 rounded-lg outline-none focus:border-indigo-500 text-sm"
+                                                />
+                                            </div>
+                                        )}
+                                        {(formData.pricingType === 'points_only' || formData.pricingType === 'coins_and_points') && (
+                                            <div>
+                                                <label className="block text-xs font-bold text-indigo-600 uppercase mb-1">Price (Points)</label>
+                                                <input 
+                                                    type="number" name="pricePoints" value={formData.pricePoints} onChange={handleChange}
+                                                    className="w-full p-2 border border-indigo-200 rounded-lg outline-none focus:border-indigo-500 text-sm"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* File Inputs */}
                                 <div>

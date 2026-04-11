@@ -218,7 +218,11 @@ exports.getLeaderboard = async (req, res) => {
 
         // 3. Unified Points Calculation (Topics + Typing + Attendance)
         // We iterate through students in the batch (or all students if no batch)
-        const filter = studentIdsInBatch ? { _id: { $in: studentIdsInBatch } } : {};
+        // EXCLUDE students who have opted out of the leaderboard
+        const filter = { 
+            'preferences.showOnLeaderboard': { $ne: false }, 
+            ...(studentIdsInBatch ? { _id: { $in: studentIdsInBatch } } : {})
+        };
         
         const leaderboard = await Student.aggregate([
             { $match: filter },
@@ -273,12 +277,33 @@ exports.getLeaderboard = async (req, res) => {
                         { $unwind: "$a" },
                         { $match: { "a.method": 'qr', "a.status": 'present', "a.date": { $gte: startOfPeriod } } },
                         { $group: { _id: "$_id", count: { $sum: 50 } } }
+                    ],
+                    // Points from Mock Interviews
+                    "interviewPoints": [
+                        { $lookup: {
+                            from: 'mockinterviewfeedbacks',
+                            localField: '_id',
+                            foreignField: 'studentId',
+                            as: 'mi'
+                        }},
+                        { $unwind: "$mi" },
+                        { $match: { 
+                            "mi.isSubmitted": true,
+                            $or: [
+                                { "mi.interviewDate": { $gte: startOfPeriod } },
+                                { "mi.createdAt": { $gte: startOfPeriod } }
+                            ]
+                        } },
+                        { $group: { 
+                            _id: "$_id", 
+                            count: { $sum: { $add: ["$mi.pointsEarned", "$mi.bonusPoints", "$mi.firstInterviewBonus"] } } 
+                        } }
                     ]
                 }
             },
             {
                 $project: {
-                    combined: { $concatArrays: ["$topicPoints", "$typingPoints", "$attendancePoints"] }
+                    combined: { $concatArrays: ["$topicPoints", "$typingPoints", "$attendancePoints", "$interviewPoints"] }
                 }
             },
             { $unwind: "$combined" },

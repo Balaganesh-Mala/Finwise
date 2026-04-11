@@ -92,6 +92,9 @@ app.use('/api/topic-content', require('./routes/topicContentRoutes'));
 app.use('/api/drip', require('./routes/dripRoutes'));
 app.use('/api/finance', require('./routes/financeRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
+app.use('/api/mock-interviews', require('./routes/mockInterviewRoutes'));
+app.use('/api/mock-interview-settings', require('./routes/mockInterviewSettingsRoutes'));
+app.use('/api/rewards', require('./routes/rewardRoutes'));
 
 // Course Module Routes
 app.use('/api', require('./routes/moduleRoutes'));

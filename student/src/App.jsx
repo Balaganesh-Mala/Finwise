@@ -11,14 +11,15 @@ import MyQR from './pages/MyQR';
 import AttendanceHistory from './pages/AttendanceHistory';
 import TypingPractice from './pages/TypingPractice';
 import TypingTrainer from './pages/TypingTrainer';
-import MockInterview from './pages/MockInterview';
-import InterviewHistory from './pages/InterviewHistory';
+import MockInterviewDashboard from './pages/MockInterviewDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import ResetPassword from './pages/ResetPassword';
 import CoursePlayer from './pages/CoursePlayer';
 import JobPortal from './pages/JobPortal';
 import Payments from './pages/Payments';
+import RewardStore from './pages/RewardStore';
+import NotFound from './pages/NotFound';
 
 
 function App() {
@@ -42,10 +43,10 @@ function App() {
           <Route path="/playground" element={<Playground />} />
           <Route path="/typing-practice" element={<TypingPractice />} />
           <Route path="/typing-trainer" element={<TypingTrainer />} />
-          <Route path="/mock-interview" element={<MockInterview />} />
-          <Route path="/my-interview-history" element={<InterviewHistory />} />
+          <Route path="/mock-interview" element={<MockInterviewDashboard />} />
           <Route path="/jobs" element={<JobPortal />} />
           <Route path="/payments" element={<Payments />} />
+          <Route path="/reward-store" element={<RewardStore />} />
         </Route>
 
         {/* Standalone Protected Route for Course Player (Full Width) */}
@@ -55,6 +56,9 @@ function App() {
           </ProtectedRoute>
         } />
 
+
+        {/* Catch-all 404 Route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

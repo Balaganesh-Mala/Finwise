@@ -300,9 +300,40 @@ router.get('/student/:studentId/enrollment', async (req, res) => {
             .populate('batchId', 'name startDate endDate status')
             .populate('courseId');
 
-        // Calculate progress for each enrollment
-        const enrollmentsWithProgress = await Promise.all(enrollments.map(async (enrollment) => {
-            const courseId = enrollment.courseId?._id;
+        // Fetch direct purchase/unlock records
+        const StudentCourse = require('../models/StudentCourse');
+        const unlockedCourses = await StudentCourse.find({ studentId: req.params.studentId }).populate('courseId');
+
+        // Get IDs of courses that are currently in a batch enrollment for this student
+        const batchCourseIds = new Set(enrollments.map(e => e.courseId?._id?.toString()).filter(Boolean));
+
+        // Create a normalized list from batch enrollments
+        const filteredBatchEnrollments = enrollments.filter(e => {
+            // Only hide bonus courses from batch list if they are locked 
+            // Since they are in BatchStudent, they are technically "assigned", but we want to honor the paywall.
+            // If the admin assigned it via batch, we consider it "unlocked via batch" UNLESS 
+            // we want to strictly force store unlock. For now, if it's in BatchStudent, it's visible.
+            return true; 
+        });
+
+        // Convert StudentCourse records (direct unlocks) into an enrollment-like structure
+        const directEnrollments = unlockedCourses
+            .filter(u => u.courseId && !batchCourseIds.has(u.courseId._id.toString()))
+            .map(u => ({
+                _id: u._id,
+                studentId: u.studentId,
+                courseId: u.courseId,
+                batchId: null,
+                isBonus: true,
+                status: 'active',
+                enrollmentDate: u.unlockedAt
+            }));
+
+        // Merge both lists
+        const allEnrollments = [...filteredBatchEnrollments, ...directEnrollments];
+
+        const enrollmentsWithProgress = await Promise.all(allEnrollments.map(async (enrollment) => {
+            const courseId = enrollment.courseId?._id || enrollment.courseId;
             let progress = 0;
             
             if (courseId) {
@@ -324,7 +355,7 @@ router.get('/student/:studentId/enrollment', async (req, res) => {
             }
             
             return {
-                ...enrollment.toObject(),
+                ...(enrollment.toObject ? enrollment.toObject() : enrollment),
                 progress
             };
         }));

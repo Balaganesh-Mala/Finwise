@@ -33,7 +33,8 @@ import BatchStudents from './pages/BatchStudents';
 import StudentSubmissions from './pages/StudentSubmissions';
 
 // Interviews
-import AIMockInterviews from './pages/Interviews/AIMockInterviews';
+import MockInterviewSettings from './pages/Interviews/MockInterviewSettings';
+import ConductMockInterview from './pages/Interviews/ConductMockInterview';
 import MockInterviewHistory from './pages/Interviews/MockInterviewHistory';
 import QuestionBank from './pages/Interviews/QuestionBank';
 import PerformanceAnalytics from './pages/Interviews/PerformanceAnalytics';
@@ -85,7 +86,8 @@ function App() {
           <Route path="submissions" element={<StudentSubmissions />} />
 
           {/* Interviews & Assessments */}
-          <Route path="interviews/ai-mock" element={<AIMockInterviews />} />
+          <Route path="interviews/settings" element={<MockInterviewSettings />} />
+          <Route path="interviews/conduct" element={<ConductMockInterview />} />
           <Route path="interviews/history" element={<MockInterviewHistory />} />
           <Route path="interviews/questions" element={<QuestionBank />} />
           <Route path="interviews/analytics" element={<PerformanceAnalytics />} />

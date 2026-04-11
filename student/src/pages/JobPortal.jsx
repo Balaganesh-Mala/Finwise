@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MapPin, IndianRupee, Clock, CalendarClock, ChevronRight, Info, CheckCircle, AlertCircle, ExternalLink, RefreshCw, Building, Lock } from 'lucide-react';
+import { MapPin, IndianRupee, Clock, CalendarClock, ChevronRight, Info, CheckCircle, AlertCircle, ExternalLink, RefreshCw, Building, Lock, ShieldAlert, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -341,6 +341,7 @@ export default function JobPortal() {
     const [modal, setModal] = useState(null);
     const [eligible, setEligible] = useState(false);
     const [completion, setCompletion] = useState(0);
+    const [showSecurityNotice, setShowSecurityNotice] = useState(false);
 
     const fetchAll = useCallback(async (studentId) => {
         try {
@@ -412,7 +413,97 @@ export default function JobPortal() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
-            <div className="max-w-5xl mx-auto px-4 pt-0">
+            <div className="max-w-5xl mx-auto px-4 pt-10">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-2 border-b border-slate-200/60">
+                    <div>
+                        <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+                            Career Opportunities
+                            <Sparkles className="text-amber-400" size={20} />
+                            
+                            {/* Blinking Security Icon */}
+                            <button 
+                                onClick={() => setShowSecurityNotice(true)}
+                                className="relative flex items-center justify-center ml-1 p-1 hover:bg-rose-50 rounded-full transition-colors group"
+                            >
+                                <span className="animate-ping absolute inline-flex h-4 w-4 rounded-full bg-rose-400 opacity-75"></span>
+                                <ShieldAlert size={18} className="text-rose-500 relative z-10" />
+                                
+                                {/* Tooltip */}
+                                <span className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
+                                    Security Policy
+                                </span>
+                            </button>
+                        </h1>
+                        <p className="text-slate-500 text-sm mt-1">Unlock your professional potential with personalized job listings.</p>
+                    </div>
+
+                    <div className="flex items-center gap-5">
+                         <div className="text-right hidden sm:block">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Applications</p>
+                            <p className="text-xl font-black text-slate-900 leading-none">{stats.totalApplied}</p>
+                         </div>
+                         <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+                         <div className="text-right hidden sm:block">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Interviews</p>
+                            <p className="text-xl font-black text-indigo-600 leading-none">{stats.interviews}</p>
+                         </div>
+                    </div>
+                </div>
+
+                {/* Security Notice Modal */}
+                <AnimatePresence>
+                    {showSecurityNotice && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setShowSecurityNotice(false)}
+                                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                            />
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+                            >
+                                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-rose-50/30">
+                                    <div className="flex items-center gap-2 text-rose-600 font-bold text-[10px] uppercase tracking-widest">
+                                        <ShieldAlert size={14} /> Security & Privacy Policy
+                                    </div>
+                                    <button 
+                                        onClick={() => setShowSecurityNotice(false)}
+                                        className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                                <div className="p-8 text-center space-y-4">
+                                    <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                                        <Lock size={32} />
+                                    </div>
+                                    <h3 className="text-xl font-extrabold text-slate-900 px-4">Do Not Share Job Details</h3>
+                                    <p className="text-sm text-slate-500 leading-relaxed px-2">
+                                        Job details and recruitment contacts are strictly confidential. Sharing this information outside this portal is a violation of policy.
+                                    </p>
+                                    <div className="p-4 bg-rose-50 rounded-xl border border-rose-100">
+                                        <p className="text-xs font-bold text-rose-600 uppercase tracking-wider">Warning</p>
+                                        <p className="text-xs text-rose-500 font-medium mt-1">If found sharing details, your profile will be permanently <span className="font-bold underline">blocked</span>.</p>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+                                    <button 
+                                        onClick={() => setShowSecurityNotice(false)}
+                                        className="text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+                                    >
+                                        I Understand
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
 
 
 

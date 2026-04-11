@@ -68,11 +68,14 @@ router.get('/:id', async (req, res) => {
 // @access  Private (Admin)
 router.post('/', cpUpload, async (req, res) => {
     try {
-        const { title, description, overview, duration, fee, skillLevel, isBonus, syllabusLink, brochureLink, highlights, syllabus } = req.body;
+        const { title, description, overview, duration, fee, skillLevel, isBonus, syllabusLink, brochureLink, highlights, syllabus, pricingType, priceCoins, pricePoints } = req.body;
         
         const courseData = {
             title, description, overview, duration, fee, skillLevel,
             isBonus: isBonus === 'true' || isBonus === true,
+            pricingType: pricingType || 'free',
+            priceCoins: Number(priceCoins) || 0,
+            pricePoints: Number(pricePoints) || 0,
             syllabusLink: syllabusLink || '',
             brochureLink: brochureLink || '',
             highlights: highlights ? JSON.parse(highlights) : [],
@@ -116,11 +119,14 @@ router.put('/:id', cpUpload, async (req, res) => {
         let course = await Course.findById(req.params.id);
         if (!course) return res.status(404).json({ msg: 'Course not found' });
 
-        const { title, description, overview, duration, fee, skillLevel, isBonus, syllabusLink, brochureLink, highlights, syllabus } = req.body;
+        const { title, description, overview, duration, fee, skillLevel, isBonus, syllabusLink, brochureLink, highlights, syllabus, pricingType, priceCoins, pricePoints } = req.body;
         
         let updateData = {
             title, description, overview, duration, fee, skillLevel,
             isBonus: isBonus === 'true' || isBonus === true,
+            pricingType: pricingType || 'free',
+            priceCoins: Number(priceCoins) || 0,
+            pricePoints: Number(pricePoints) || 0,
             syllabusLink: syllabusLink || '',
             brochureLink: brochureLink || ''
         };

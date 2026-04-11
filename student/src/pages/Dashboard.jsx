@@ -92,7 +92,7 @@ const RankCardModal = ({ rank, points, user, stats, activitySummary, weeklyActiv
 
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
             if (!blob) throw new Error("Canvas to Blob failed");
-            
+
             const file = new File([blob], `Finwise-Rank-${rank}.png`, { type: 'image/png' });
 
             // Force Download if requested or if sharing is unavailable
@@ -582,6 +582,7 @@ const Dashboard = () => {
     const [activityChartData, setActivityChartData] = useState([]);
     const [activitySummary, setActivitySummary] = useState({ totalHours: 0, topicCount: 0, activeDays: 0 });
     const [activityLoading, setActivityLoading] = useState(false);
+    const [mockHistory, setMockHistory] = useState([]);
 
     const fetchDashboardData = useCallback(async () => {
         try {
@@ -595,13 +596,15 @@ const Dashboard = () => {
                         axios.get(`${import.meta.env.VITE_API_URL}/api/students/dashboard/${parsedUser._id}`),
                         axios.get(`${import.meta.env.VITE_API_URL}/api/students/leaderboard?studentId=${parsedUser._id}&period=weekly`),
                         axios.get(`${import.meta.env.VITE_API_URL}/api/students/leaderboard?studentId=${parsedUser._id}&period=daily`),
-                        axios.get(`${import.meta.env.VITE_API_URL}/api/settings`)
+                        axios.get(`${import.meta.env.VITE_API_URL}/api/settings`),
+                        axios.get(`${import.meta.env.VITE_API_URL}/api/mock-interviews/student/${parsedUser._id}`)
                     ]);
 
                     const dashboardRes = results[0].status === 'fulfilled' ? results[0].value : null;
                     const weeklyRes = results[1].status === 'fulfilled' ? results[1].value : null;
                     const dailyRes = results[2].status === 'fulfilled' ? results[2].value : null;
                     const settingsRes = results[3].status === 'fulfilled' ? results[3].value : null;
+                    const mockRes = results[4].status === 'fulfilled' ? results[4].value : null;
 
                     if (dashboardRes && dashboardRes.data.success) {
                         setStats(dashboardRes.data.stats);
@@ -613,12 +616,16 @@ const Dashboard = () => {
                         setSettings(settingsRes.data);
                     }
 
+                    if (mockRes && mockRes.data.success) {
+                        setMockHistory(mockRes.data.history);
+                    }
+
                     if (weeklyRes && weeklyRes.data.success) {
                         setWeeklyLeaderboard(weeklyRes.data.leaderboard);
                         if (leaderboardPeriod === 'weekly') {
                             setLeaderboard(weeklyRes.data.leaderboard);
                         }
-                        
+
                         // Ranking Logic
                         const myRankIndex = weeklyRes.data.leaderboard.findIndex(s => s.id === parsedUser._id);
                         if (myRankIndex !== -1 && myRankIndex < 3) {
@@ -655,7 +662,7 @@ const Dashboard = () => {
             fetchDashboardData();
         };
         window.addEventListener('finwise-activity-sync', handleSync);
-        
+
         return () => {
             window.removeEventListener('finwise-activity-sync', handleSync);
         };
@@ -729,6 +736,8 @@ const Dashboard = () => {
             <div className="mb-6">
                 {/* Date removed, moved to navbar */}
             </div>
+
+
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -840,13 +849,13 @@ const Dashboard = () => {
                             </div>
                             {/* Period Toggle */}
                             <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100">
-                                <button 
+                                <button
                                     onClick={() => { setLeaderboardPeriod('daily'); setLeaderboard(dailyLeaderboard); }}
                                     className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${leaderboardPeriod === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                 >
                                     Day
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => { setLeaderboardPeriod('weekly'); setLeaderboard(weeklyLeaderboard); }}
                                     className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${leaderboardPeriod === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                 >
@@ -879,7 +888,13 @@ const Dashboard = () => {
                                             <div className="relative shrink-0">
                                                 <div className="w-12 h-12 rounded-xl overflow-hidden ring-2 ring-amber-50 shadow-inner">
                                                     {leaderboard[0].profilePicture ? (
-                                                        <img src={leaderboard[0].profilePicture} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                                                        <img 
+                                                            src={leaderboard[0].profilePicture} 
+                                                            className="w-full h-full object-cover pointer-events-none select-none" 
+                                                            crossOrigin="anonymous" 
+                                                            onContextMenu={(e) => e.preventDefault()}
+                                                            draggable="false"
+                                                        />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center bg-amber-50 text-amber-600 text-lg font-black">
                                                             {leaderboard[0].name?.charAt(0)}
@@ -911,7 +926,13 @@ const Dashboard = () => {
                                                 <div className="relative shrink-0">
                                                     <div className={`w-8 h-8 rounded-lg overflow-hidden border p-0.5 bg-white ${i === 0 ? 'border-gray-200' : 'border-orange-100'}`}>
                                                         {student.profilePicture ? (
-                                                            <img src={student.profilePicture} className="w-full h-full object-cover rounded-md" crossOrigin="anonymous" />
+                                                            <img 
+                                                                src={student.profilePicture} 
+                                                                className="w-full h-full object-cover rounded-md pointer-events-none select-none" 
+                                                                crossOrigin="anonymous" 
+                                                                onContextMenu={(e) => e.preventDefault()}
+                                                                draggable="false"
+                                                            />
                                                         ) : (
                                                             <div className={`w-full h-full flex items-center justify-center text-[10px] font-black ${i === 0 ? 'text-gray-400' : 'text-orange-500'}`}>
                                                                 {student.name?.charAt(0)}
@@ -952,7 +973,14 @@ const Dashboard = () => {
                                                 <span className="text-[10px] font-black text-gray-300 w-4 text-center">{idx + 4}</span>
                                                 <div className="h-7 w-7 rounded-full overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
                                                     {student.profilePicture ? (
-                                                        <img src={student.profilePicture} alt={student.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                                                        <img 
+                                                            src={student.profilePicture} 
+                                                            alt={student.name} 
+                                                            className="w-full h-full object-cover pointer-events-none select-none" 
+                                                            crossOrigin="anonymous" 
+                                                            onContextMenu={(e) => e.preventDefault()}
+                                                            draggable="false"
+                                                        />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center bg-white text-gray-400 text-[9px] font-black">
                                                             {student.name?.charAt(0)}
@@ -1005,6 +1033,57 @@ const Dashboard = () => {
                             ))
                         ) : (
                             <p className="text-gray-500 text-center py-8">No recent activity found. Start learning!</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Interview Performance Trends */}
+                <div className="lg:col-span-1 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-800">Interview Readiness</h2>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Mock Trends</p>
+                        </div>
+                        <TrendingUp size={20} className="text-indigo-500" />
+                    </div>
+
+                    <div className="h-40 w-full mb-6">
+                        {mockHistory.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={mockHistory.slice().reverse().slice(-5).map(h => ({
+                                    date: new Date(h.interviewDate || h.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                                    score: h.overallScore
+                                }))}>
+                                    <XAxis dataKey="date" hide />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', fontSize: '10px' }}
+                                    />
+                                    <Bar dataKey="score" fill="#6366F1" radius={[4, 4, 0, 0]} barSize={20} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
+                                <Sparkles size={24} className="mb-2" />
+                                <p className="text-[10px] font-bold uppercase">No Mocks Yet</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-3">
+                        {mockHistory.length > 0 ? (
+                            mockHistory.slice(0, 3).map((h, i) => (
+                                <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-transparent hover:border-gray-100 transition-all">
+                                    <div>
+                                        <p className="text-[11px] font-bold text-gray-900 leading-none mb-1">{h.interviewType}</p>
+                                        <p className="text-[9px] text-gray-400 font-medium">{new Date(h.interviewDate || h.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                    <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">{h.overallScore}/10</span>
+                                </div>
+                            ))
+                        ) : (
+                            <button className="w-full py-2 bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase rounded-xl hover:bg-indigo-100 transition-all">
+                                Schedule First Mock
+                            </button>
                         )}
                     </div>
                 </div>

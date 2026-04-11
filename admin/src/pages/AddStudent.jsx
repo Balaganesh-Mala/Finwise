@@ -29,10 +29,12 @@ const AddStudent = () => {
             myCourses: true,
             myQR: true,
             attendance: true,
-            typingPractice: false,
-            aiMockInterview: false,
+            typingPractice: true,
+            aiMockInterview: true,
             profile: true,
-            settings: true
+            settings: true,
+            jobs: true,
+            payments: true
         },
         profilePicture: ''
     });
@@ -55,7 +57,7 @@ const AddStudent = () => {
                         ...student,
                         startDate: formattedDate,
                         dob: formattedDob,
-                        access: student.access || formData.access,
+                        access: { ...formData.access, ...(student.access || {}) },
                         profilePicture: student.profilePicture || ''
                     });
                 } catch (err) {

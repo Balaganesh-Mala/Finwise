@@ -64,7 +64,8 @@ const navCategories = [
     title: 'Interviews Preparation',
     icon: MonitorPlay,
     links: [
-      { name: 'AI Mock Management', path: '/interviews/ai-mock', icon: Video },
+      { name: 'Settings', path: '/interviews/settings', icon: Settings },
+      { name: 'Conduct Mock', path: '/interviews/conduct', icon: FileText },
       { name: 'Mock History', path: '/interviews/history', icon: ClipboardList },
       { name: 'Question Bank', path: '/interviews/questions', icon: HelpCircle },
       { name: 'Analytics', path: '/interviews/analytics', icon: TrendingUp }

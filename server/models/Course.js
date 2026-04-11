@@ -38,6 +38,19 @@ const CourseSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    pricingType: {
+        type: String,
+        enum: ['free', 'coins_only', 'points_only', 'coins_and_points'],
+        default: 'free'
+    },
+    priceCoins: {
+        type: Number,
+        default: 0
+    },
+    pricePoints: {
+        type: Number,
+        default: 0
+    },
     imageUrl: {
         type: String,
         default: 'no-photo.jpg'

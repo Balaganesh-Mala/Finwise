@@ -5,6 +5,8 @@ const Student = require('../models/Student');
 const Trainer = require('../models/Trainer');
 const TrainerQR = require('../models/TrainerQR');
 const Attendance = require('../models/Attendance');
+const StudentWallet = require('../models/StudentWallet');
+const Transaction = require('../models/Transaction');
 
 // @route   POST /api/attendance/qr-mark
 // @desc    Mark attendance via QR Scan
@@ -74,9 +76,34 @@ router.post('/qr-mark', async (req, res) => {
             date: new Date()
         });
 
-        // 6. Award Points (50 points for QR Attendance)
+        // 6. Award Rewards (50 points + 10 coins)
         student.points = (student.points || 0) + 50;
         await student.save();
+
+        // Update Wallet (Coins)
+        let wallet = await StudentWallet.findOne({ studentId: student._id });
+        if (!wallet) {
+            wallet = new StudentWallet({ studentId: student._id });
+        }
+        wallet.totalCoins += 10;
+        wallet.totalPoints += 50; // Keep points in sync if wallet tracking is used
+        
+        // Update level based on points (simple logic)
+        if (wallet.totalPoints >= 1000) wallet.level = 4;
+        else if (wallet.totalPoints >= 500) wallet.level = 3;
+        else if (wallet.totalPoints >= 200) wallet.level = 2;
+        else wallet.level = 1;
+        
+        await wallet.save();
+
+        // Record Transaction
+        await Transaction.create({
+            studentId: student._id,
+            type: 'coins',
+            amount: 10,
+            reason: 'attendance',
+            date: new Date()
+        });
 
         res.json({
             success: true,

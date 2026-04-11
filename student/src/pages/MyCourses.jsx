@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, PlayCircle, Clock, Award, Loader } from 'lucide-react';
+import { BookOpen, PlayCircle, Clock, Award, Loader, ShieldAlert, X, Sparkles, Lock, FileText, Video } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -9,6 +10,7 @@ const MyCourses = () => {
     const [studentData, setStudentData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [realProgress, setRealProgress] = useState(0);
+    const [showSecurityNotice, setShowSecurityNotice] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -135,10 +137,112 @@ const MyCourses = () => {
     );
 
     return (
-        <div>
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-800">My Courses</h1>
-                <p className="text-gray-500 mt-1">Continue learning where you left off.</p>
+        <div className="min-h-screen bg-gray-50 pb-16">
+            <div className="max-w-6xl mx-auto px-4 pt-10">
+
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-2 border-b border-slate-200/60">
+                    <div>
+                        <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+                            My Courses
+                            <Sparkles className="text-amber-400" size={20} />
+
+                            {/* Blinking Security Icon */}
+                            <button
+                                onClick={() => setShowSecurityNotice(true)}
+                                className="relative flex items-center justify-center ml-1 p-1 hover:bg-rose-50 rounded-full transition-colors group"
+                            >
+                                <span className="animate-ping absolute inline-flex h-4 w-4 rounded-full bg-rose-400 opacity-75"></span>
+                                <ShieldAlert size={18} className="text-rose-500 relative z-10" />
+
+                                <span className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
+                                    Content Policy
+                                </span>
+                            </button>
+                        </h1>
+                        <p className="text-slate-500 text-sm mt-1">Access your learning journey and recorded sessions.</p>
+                    </div>
+
+                    {studentData && (
+                        <div className="flex items-center gap-5">
+                            <div className="text-right hidden sm:block">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Batch Progress</p>
+                                <p className="text-xl font-black text-slate-900 leading-none">{realProgress}%</p>
+                            </div>
+                            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+                            <div className="text-right hidden sm:block">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Joining Date</p>
+                                <p className="text-sm font-bold text-indigo-600 leading-none">
+                                    {new Date(studentData.startDate).toLocaleDateString()}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Security Content Modal */}
+                <AnimatePresence>
+                    {showSecurityNotice && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setShowSecurityNotice(false)}
+                                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+                            >
+                                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-rose-50/30">
+                                    <div className="flex items-center gap-2 text-rose-600 font-bold text-[10px] uppercase tracking-widest">
+                                        <Lock size={14} /> IP Protection Policy
+                                    </div>
+                                    <button
+                                        onClick={() => setShowSecurityNotice(false)}
+                                        className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                                <div className="p-8 text-center space-y-6">
+                                    <div className="flex justify-center gap-3">
+                                        <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center">
+                                            <Video size={24} />
+                                        </div>
+                                        <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center">
+                                            <FileText size={24} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-extrabold text-slate-900 mb-2">Internal Assets Only</h3>
+                                        <p className="text-sm text-slate-500 leading-relaxed">
+                                            Recorded videos and study notes are strictly for your personal learning. Sharing these materials externally is a severe violation of Finwise Terms of Service.
+                                        </p>
+                                    </div>
+                                    <div className="p-4 bg-rose-50 rounded-xl border border-rose-100 text-left">
+                                        <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Strict Policy</p>
+                                        <p className="text-xs text-rose-500 font-medium leading-relaxed">
+                                            Unauthorized sharing, recording, or distribution will result in **immediate termination** of your course access and permanent blacklisting.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+                                    <button
+                                        onClick={() => setShowSecurityNotice(false)}
+                                        className="text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+                                    >
+                                        I Acknowledge & Agree
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

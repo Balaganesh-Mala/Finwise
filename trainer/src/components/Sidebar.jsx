@@ -33,6 +33,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { name: 'Attendance', icon: Users, path: '/attendance' },
         { name: 'Materials', icon: BookOpen, path: '/materials' },
         { name: 'Submissions', icon: ClipboardList, path: '/submissions' },
+        { name: 'Mock Interview', icon: MessageSquare, path: '/mock-interview' },
         { name: 'Comments', icon: MessageSquare, path: '/comments' },
 
         { name: 'Analytics', icon: TrendingUp, path: '/analytics' },

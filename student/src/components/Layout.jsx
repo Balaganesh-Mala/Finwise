@@ -9,7 +9,6 @@ import {
     X,
     GraduationCap,
     Bell,
-    Search,
     ChevronDown,
     Settings,
     Code2,
@@ -25,7 +24,9 @@ import {
     ExternalLink,
     Briefcase,
     AlertCircle,
-    CreditCard
+    CreditCard,
+    Coins,
+    BotIcon
 } from 'lucide-react';
 
 
@@ -48,6 +49,7 @@ const Layout = () => {
     const [newJobsCount, setNewJobsCount] = useState(0);
     const [dailyRank, setDailyRank] = useState(null);
     const [weeklyRank, setWeeklyRank] = useState(null);
+    const [wallet, setWallet] = useState({ totalPoints: 0, totalCoins: 0, level: 1 });
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -224,15 +226,32 @@ const Layout = () => {
             } catch (err) { console.error("Failed to fetch ranks:", err); }
         };
 
+        const fetchWallet = async () => {
+            if (!user?._id) return;
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const { data } = await axios.get(`${API_URL}/api/rewards/wallet/${user._id}`);
+                if (data.success) {
+                    setWallet({
+                        totalPoints: data.totalPoints,
+                        totalCoins: data.totalCoins,
+                        level: data.level
+                    });
+                }
+            } catch (err) { console.error("Failed to fetch wallet:", err); }
+        };
+
         checkNewJobs();
         fetchRanks();
+        fetchWallet();
 
         // Real-time synchronization event listener
         const handleSync = () => {
             fetchRanks();
+            fetchWallet();
         };
         window.addEventListener('finwise-activity-sync', handleSync);
-        
+
         const interval = setInterval(() => {
             checkNewJobs();
             fetchRanks();
@@ -266,16 +285,12 @@ const Layout = () => {
                 { label: 'My QR', path: '/my-qr', accessKey: 'myQR' }
             ]
         },
-        {
-            icon: Bot,
-            label: 'Interview Preparation',
-            children: [
-                { label: 'AI Mock Interview', path: '/mock-interview', accessKey: 'aiMockInterview' },
-                { label: 'History', path: '/my-interview-history', accessKey: 'aiMockInterview' }
-            ]
-        },
-        { icon: Briefcase, label: 'Jobs', path: '/jobs', accessKey: 'dashboard' }, // Accessible to everyone who has dashboard access
+
+        { icon: BotIcon, label: 'Interview Preparation', path: '/mock-interview', accessKey: 'aiMockInterview' }, // Accessible to everyone who has dashboard access
+
+        { icon: Briefcase, label: 'Jobs', path: '/jobs', accessKey: 'jobs' }, // Managed via Admin Feature Access
         { icon: CreditCard, label: 'Payments', path: '/payments', accessKey: 'payments' },
+        { icon: Sparkles, label: 'Reward Store', path: '/reward-store', accessKey: 'dashboard' },
         { icon: User, label: 'Profile', path: '/profile', accessKey: 'profile' },
         { icon: Settings, label: 'Settings', path: '/settings', accessKey: 'settings' },
     ];
@@ -549,12 +564,12 @@ const Layout = () => {
                     </div>
 
                     {/* Right Side: Search & Ranking & Profile */}
-                    <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-3 md:gap-8">
                         {/* Ranking Section - Fitted Horizontal Design */}
                         <div className="hidden lg:flex items-center gap-4">
                             {/* Today Ranking */}
                             <div className="flex flex-col items-center">
-                                <div className="text-[8px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-1 leading-none">Current Ranking</div>
+
                                 <div className="flex items-center gap-3 bg-white border border-gray-100 pl-3 pr-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-all cursor-default group relative overflow-hidden">
                                     <div className="flex flex-col items-start">
                                         <span className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">Today</span>
@@ -568,37 +583,8 @@ const Layout = () => {
                                     <Trophy size={14} className="text-yellow-400 opacity-20 group-hover:opacity-100 transition-opacity ml-1" />
                                 </div>
                             </div>
-
-                            {/* Weekly Ranking */}
-                            <div className="flex flex-col items-center">
-                                <div className="text-[8px] font-black text-indigo-400 opacity-60 uppercase tracking-[0.2em] mb-1 leading-none">Current Ranking</div>
-                                <button 
-                                    onClick={() => navigate('/')}
-                                    className="flex items-center gap-3 bg-slate-900 border border-slate-800 pl-3 pr-4 py-2 rounded-xl shadow-lg hover:bg-slate-800 transition-all group relative overflow-hidden"
-                                >
-                                    <div className="flex flex-col items-start">
-                                        <span className="text-[9px] font-bold text-slate-500 uppercase leading-none mb-1">This Week</span>
-                                        <span className="text-[13px] font-black text-white leading-none">#{weeklyRank?.rank || '-'}</span>
-                                    </div>
-                                    <div className="h-6 w-px bg-slate-700"></div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[12px] font-black text-indigo-400 leading-none">{weeklyRank?.points || 0}</span>
-                                        <span className="text-[9px] font-bold text-slate-500 uppercase leading-none">Pts</span>
-                                    </div>
-                                    <Sparkles size={14} className="text-indigo-400 opacity-30 group-hover:opacity-100 transition-opacity ml-1" />
-                                </button>
-                            </div>
                         </div>
 
-                        {/* Search Bar (Desktop) */}
-                        <div className="hidden xl:flex items-center bg-gray-50 border border-gray-100 rounded-full px-4 py-2.5 w-44 focus-within:w-60 focus-within:ring-2 focus-within:ring-indigo-100 transition-all duration-300">
-                            <Search size={14} className="text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                className="bg-transparent border-none outline-none text-xs ml-2 w-full text-gray-700 placeholder-gray-400"
-                            />
-                        </div>
 
                         {/* Notification Bell */}
                         <div className="relative">
@@ -645,6 +631,17 @@ const Layout = () => {
                                     </div>
                                 </>
                             )}
+                        </div>
+
+                        {/* Wallet / Coins Summary (Sticky Navbar View) */}
+                        <div
+                            onClick={() => navigate('/reward-store')}
+                            className="flex items-center gap-1.5 md:gap-2 bg-amber-50 border border-amber-100 px-2 md:px-3 py-1 md:py-1.5 rounded-full cursor-pointer hover:bg-amber-100 transition-colors group"
+                        >
+                            <div className="bg-amber-400 p-0.5 md:p-1 rounded-full text-white group-hover:scale-110 transition-transform">
+                                <Coins size={10} className="md:w-3 md:h-3" strokeWidth={3} />
+                            </div>
+                            <span className="text-[11px] md:text-xs font-black text-amber-700">{wallet.totalCoins}</span>
                         </div>
 
                         <div className="h-8 w-px bg-gray-200 mx-2 hidden md:block"></div>
@@ -711,7 +708,11 @@ const Layout = () => {
                                         <div className="grid grid-cols-2 gap-2 mb-4">
                                             <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
                                                 <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Points</p>
-                                                <p className="text-lg font-black text-emerald-700">{user?.points || 0}</p>
+                                                <p className="text-lg font-black text-emerald-700">{wallet.totalPoints || user?.points || 0}</p>
+                                            </div>
+                                            <div className="bg-amber-50 rounded-xl p-3 text-center border border-amber-100">
+                                                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Coins</p>
+                                                <p className="text-lg font-black text-amber-700">{wallet.totalCoins}</p>
                                             </div>
                                             <div className="bg-indigo-50 rounded-xl p-3 text-center border border-indigo-100">
                                                 <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">Type Level</p>
