@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Search, Edit2, Trash2, X, FileText, Image as ImageIcon, Save, Loader } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const Blogs = () => {
     const [blogs, setBlogs] = useState([]);
@@ -115,7 +116,17 @@ const Blogs = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this blog post?')) return;
+        const result = await Swal.fire({
+            title: 'Delete Blog Post?',
+            text: 'Are you sure you want to delete this blog post? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (!result.isConfirmed) return;
 
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/blogs/${id}`);

@@ -37,17 +37,22 @@ exports.getDashboardStats = async (req, res) => {
                 allowedCourses = trainer.assignedCourses.map(c => c.title);
                 coursesCount = trainer.assignedCourses.length;
             } else if (trainer.role) {
-                let searchKeyword = '';
-                if (trainer.role.includes('MS Office')) searchKeyword = 'MS Office';
-                else if (trainer.role.includes('Spoken English')) searchKeyword = 'Spoken English';
-                else if (trainer.role.includes('Coding')) searchKeyword = 'Full Stack';
+                let searchKeyword = trainer.role.replace(/Trainer/ig, '').trim();
+                
+                if (searchKeyword === '' || searchKeyword.toLowerCase() === 'all') {
+                    const allCourses = await Course.find();
+                    allowedCourses = allCourses.map(c => c.title);
+                    coursesCount = allCourses.length;
+                } else {
+                    if (searchKeyword.includes('Coding')) searchKeyword = 'Full Stack';
 
-                if (searchKeyword) {
-                    const matchingCourses = await Course.find({ 
-                        title: { $regex: searchKeyword, $options: 'i' } 
-                    });
-                    allowedCourses = matchingCourses.map(c => c.title);
-                    coursesCount = matchingCourses.length;
+                    if (searchKeyword && searchKeyword !== 'Other' && searchKeyword !== 'Custom') {
+                        const matchingCourses = await Course.find({ 
+                            title: { $regex: searchKeyword, $options: 'i' } 
+                        });
+                        allowedCourses = matchingCourses.map(c => c.title);
+                        coursesCount = matchingCourses.length;
+                    }
                 }
             }
 
@@ -165,17 +170,21 @@ exports.getStudents = async (req, res) => {
         if (trainer.assignedCourses && trainer.assignedCourses.length > 0) {
             allowedCourses = trainer.assignedCourses.map(c => c.title);
         } else if (trainer.role) {
-            let searchKeyword = '';
-            if (trainer.role.includes('MS Office')) searchKeyword = 'MS Office';
-            else if (trainer.role.includes('Spoken English')) searchKeyword = 'Spoken English';
-            else if (trainer.role.includes('Coding')) searchKeyword = 'Full Stack';
+            let searchKeyword = trainer.role.replace(/Trainer/ig, '').trim();
+            const Course = mongoose.model('Course');
 
-            if (searchKeyword) {
-                const Course = mongoose.model('Course');
-                const matchingCourses = await Course.find({ 
-                    title: { $regex: searchKeyword, $options: 'i' } 
-                });
-                allowedCourses = matchingCourses.map(c => c.title);
+            if (searchKeyword === '' || searchKeyword.toLowerCase() === 'all') {
+                const allCourses = await Course.find();
+                allowedCourses = allCourses.map(c => c.title);
+            } else {
+                if (searchKeyword.includes('Coding')) searchKeyword = 'Full Stack';
+
+                if (searchKeyword && searchKeyword !== 'Other' && searchKeyword !== 'Custom') {
+                    const matchingCourses = await Course.find({ 
+                        title: { $regex: searchKeyword, $options: 'i' } 
+                    });
+                    allowedCourses = matchingCourses.map(c => c.title);
+                }
             }
         }
         
@@ -194,6 +203,28 @@ exports.getStudents = async (req, res) => {
             query.courseName = courseFilter;
         }
 
+        const batchFilter = req.query.batch || 'All';
+        if (batchFilter !== 'All') {
+            const Batch = mongoose.model('Batch');
+            const BatchStudent = mongoose.model('BatchStudent');
+            
+            const matchingBatches = await Batch.find({ name: { $regex: batchFilter, $options: 'i' } });
+            const batchIds = matchingBatches.map(b => b._id);
+            const enrollments = await BatchStudent.find({ batchId: { $in: batchIds } });
+            const enrolledStudentIds = enrollments.map(e => e.studentId);
+
+            query.$and = [
+                {
+                    $or: [
+                        { _id: { $in: enrolledStudentIds } },
+                        { batchName: { $regex: batchFilter, $options: 'i' } },
+                        { batchNames: { $regex: batchFilter, $options: 'i' } },
+                        { batchTiming: { $regex: batchFilter, $options: 'i' } }
+                    ]
+                }
+            ];
+        }
+
         // 3. Execute Query
         const total = await Student.countDocuments(query);
         const students = await Student.find(query)
@@ -203,10 +234,18 @@ exports.getStudents = async (req, res) => {
             .select('-passwordHash')
             .lean(); // Convert into a plain JS object so we can append properties
 
-        // 4. Calculate Progress for each student
+        // 4. Calculate Progress and Batches for each student
         const studentsWithProgress = await Promise.all(students.map(async (student) => {
             let progressData = { percentage: 0, completed: 0, total: 0 };
             
+            const BatchStudent = mongoose.model('BatchStudent');
+            const batchAssignments = await BatchStudent.find({ 
+                studentId: student._id 
+            }).populate('batchId', 'name').lean();
+            
+            const batchNames = batchAssignments.map(ba => ba.batchId?.name).filter(Boolean);
+            const displayBatch = batchNames[0] || student.batchTiming || student.batchName;
+
             if (student.courseName) {
                 // Find course to look up modules/topics
                 const course = await Course.findOne({ title: student.courseName });
@@ -234,7 +273,7 @@ exports.getStudents = async (req, res) => {
                 }
             }
 
-            return { ...student, progress: progressData };
+            return { ...student, batchTiming: displayBatch, progress: progressData };
         }));
 
         res.json({
@@ -264,24 +303,96 @@ exports.getTrainerCourses = async (req, res) => {
 
         // FALLBACK: If no courses are explicitly assigned, try to find matching courses based on Role
         if (courses.length === 0 && trainer.role) {
-            let searchKeyword = '';
-            if (trainer.role.includes('MS Office')) searchKeyword = 'MS Office';
-            else if (trainer.role.includes('Spoken English')) searchKeyword = 'Spoken English';
-            else if (trainer.role.includes('Coding')) searchKeyword = 'Full Stack'; // Example mapping
+            let searchKeyword = trainer.role.replace(/Trainer/ig, '').trim();
+            const Course = mongoose.model('Course');
 
-            if (searchKeyword) {
-                const Course = mongoose.model('Course');
-                // Case-insensitive regex search
-                const matchingCourses = await Course.find({ 
-                    title: { $regex: searchKeyword, $options: 'i' } 
-                });
-                courses = matchingCourses;
+            if (searchKeyword === '' || searchKeyword.toLowerCase() === 'all') {
+                courses = await Course.find();
+            } else {
+                if (searchKeyword.includes('Coding')) searchKeyword = 'Full Stack';
+
+                if (searchKeyword && searchKeyword !== 'Other' && searchKeyword !== 'Custom') {
+                    // Case-insensitive regex search
+                    const matchingCourses = await Course.find({ 
+                        title: { $regex: searchKeyword, $options: 'i' } 
+                    });
+                    courses = matchingCourses;
+                }
             }
         }
 
         res.json(courses);
     } catch (err) {
         console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Update Trainer Profile
+// @route   PUT /api/trainer/profile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+    try {
+        const { bio, phone, specialization, socials } = req.body;
+        
+        const trainer = await Trainer.findById(req.user.id);
+        if (!trainer) {
+            return res.status(404).json({ message: 'Trainer not found' });
+        }
+
+        if (bio !== undefined) trainer.bio = bio;
+        if (phone !== undefined) trainer.phone = phone;
+        if (specialization !== undefined) trainer.specialization = specialization;
+        
+        if (socials) {
+            try {
+                const parsedSocials = typeof socials === 'string' ? JSON.parse(socials) : socials;
+                trainer.socialLinks = { 
+                    linkedin: parsedSocials.linkedin || trainer.socialLinks?.linkedin || '',
+                    github: parsedSocials.github || trainer.socialLinks?.github || '',
+                    website: parsedSocials.website || trainer.socialLinks?.website || ''
+                };
+            } catch (e) {
+                console.error("Error parsing socials:", e);
+            }
+        }
+
+        // Handle Profile Picture Upload (if implemented in the route via multer)
+        if (req.file) {
+            // Because we pass req.file to the helper in route or we just expect it to be handled there?
+            // Wait, we have the generic upload endpoint /api/trainer/upload that returns a URL.
+            // So the frontend can just hit /api/trainer/upload first, get the URL, and pass { photo: url } here!
+        }
+        
+        if (req.body.photo) {
+            trainer.photo = req.body.photo;
+        }
+
+        // Handle Password Update if provided
+        if (req.body.password && req.body.password.trim() !== '') {
+            trainer.password = req.body.password;
+        }
+
+        await trainer.save();
+
+        res.json({
+            success: true,
+            message: 'Profile updated successfully',
+            user: {
+                _id: trainer._id,
+                name: trainer.name,
+                email: trainer.email,
+                role: trainer.role,
+                status: trainer.status,
+                photo: trainer.photo,
+                bio: trainer.bio,
+                phone: trainer.phone,
+                specialization: trainer.specialization,
+                socialLinks: trainer.socialLinks
+            }
+        });
+    } catch (err) {
+        console.error('Update Profile Error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Calendar, BookOpen,
     MessageSquare, User, TrendingUp, LogOut, QrCode, ClipboardList
@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { cn } from '@/lib/utils';
 
 const Sidebar = ({ isOpen, onClose }) => {
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const [settings, setSettings] = useState({ siteTitle: 'Trainer Portal', logoUrl: '' });
 
     useEffect(() => {
@@ -26,20 +26,26 @@ const Sidebar = ({ isOpen, onClose }) => {
         fetchSettings();
     }, []);
 
-    const links = [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-        { name: 'Classes', icon: Calendar, path: '/classes' },
-        { name: 'Students', icon: Users, path: '/students' },
-        { name: 'Attendance', icon: Users, path: '/attendance' },
-        { name: 'Materials', icon: BookOpen, path: '/materials' },
-        { name: 'Submissions', icon: ClipboardList, path: '/submissions' },
-        { name: 'Mock Interview', icon: MessageSquare, path: '/mock-interview' },
-        { name: 'Comments', icon: MessageSquare, path: '/comments' },
+    const allLinks = [
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', accessKey: 'dashboard' },
+        { name: 'Classes', icon: Calendar, path: '/classes', accessKey: 'classes' },
+        { name: 'Students', icon: Users, path: '/students', accessKey: 'students' },
+        { name: 'Attendance', icon: Users, path: '/attendance', accessKey: 'attendance' },
+        { name: 'Materials', icon: BookOpen, path: '/materials', accessKey: 'materials' },
+        { name: 'Submissions', icon: ClipboardList, path: '/submissions', accessKey: 'submissions' },
+        { name: 'Mock Interview', icon: MessageSquare, path: '/mock-interview', accessKey: 'mockInterview' },
+        { name: 'Comments', icon: MessageSquare, path: '/comments', accessKey: 'comments' },
 
-        { name: 'Analytics', icon: TrendingUp, path: '/analytics' },
-        { name: 'My QR', icon: QrCode, path: '/my-qr' },
-        { name: 'Profile', icon: User, path: '/profile' },
+        { name: 'Analytics', icon: TrendingUp, path: '/analytics', accessKey: 'analytics' },
+        { name: 'My QR', icon: QrCode, path: '/my-qr', accessKey: 'myQR' },
+        { name: 'Profile', icon: User, path: '/profile', accessKey: 'profile' },
     ];
+
+    // Filter links based on user access
+    const links = allLinks.filter(link => {
+        if (!user || !user.access) return true; // Default to showing if access object is missing (e.g. during hiring)
+        return user.access[link.accessKey] !== false;
+    });
 
     return (
         <>
@@ -57,7 +63,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 "fixed inset-y-0 left-0 md:static md:translate-x-0",
                 isOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="p-6 flex items-center space-x-3 border-b border-gray-100">
+                <Link to="/dashboard" className="p-6 flex items-center space-x-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     {settings.logoUrl ? (
                         <img src={settings.logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
                     ) : (
@@ -66,7 +72,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                         </div>
                     )}
                     <span className="text-xl font-bold text-gray-800">{settings.siteTitle}</span>
-                </div>
+                </Link>
                 <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
                     {links.map((link) => (
                         <NavLink

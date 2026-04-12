@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Search, Plus, Filter, Trash2, Edit, ChevronDown, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const CATEGORIES = [
     'All',
@@ -138,7 +139,17 @@ const QuestionBank = () => {
     };
 
     const deleteQuestion = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this specific question?')) return;
+        const result = await Swal.fire({
+            title: 'Delete Question?',
+            text: 'Are you sure you want to delete this specific question? This will remove it from the Question Bank.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (!result.isConfirmed) return;
         try {
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             await axios.delete(`${apiUrl}/api/interview/questions/${id}`);

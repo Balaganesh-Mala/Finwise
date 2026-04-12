@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const QRScanner = () => {
     const [data, setData] = useState('No result');
@@ -48,7 +49,12 @@ const QRScanner = () => {
     const startScanner = async () => {
         // Check for Secure Context (HTTPS or Localhost)
         if (window.isSecureContext === false) {
-            alert("Camera access requires a Secure Context (HTTPS). If you are testing on mobile via IP, browser security blocks the camera. Please use localhost, HTTPS, or a tunneling service (like ngrok).");
+            Swal.fire({
+                title: 'Security Requirement',
+                text: 'Camera access requires a Secure Context (HTTPS). If you are testing on mobile via IP, browser security blocks the camera. Please use localhost, HTTPS, or a tunneling service (like ngrok).',
+                icon: 'warning',
+                confirmButtonColor: '#4f46e5'
+            });
             return;
         }
 
@@ -75,11 +81,26 @@ const QRScanner = () => {
         } catch (err) {
             console.error("Failed to start scanner", err);
             if (err.name === 'NotAllowedError') {
-                alert("Camera permission denied. Please allow camera access in your browser settings.");
+                Swal.fire({
+                    title: 'Permission Denied',
+                    text: 'Camera permission denied. Please allow camera access in your browser settings.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
             } else if (err.name === 'NotFoundError') {
-                alert("No camera found on this device.");
+                Swal.fire({
+                    title: 'No Camera Found',
+                    text: 'No camera found on this device.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
             } else {
-                alert(`Failed to start camera: ${err.message || 'Unknown error'}. Ensure you are on HTTPS if using mobile.`);
+                Swal.fire({
+                    title: 'Camera Error',
+                    text: `Failed to start camera: ${err.message || 'Unknown error'}. Ensure you are on HTTPS if using mobile.`,
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
             }
         }
     };

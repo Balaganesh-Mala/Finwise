@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { Calendar, Clock, Video, Plus, Trash2, Users } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const Meetings = () => {
     const [meetings, setMeetings] = useState([]);
@@ -57,7 +58,17 @@ const Meetings = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to cancel this meeting?")) return;
+        const result = await Swal.fire({
+            title: 'Cancel Meeting?',
+            text: 'Are you sure you want to cancel this staff meeting?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, cancel it'
+        });
+
+        if (!result.isConfirmed) return;
         try {
             await axios.delete(`${API_URL}/api/admin/meetings/${id}`);
             toast.success("Meeting cancelled");

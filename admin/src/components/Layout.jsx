@@ -433,8 +433,12 @@ const Layout = () => {
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                   className="flex items-center gap-3 p-1.5 pr-4 text-gray-600 hover:bg-gray-50 rounded-full transition-all border border-transparent hover:border-gray-200 group"
                 >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-indigo-100 ring-2 ring-white group-hover:scale-105 transition-transform">
-                    {userInitial}
+                  <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-indigo-100 ring-2 ring-white group-hover:scale-105 transition-transform">
+                    {settings.logoUrl ? (
+                      <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      userInitial
+                    )}
                   </div>
                   <div className="hidden sm:block text-left">
                     <p className="text-xs font-bold text-slate-800 leading-tight">{userName}</p>

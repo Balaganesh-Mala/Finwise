@@ -7,6 +7,9 @@ const Students = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filterCourse, setFilterCourse] = useState('All');
+    const [batchFilter, setBatchFilter] = useState('');
+    const [courses, setCourses] = useState([]);
+    const [batches, setBatches] = useState([]);
 
     // Pagination State
     const [page, setPage] = useState(1);
@@ -17,7 +20,35 @@ const Students = () => {
     useEffect(() => {
         setPage(1); // Reset to page 1 on new filter/search
         fetchStudents(1, true);
-    }, [search, filterCourse]);
+    }, [search, filterCourse, batchFilter]);
+
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const token = localStorage.getItem('trainerToken');
+                const { data } = await axios.get(`${API_URL}/api/trainer/courses`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setCourses(data);
+            } catch (error) {
+                console.error("Error fetching courses:", error);
+            }
+        };
+        const fetchBatches = async () => {
+            try {
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const { data } = await axios.get(`${API_URL}/api/batches`);
+                if (data.success) {
+                    setBatches(data.batches);
+                }
+            } catch (error) {
+                console.error("Error fetching batches:", error);
+            }
+        };
+        fetchCourses();
+        fetchBatches();
+    }, []);
 
     const fetchStudents = async (pageNum = 1, reset = false) => {
         try {
@@ -29,7 +60,8 @@ const Students = () => {
                 page: pageNum,
                 limit: 9, // 9 cards per page looks good on grid
                 search,
-                course: filterCourse
+                course: filterCourse,
+                batch: batchFilter || 'All'
             });
 
             const { data } = await axios.get(`${API_URL}/api/trainer/students?${params.toString()}`, {
@@ -58,11 +90,7 @@ const Students = () => {
         fetchStudents(nextPage, false);
     };
 
-    // Extract unique courses (Ideally this should come from API too, but hardcoded/dynamic based on loaded students is tricky)
-    // For now, let's keep 'All' or maybe fetch trainer courses if needed. 
-    // Simplified: Just 'All' and manual input if backend supports it, or keep the previous list approach if it was working.
-    // Actually, let's rely on backend filtering mostly.
-    const courseOptions = ['All', 'Full Stack', 'Data Science', 'Digital Marketing', 'MS Office', 'Spoken English'];
+    // Fetch dynamic options using the effect above
 
     return (
         <div className="space-y-6">
@@ -72,28 +100,44 @@ const Students = () => {
                     <p className="text-gray-500">Manage and view student details.</p>
                 </div>
 
-                <div className="flex gap-2">
-                    <div className="relative">
+                <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2 w-full md:w-auto">
+                    <div className="relative w-full sm:w-auto">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                         <input
                             type="text"
                             placeholder="Search students..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-64"
+                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full sm:w-48 lg:w-64"
                         />
                     </div>
-                    <div className="relative">
-                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                        <select
-                            value={filterCourse}
-                            onChange={(e) => setFilterCourse(e.target.value)}
-                            className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-white cursor-pointer"
-                        >
-                            {courseOptions.map(course => (
-                                <option key={course} value={course}>{course}</option>
-                            ))}
-                        </select>
+                    <div className="relative w-full sm:w-auto flex gap-2">
+                        <div className="relative w-1/2 sm:w-auto">
+                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                            <select
+                                value={batchFilter}
+                                onChange={(e) => setBatchFilter(e.target.value)}
+                                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-white cursor-pointer w-full sm:w-40 md:w-48 text-sm"
+                            >
+                                <option value="">All Batches</option>
+                                {batches.map(b => (
+                                    <option key={b._id} value={b.name}>{b.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="relative w-1/2 sm:w-auto">
+                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                            <select
+                                value={filterCourse}
+                                onChange={(e) => setFilterCourse(e.target.value)}
+                                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-white cursor-pointer w-full sm:w-40 md:w-48 text-sm"
+                            >
+                                <option value="All">All Courses</option>
+                                {courses.map(course => (
+                                    <option key={course._id || course.title} value={course.title}>{course.title}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>

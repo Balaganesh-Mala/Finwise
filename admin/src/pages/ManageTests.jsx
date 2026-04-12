@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { Plus, Trash2, CheckSquare, Square, Video, FileText, List, Pencil, Download, Search, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const CATEGORIES = [
     'All', 'Accounting', 'Taxation', 'Financial Management',
@@ -224,7 +225,17 @@ const ManageTests = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure?')) return;
+        const result = await Swal.fire({
+            title: 'Delete Test?',
+            text: 'Are you sure you want to delete this test? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (!result.isConfirmed) return;
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/tests/${id}`);
             toast.success('Deleted');

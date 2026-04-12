@@ -4,11 +4,163 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const Trainer = require('../models/Trainer');
 const TrainerExam = require('../models/TrainerExam');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+const Setting = require('../models/Setting');
 const { sendEmail } = require('../utils/emailService');
+const { trainerRegistrationTemplate } = require('../templates/emailTemplates');
+
+// Configure Multer
+const upload = multer({ 
+    dest: 'uploads/',
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+// Helper: Upload to Cloudinary
+const uploadToCloudinary = async (filePath, folder) => {
+    try {
+        const result = await cloudinary.uploader.upload(filePath, {
+            folder: folder,
+            resource_type: 'auto',
+            use_filename: true,
+            unique_filename: true
+        });
+        fs.unlinkSync(filePath);
+        return result;
+    } catch (err) {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        throw err;
+    }
+};
 
 // @desc    Create Trainer Candidate
 // @route   POST /api/admin/trainers/create
 // @access  Admin
+// @desc    Register Active Trainer Directly
+// @route   POST /api/admin/trainers/register
+// @access  Admin
+router.post('/register', upload.single('profilePicture'), async (req, res) => {
+    try {
+        const { name, email, phone, role, specialization, bio, access } = req.body;
+        
+        let parsedAccess;
+        if (access) {
+            try {
+                parsedAccess = JSON.parse(access);
+            } catch(e) {
+                console.error("Failed to parse access", e);
+            }
+        }
+        
+        let profilePictureUrl = "";
+
+        if (req.file) {
+            try {
+                const result = await uploadToCloudinary(req.file.path, 'trainer_profiles');
+                profilePictureUrl = result.secure_url;
+            } catch (uploadErr) {
+                console.error("Cloudinary Upload Error during Create:", uploadErr);
+            }
+        }
+
+        let trainer = await Trainer.findOne({ email });
+        if (trainer) {
+            return res.status(400).json({ message: 'Trainer with this email already exists' });
+        }
+
+        // Generate Password: name + 4 random digits
+        const randomDigits = Math.floor(1000 + Math.random() * 9000);
+        const firstName = name.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+        const plainPassword = `${firstName}${randomDigits}`;
+
+        // Create Active Trainer (Pre-save hook will hash password)
+        trainer = new Trainer({
+            name,
+            email,
+            phone,
+            password: plainPassword,
+            role,
+            specialization,
+            bio,
+            photo: profilePictureUrl,
+            status: 'active',
+            ...(parsedAccess && { access: parsedAccess })
+        });
+
+        await trainer.save();
+
+        let settings = {};
+        try {
+            settings = await Setting.findOne() || {};
+        } catch (settingErr) {
+            console.error('Error fetching settings:', settingErr);
+        }
+
+        try {
+            await sendEmail(
+                email,
+                `Welcome to ${settings.siteTitle || 'Wonew Skill Up Academy'} - Trainer Portal Login`,
+                trainerRegistrationTemplate(name, email, plainPassword, settings)
+            );
+        } catch (emailErr) {
+            console.error("Failed to send email", emailErr);
+        }
+
+        res.status(201).json({ success: true, message: 'Trainer registered & email sent!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @desc    Update existing Trainer
+// @route   PUT /api/admin/trainers/update/:id
+// @access  Admin
+router.put('/update/:id', upload.single('profilePicture'), async (req, res) => {
+    try {
+        const { name, email, phone, role, specialization, bio, access } = req.body;
+
+        let trainer = await Trainer.findById(req.params.id);
+        if (!trainer) {
+            return res.status(404).json({ message: 'Trainer not found' });
+        }
+
+        let parsedAccess;
+        if (access) {
+            try {
+                parsedAccess = JSON.parse(access);
+            } catch(e) {
+                console.error("Failed to parse access", e);
+            }
+        }
+
+        if (req.file) {
+            try {
+                const result = await uploadToCloudinary(req.file.path, 'trainer_profiles');
+                trainer.photo = result.secure_url;
+            } catch (uploadErr) {
+                console.error("Cloudinary Upload Error during Update:", uploadErr);
+            }
+        }
+
+        if (name) trainer.name = name;
+        if (email) trainer.email = email;
+        if (phone !== undefined) trainer.phone = phone;
+        if (role) trainer.role = role;
+        if (specialization !== undefined) trainer.specialization = specialization;
+        if (bio !== undefined) trainer.bio = bio;
+        if (parsedAccess) trainer.access = parsedAccess;
+
+        await trainer.save();
+
+        res.json({ success: true, message: 'Trainer updated successfully!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // @desc    Create Trainer Candidate (or Re-apply)
 // @route   POST /api/admin/trainers/create
 // @access  Admin

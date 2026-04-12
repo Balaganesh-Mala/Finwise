@@ -21,6 +21,7 @@ import CourseContent from './pages/CourseContent';
 import MockInterviewForm from './pages/MockInterviewForm';
 import StudentSubmissions from './pages/StudentSubmissions';
 
+import Profile from './pages/Profile';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -52,6 +53,7 @@ function App() {
 
           {/* Employee / Trainer Routes */}
           <Route path="/" element={<ProtectedRoute><TrainerLayout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="classes" element={<Classes />} />
             <Route path="students" element={<Students />} />
@@ -62,7 +64,7 @@ function App() {
             <Route path="mock-interview" element={<MockInterviewForm />} />
 
             <Route path="my-qr" element={<MyQR />} />
-            <Route path="profile" element={<div>Profile Page</div>} />
+            <Route path="profile" element={<Profile />} />
             {/* Add other routes */}
           </Route>
 

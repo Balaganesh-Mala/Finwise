@@ -6,6 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const Students = () => {
     const navigate = useNavigate();
@@ -50,7 +51,18 @@ const Students = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this student?')) return;
+        const result = await Swal.fire({
+            title: 'Delete Student?',
+            text: 'Are you sure you want to delete this student? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             await axios.delete(`${API_URL}/api/students/${id}`);

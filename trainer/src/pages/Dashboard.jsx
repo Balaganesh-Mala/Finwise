@@ -23,13 +23,9 @@ const Dashboard = () => {
                     axios.get(`${BASE_URL}/api/admin/meetings`, { headers })
                 ]);
 
-                console.log("Dashboard Stats:", statsRes.data);
-                console.log("Meetings API Response:", meetingsRes.data);
-
                 setStats(statsRes.data);
                 // Filter for upcoming meetings - REMOVED FILTER FOR DEBUGGING
                 setMeetings(meetingsRes.data);
-                console.log("Meetings State Set To:", meetingsRes.data);
             } catch (error) {
                 console.error("Error fetching data", error);
             } finally {
@@ -162,35 +158,48 @@ const Dashboard = () => {
                         <CardTitle className="text-lg">Quick Actions</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3">
-                        <a href="/attendance" className="flex items-center p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group">
-                            <div className="p-2 bg-green-100 text-green-600 rounded-lg mr-3 group-hover:bg-green-200 transition-colors">
-                                <Users size={18} />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-900">Mark Attendance</h4>
-                                <p className="text-xs text-gray-500">Log daily attendance</p>
-                            </div>
-                        </a>
+                        {user?.access?.attendance !== false && (
+                            <a href="/attendance" className="flex items-center p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group">
+                                <div className="p-2 bg-green-100 text-green-600 rounded-lg mr-3 group-hover:bg-green-200 transition-colors">
+                                    <Users size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-900">Mark Attendance</h4>
+                                    <p className="text-xs text-gray-500">Log daily attendance</p>
+                                </div>
+                            </a>
+                        )}
 
-                        <a href="/students" className="flex items-center p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group">
-                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors">
-                                <MessageSquare size={18} />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-900">View Students</h4>
-                                <p className="text-xs text-gray-500">Manage student progress</p>
-                            </div>
-                        </a>
+                        {user?.access?.students !== false && (
+                            <a href="/students" className="flex items-center p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group">
+                                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors">
+                                    <MessageSquare size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-900">View Students</h4>
+                                    <p className="text-xs text-gray-500">Manage student progress</p>
+                                </div>
+                            </a>
+                        )}
 
-                        <a href="/my-qr" className="flex items-center p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group">
-                            <div className="p-2 bg-purple-100 text-purple-600 rounded-lg mr-3 group-hover:bg-purple-200 transition-colors">
-                                <TrendingUp size={18} />
+                        {user?.access?.myQR !== false && (
+                            <a href="/my-qr" className="flex items-center p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group">
+                                <div className="p-2 bg-purple-100 text-purple-600 rounded-lg mr-3 group-hover:bg-purple-200 transition-colors">
+                                    <TrendingUp size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-900">My QR Code</h4>
+                                    <p className="text-xs text-gray-500">Share your profile</p>
+                                </div>
+                            </a>
+                        )}
+
+                        {/* Fallback if no actions are allowed */}
+                        {user?.access?.attendance === false && user?.access?.students === false && user?.access?.myQR === false && (
+                            <div className="text-center py-4 text-gray-500 text-sm italic">
+                                No quick actions available.
                             </div>
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-900">My QR Code</h4>
-                                <p className="text-xs text-gray-500">Share your profile</p>
-                            </div>
-                        </a>
+                        )}
                     </CardContent>
                 </Card>
 

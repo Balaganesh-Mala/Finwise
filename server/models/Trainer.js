@@ -20,7 +20,6 @@ const trainerSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['MS Office Trainer', 'Spoken English Trainer', 'Coding Trainer', 'Other'],
         default: 'Other'
     },
     hiringRounds: {
@@ -73,6 +72,19 @@ const trainerSchema = new mongoose.Schema({
         linkedin: String,
         github: String,
         website: String
+    },
+    access: {
+        dashboard: { type: Boolean, default: true },
+        classes: { type: Boolean, default: true },
+        students: { type: Boolean, default: true },
+        attendance: { type: Boolean, default: true },
+        materials: { type: Boolean, default: true },
+        submissions: { type: Boolean, default: true },
+        mockInterview: { type: Boolean, default: true },
+        comments: { type: Boolean, default: true },
+        analytics: { type: Boolean, default: true },
+        myQR: { type: Boolean, default: true },
+        profile: { type: Boolean, default: true }
     },
     createdAt: {
         type: Date,

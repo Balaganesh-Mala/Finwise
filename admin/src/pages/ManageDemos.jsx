@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Calendar, Clock, Trash2, Plus, User, Phone, Mail, BookOpen, Search } from 'lucide-react';
+import Swal from 'sweetalert2';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -50,7 +51,12 @@ const ManageDemos = () => {
 
     const handleCreateSlot = async () => {
         if (selectedTimes.length === 0) {
-            alert("Please select at least one time slot.");
+            Swal.fire({
+                title: 'Selection Required',
+                text: 'Please select at least one time slot.',
+                icon: 'info',
+                confirmButtonColor: '#4f46e5'
+            });
             return;
         }
 
@@ -77,17 +83,37 @@ const ManageDemos = () => {
             };
 
             await axios.post(`${baseUrl}/api/demos/slots`, payload);
-            alert("Slots created successfully!");
+            Swal.fire({
+                title: 'Success!',
+                text: 'Slots created successfully!',
+                icon: 'success',
+                confirmButtonColor: '#4f46e5'
+            });
             setSelectedTimes([]);
             fetchData(); // Refresh list
         } catch (err) {
             console.error("Error creating slot:", err);
-            alert("Failed to create slots. Some might already exist.");
+            Swal.fire({
+                title: 'Creation Failed',
+                text: 'Failed to create slots. Some might already exist.',
+                icon: 'error',
+                confirmButtonColor: '#ef4444'
+            });
         }
     };
 
     const handleDeleteSlot = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this slot?")) return;
+        const result = await Swal.fire({
+            title: 'Delete Slot?',
+            text: 'Are you sure you want to delete this available demo slot?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (!result.isConfirmed) return;
         try {
             const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             await axios.delete(`${baseUrl}/api/demos/slots/${id}`);

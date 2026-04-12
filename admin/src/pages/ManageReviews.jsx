@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Trash2, Edit, Star, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const ManageReviews = () => {
     const [reviews, setReviews] = useState([]);
@@ -38,7 +39,17 @@ const ManageReviews = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this review?')) {
+        const result = await Swal.fire({
+            title: 'Delete Review?',
+            text: 'Are you sure you want to delete this student review?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (result.isConfirmed) {
             try {
                 await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reviews/${id}`);
                 setReviews(reviews.filter(r => r._id !== id));

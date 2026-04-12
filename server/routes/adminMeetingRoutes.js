@@ -76,8 +76,14 @@ router.post('/', async (req, res) => {
 // @access  Admin/Trainer (Protected)
 router.get('/', async (req, res) => {
     try {
-        // Can add query params to filter by date if needed
-        const meetings = await Meeting.find().sort({ date: -1 });
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of today
+
+        // Delete meetings that are in the past (completed)
+        await Meeting.deleteMany({ date: { $lt: today } });
+
+        // Return remaining upcoming meetings
+        const meetings = await Meeting.find().sort({ date: 1 });
         res.json(meetings);
     } catch (err) {
         console.error(err);

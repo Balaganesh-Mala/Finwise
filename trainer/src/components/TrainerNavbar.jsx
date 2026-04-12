@@ -60,7 +60,7 @@ const TrainerNavbar = ({ onMenuClick }) => {
                 </button>
 
                 {/* Search (Placeholder) */}
-                <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 w-48 sm:w-64 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                <div className="hidden sm:flex items-center bg-gray-100 rounded-full px-4 py-2 w-48 sm:w-64 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
                     <Search size={18} className="text-gray-400" />
                     <input
                         type="text"

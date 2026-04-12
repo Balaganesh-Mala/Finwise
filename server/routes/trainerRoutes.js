@@ -10,7 +10,7 @@ const {
     getExamStatus, submitMCQ, saveVideo, saveAssignment, submitWritten, submitExam 
 } = require('../controllers/trainerHiringController');
 const { 
-    getDashboardStats, getClasses, createClass, markAttendance, getStudents, getTrainerCourses
+    getDashboardStats, getClasses, createClass, markAttendance, getStudents, getTrainerCourses, updateProfile
 } = require('../controllers/trainerPortalController');
 
 // Configure Multer
@@ -79,5 +79,6 @@ router.post('/classes', protect, createClass);
 router.get('/students', protect, getStudents);
 router.get('/courses', protect, getTrainerCourses);
 router.post('/attendance/mark', protect, markAttendance);
+router.put('/profile', protect, updateProfile);
 
 module.exports = router;

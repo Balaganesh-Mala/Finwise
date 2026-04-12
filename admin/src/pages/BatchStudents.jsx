@@ -5,6 +5,7 @@ import {
     ArrowLeft, UserPlus, Users, Trash2, RefreshCw, X, Search, Calendar, IndianRupee, CheckCircle2, AlertCircle, Clock, Gift, Check, ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 // Helper: format number as compact Indian currency string
 const fmt = (n) =>
@@ -218,7 +219,17 @@ const BatchStudents = () => {
     };
 
     const handleRemoveStudent = async (studentId) => {
-        if (!window.confirm('Remove this student from the batch?')) return;
+        const result = await Swal.fire({
+            title: 'Remove Student?',
+            text: 'Are you sure you want to remove this student from the batch?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, remove them'
+        });
+
+        if (!result.isConfirmed) return;
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL}/api/batches/${batchId}/students/${studentId}`);
             setEnrollments(prev => prev.filter(e => e.studentId?._id !== studentId));

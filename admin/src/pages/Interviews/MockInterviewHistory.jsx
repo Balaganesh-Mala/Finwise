@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { Search, Loader2, Filter, Eye, X, User, Star, CheckSquare, Award, Trash2, Edit2, Save } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const MockInterviewHistory = () => {
     const [history, setHistory] = useState([]);
@@ -30,7 +31,17 @@ const MockInterviewHistory = () => {
 
     const handleDelete = async (id, e) => {
         e.stopPropagation();
-        if(!window.confirm("⚠️ DANGER: Are you sure you want to delete this interview?\n\nThis will permanently erase the record AND immediately deduct the exact Points and Coins the student earned from this evaluation. Their Rank Level may drop.\n\nThis action cannot be undone.")) return;
+        const result = await Swal.fire({
+            title: 'DANGER: Delete Interview?',
+            text: 'This will permanently erase the record AND immediately deduct the exact Points and Coins the student earned from this evaluation. Their Rank Level may drop. This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, DELETE it'
+        });
+
+        if (!result.isConfirmed) return;
         
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';

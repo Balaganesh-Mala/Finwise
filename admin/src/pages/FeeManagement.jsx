@@ -16,6 +16,7 @@ import {
     Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import AddFeeStructureModal from '../components/AddFeeStructureModal';
 import ReceiptModal from '../components/ReceiptModal';
 import MarkPaidModal from '../components/MarkPaidModal';
@@ -156,7 +157,17 @@ export default function FeeManagement() {
     };
 
     const handleDeleteInstallment = async (id) => {
-        if (!window.confirm("Are you sure you want to permanently delete this installment? This action cannot be undone.")) return;
+        const result = await Swal.fire({
+            title: 'Delete Installment?',
+            text: 'Are you sure you want to permanently delete this installment? This action cannot be undone and will affect student fee records.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (!result.isConfirmed) return;
 
         try {
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';

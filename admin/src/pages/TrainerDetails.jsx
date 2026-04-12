@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import { ArrowLeft, Video, FileText, CheckCircle, XCircle } from 'lucide-react';
 
 const TrainerDetails = () => {
@@ -42,7 +43,18 @@ const TrainerDetails = () => {
     }, [id]);
 
     const updateStatus = async (newStatus) => {
-        if (!window.confirm(`Mark as ${newStatus}?`)) return;
+        const result = await Swal.fire({
+            title: trainer.status === 'applicant' ? 'Hire Candidate?' : 'Change Status?',
+            text: `Are you sure you want to mark this trainer as ${newStatus}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#d33',
+            confirmButtonText: newStatus === 'active' ? 'Yes, Activate' : 'Yes, Reject'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/trainers/status/${id}`, { status: newStatus });
             toast.success('Status updated');

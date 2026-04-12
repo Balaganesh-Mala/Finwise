@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Plus, Edit2, Trash2, Search, X, Image, BookOpen, Clock, DollarSign, BarChart, Upload, FileText, CheckCircle, AlertCircle, Layers } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const Courses = () => {
     const navigate = useNavigate();
@@ -54,15 +55,25 @@ const Courses = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this course? This will remove all associated files.')) {
-            try {
-                await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/courses/${id}`);
-                setCourses(courses.filter(course => course._id !== id));
-                toast.success('Course deleted successfully');
-            } catch (err) {
-                console.error('Error deleting course:', err);
-                toast.error('Failed to delete course');
-            }
+        const result = await Swal.fire({
+            title: 'Delete Course?',
+            text: 'Are you sure you want to delete this course? This will remove all associated files and modules. This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/courses/${id}`);
+            setCourses(courses.filter(course => course._id !== id));
+            toast.success('Course deleted successfully');
+        } catch (err) {
+            console.error('Error deleting course:', err);
+            toast.error('Failed to delete course');
         }
     };
 

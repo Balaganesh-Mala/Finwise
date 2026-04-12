@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Download, ExternalLink, Calendar, Mail, Phone, Briefcase, Trash2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import PDFPreviewModal from '../components/PDFPreviewModal';
 
 const Applications = () => {
@@ -33,7 +34,17 @@ const Applications = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this application?')) {
+        const result = await Swal.fire({
+            title: 'Delete Application?',
+            text: 'Are you sure you want to delete this job application?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (result.isConfirmed) {
             try {
                 await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/applications/${id}`);
                 setApplications(applications.filter(app => app._id !== id));

@@ -7,6 +7,7 @@ import {
     BookOpen, Upload, ClipboardList, Layers, Lock, LockOpen, ShieldCheck, Globe
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const ManageCourseModules = () => {
     const { courseId } = useParams();
@@ -219,7 +220,17 @@ const ManageCourseModules = () => {
 
     // ─── Enable Drip (sequential unlock order) ───
     const handleEnableDrip = async () => {
-        if (!window.confirm('Enable drip lock? This will lock all topics and release them day by day based on batch start date.')) return;
+        const result = await Swal.fire({
+            title: 'Enable Drip Lock?',
+            text: 'This will lock all topics and release them day by day based on the batch start date. Students will only see upcoming lessons sequentially.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, Enable'
+        });
+
+        if (!result.isConfirmed) return;
         setDripLoading(true);
         try {
             await axios.post(`${import.meta.env.VITE_API_URL}/api/drip/set-unlock-order/${courseId}`);
@@ -238,7 +249,17 @@ const ManageCourseModules = () => {
 
     // ─── Disable Drip (clear all unlock orders) ───
     const handleDisableDrip = async () => {
-        if (!window.confirm('Disable drip lock? All topics will become freely accessible immediately.')) return;
+        const result = await Swal.fire({
+            title: 'Disable Drip Lock?',
+            text: 'Are you sure? All topics will become freely accessible to students immediately.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, Disable'
+        });
+
+        if (!result.isConfirmed) return;
         setDripLoading(true);
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL}/api/drip/unlock-order/${courseId}`);
@@ -305,7 +326,17 @@ const ManageCourseModules = () => {
     };
 
     const handleDeleteModule = async (moduleId) => {
-        if (!window.confirm('Delete this module and ALL its topics?')) return;
+        const result = await Swal.fire({
+            title: 'Delete Module?',
+            text: 'Are you sure you want to delete this module and ALL its topics? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete everything'
+        });
+
+        if (!result.isConfirmed) return;
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/module/${moduleId}`);
             setModules(modules.filter(m => m._id !== moduleId));
@@ -429,7 +460,17 @@ const ManageCourseModules = () => {
     };
 
     const handleDeleteTopic = async (moduleId, topicId) => {
-        if (!window.confirm('Delete this topic?')) return;
+        const result = await Swal.fire({
+            title: 'Delete Topic?',
+            text: 'Are you sure you want to delete this topic?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (!result.isConfirmed) return;
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/topic/${topicId}`);
             setTopics(prev => ({

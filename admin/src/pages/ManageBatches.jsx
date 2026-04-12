@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Plus, Edit2, Trash2, Users, Calendar, BookOpen, X, Save, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const EMPTY_FORM = {
     name: '',
@@ -98,7 +99,18 @@ const ManageBatches = () => {
     };
 
     const handleDelete = async (batchId) => {
-        if (!window.confirm('Delete this batch? All student assignments will be removed.')) return;
+        const result = await Swal.fire({
+            title: 'Delete Batch?',
+            text: 'Are you sure you want to delete this batch? All student assignments will be removed. This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL}/api/batches/${batchId}`);
             setBatches(prev => prev.filter(b => b._id !== batchId));

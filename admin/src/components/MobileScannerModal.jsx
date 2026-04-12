@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import axios from 'axios';
 import { X, CheckCircle, XCircle } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const MobileScannerModal = ({ onClose }) => {
     const [scanResult, setScanResult] = useState(null);
@@ -29,7 +30,12 @@ const MobileScannerModal = ({ onClose }) => {
 
     const startScanner = async () => {
         if (window.isSecureContext === false) {
-            alert("Camera access requires a Secure Context (HTTPS) or Localhost.");
+            Swal.fire({
+                title: 'Security Requirement',
+                text: 'Camera access requires a Secure Context (HTTPS) or Localhost.',
+                icon: 'warning',
+                confirmButtonColor: '#4f46e5'
+            });
             onClose();
             return;
         }

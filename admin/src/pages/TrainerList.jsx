@@ -94,62 +94,96 @@ const TrainerList = () => {
                         {trainers.map((trainer) => (
                             <tr key={trainer._id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-gray-900">{trainer.name}</div>
+                                    <div className="flex items-center gap-3">
+                                        {trainer.photo ? (
+                                            <img
+                                                src={trainer.photo}
+                                                alt={trainer.name}
+                                                className="w-9 h-9 rounded-full object-cover border border-gray-200"
+                                            />
+                                        ) : (
+                                            <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm border border-indigo-100">
+                                                {trainer.name?.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                        <div className="text-sm font-bold text-gray-900">{trainer.name}</div>
+                                    </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-500">{trainer.role}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        ${trainer.status === 'active' ? 'bg-green-100 text-green-800' :
-                                            trainer.status === 'applicant' ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'}`}>
-                                        {trainer.status}
-                                    </span>
+                                    <div className="flex flex-col gap-1.5 focus:outline-none">
+                                        {trainer.status !== 'applicant' ? (
+                                            <button
+                                                onClick={() => updateStatus(trainer._id, trainer.status === 'active' ? 'rejected' : 'active')}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                                                    trainer.status === 'active' ? 'bg-indigo-600' : 'bg-gray-200'
+                                                }`}
+                                                title={`Change to ${trainer.status === 'active' ? 'Inactive' : 'Active'}`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                        trainer.status === 'active' ? 'translate-x-6' : 'translate-x-1'
+                                                    }`}
+                                                />
+                                            </button>
+                                        ) : (
+                                            <span className="px-2 inline-flex text-[10px] leading-5 font-bold uppercase rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">
+                                                Applicant
+                                            </span>
+                                        )}
+                                        {trainer.status !== 'applicant' && (
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                                trainer.status === 'active' ? 'text-indigo-600' : 'text-gray-400'
+                                            }`}>
+                                                {trainer.status === 'active' ? 'Active' : 'Inactive'}
+                                            </span>
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {trainer.email}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    {trainer.status === 'applicant' && (
-                                        <>
-                                            <a href={`/trainers/${trainer._id}`} className="text-blue-600 hover:underline mr-2">
-                                                Review Application
-                                            </a>
-                                            <button
-                                                onClick={() => updateStatus(trainer._id, 'active')}
-                                                className="text-indigo-600 hover:text-indigo-900 mr-2"
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-3">
+                                        {/* Applicant Specific Actions */}
+                                        {trainer.status === 'applicant' && (
+                                            <div className="flex items-center gap-2">
+                                                <a href={`/trainers/${trainer._id}`} className="text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:shadow-sm">
+                                                    Review
+                                                </a>
+                                                <button
+                                                    onClick={() => updateStatus(trainer._id, 'active')}
+                                                    className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:shadow-sm"
+                                                >
+                                                    Promote
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center gap-2 border-l pl-4 border-gray-100">
+                                            <a 
+                                                href={`/trainers/edit/${trainer._id}`} 
+                                                className="text-gray-400 hover:text-indigo-600 transition-colors"
+                                                title="Edit Trainer"
                                             >
-                                                Promote to Trainer
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </a>
+                                            
+                                            <button
+                                                onClick={() => deleteTrainer(trainer._id)}
+                                                className="text-gray-400 hover:text-red-600 transition-colors"
+                                                title="Delete Trainer"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
                                             </button>
-                                        </>
-                                    )}
-                                    {trainer.status === 'active' && (
-                                        <button
-                                            onClick={() => updateStatus(trainer._id, 'rejected')}
-                                            className="text-red-600 hover:text-red-900"
-                                        >
-                                            Deactivate
-                                        </button>
-                                    )}
-                                    {trainer.status === 'rejected' && (
-                                        <button
-                                            onClick={() => updateStatus(trainer._id, 'active')}
-                                            className="text-green-600 hover:text-green-900"
-                                        >
-                                            Activate
-                                        </button>
-                                    )}
-                                    {/* Link to view Exam results could go here */}
-                                    <button
-                                        onClick={() => deleteTrainer(trainer._id)}
-                                        className="text-red-500 hover:text-red-700 ml-2"
-                                        title="Delete Trainer"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

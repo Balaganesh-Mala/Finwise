@@ -76,6 +76,7 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="trainers" element={<TrainerList />} />
           <Route path="trainers/add" element={<AddTrainer />} />
+          <Route path="trainers/edit/:id" element={<AddTrainer />} />
           <Route path="trainers/:id" element={<TrainerDetails />} />
           <Route path="meetings" element={<Meetings />} />
           <Route path="tests" element={<ManageTests />} />

@@ -1,6 +1,7 @@
 // Shared styles and helpers
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 const STUDENT_URL = process.env.STUDENT_URL || 'http://localhost:5174';
+const TRAINER_URL = process.env.TRAINER_URL || 'http://localhost:5176';
 const BRAND_COLOR = '#1e3a8a'; // Professional Navy Blue for Finance
 const ACCENT_COLOR = '#f8fafc';
 
@@ -101,6 +102,36 @@ const studentRegistrationTemplate = (name, email, password, settings = {}) => {
     <!-- CTA -->
     <div style="text-align: center; margin-top: 10px;">
       <a href="${STUDENT_URL}" class="btn">Access Student Portal</a>
+    </div>
+    
+    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: -5px; margin-bottom: 25px;">
+      <em>* For security purposes, please update your password upon first login.</em>
+    </p>
+  `;
+  return baseLayout(content, settings);
+};
+
+const trainerRegistrationTemplate = (name, email, password, settings = {}) => {
+  const brandName = settings?.siteTitle || 'Finwise Career Solutions';
+  const content = `
+    <h1 style="margin: 0 0 20px; color: #0f172a; font-size: 26px; font-weight: 800;">Welcome to ${brandName}!</h1>
+    <p style="margin: 0 0 20px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Dear <strong>${name}</strong>,<br><br>
+      We are thrilled to welcome you to our team as a professional trainer. Your trainer portal access has been successfully provisioned. You can now log in to manage your classes, students, and schedules.
+    </p>
+
+    <!-- Credentials -->
+    <div class="info-box">
+      <p style="margin: 0 0 6px; font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">Portal Login Email</p>
+      <p style="margin: 0 0 20px; font-size: 18px; color: #0f172a; font-weight: 600;">${email}</p>
+      
+      <p style="margin: 0 0 6px; font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">Temporary Password</p>
+      <p style="margin: 0; font-size: 18px; font-family: 'Courier New', Courier, monospace; color: #0f172a; font-weight: 600; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; display: inline-block;">${password}</p>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align: center; margin-top: 10px;">
+      <a href="${TRAINER_URL}/login" class="btn">Access Trainer Portal</a>
     </div>
     
     <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: -5px; margin-bottom: 25px;">
@@ -263,6 +294,7 @@ const feeAndCurriculumTemplate = (name, courseName, courseFee, curriculumUrl, se
 
 module.exports = {
   studentRegistrationTemplate,
+  trainerRegistrationTemplate,
   resetPasswordTemplate,
   courseEnrolledTemplate,
   brochureDownloadTemplate,
