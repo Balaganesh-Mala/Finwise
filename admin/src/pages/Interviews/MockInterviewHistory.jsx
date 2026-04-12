@@ -82,7 +82,8 @@ const MockInterviewHistory = () => {
                     strengths: edited.strengths,
                     weaknesses: edited.weaknesses,
                     topicScores: edited.topicScores,
-                    improvementPlan: edited.improvementPlan
+                    improvementPlan: edited.improvementPlan,
+                    interviewDate: edited.interviewDate
                 }, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -184,6 +185,21 @@ const MockInterviewHistory = () => {
                                     />
                                 ) : (
                                     <p className="text-lg font-bold text-slate-800 mt-1">{feedback.interviewerName}</p>
+                                )}
+                            </div>
+                            <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex-1 min-w-[120px]">
+                                <p className="text-xs font-bold text-slate-500 uppercase">Interview Date</p>
+                                {isEditing ? (
+                                    <input 
+                                        type="date" 
+                                        value={edited.interviewDate ? new Date(edited.interviewDate).toISOString().split('T')[0] : ''} 
+                                        onChange={(e) => setEdited({...edited, interviewDate: e.target.value})}
+                                        className="mt-1 w-full bg-white border border-slate-300 rounded-lg p-1 font-bold text-slate-700"
+                                    />
+                                ) : (
+                                    <p className="text-lg font-bold text-slate-800 mt-1">
+                                        {new Date(feedback.interviewDate || feedback.createdAt).toLocaleDateString('en-GB')}
+                                    </p>
                                 )}
                             </div>
                         </div>
@@ -353,7 +369,7 @@ const MockInterviewHistory = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-sm font-semibold text-slate-600">
-                                            {new Date(h.date || h.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            {new Date(h.interviewDate || h.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                         </td>
                                         <td className="px-6 py-4">
                                             <p className="text-sm font-bold text-slate-800">{h.interviewType}</p>

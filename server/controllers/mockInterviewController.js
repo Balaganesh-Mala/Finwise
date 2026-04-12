@@ -19,7 +19,7 @@ exports.submitFeedback = async (req, res) => {
             communicationScore, technicalScore, confidenceScore,
             problemSolvingScore, bodyLanguageScore, practicalScore,
             topicScores: rawTopicScores = [], strengths, weaknesses, suggestions,
-            improvementPlan = [], recordingUrl
+            improvementPlan = [], recordingUrl, interviewDate
         } = req.body;
 
         // Clean topicScores: Filter out any entries with empty topic names
@@ -32,9 +32,10 @@ exports.submitFeedback = async (req, res) => {
         }
 
         // 2. Duplicate Submission Protection (same day, same type, same student)
-        const startOfDay = new Date();
+        const targetDate = interviewDate ? new Date(interviewDate) : new Date();
+        const startOfDay = new Date(targetDate);
         startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date();
+        const endOfDay = new Date(targetDate);
         endOfDay.setHours(23, 59, 59, 999);
 
         const existingFeedback = await MockInterviewFeedback.findOne({
@@ -113,7 +114,8 @@ exports.submitFeedback = async (req, res) => {
             communicationScore, technicalScore, confidenceScore,
             problemSolvingScore, bodyLanguageScore, practicalScore,
             topicScores, strengths, weaknesses, suggestions,
-            improvementPlan, recordingUrl,
+            improvementPlan, recordingUrl, 
+            interviewDate: interviewDate ? new Date(interviewDate) : undefined,
             status, weakAreas, isSubmitted: true,
             pointsEarned, coinsEarned, bonusPoints, bonusCoins, 
             firstInterviewBonus, firstInterviewCoinsBonus
@@ -253,7 +255,7 @@ exports.getAllHistory = async (req, res) => {
 // @access  Private (Admin)
 exports.updateFeedback = async (req, res) => {
     try {
-        const { strengths, weaknesses, suggestions, improvementPlan, interviewerName, performanceStatus, topicScores } = req.body;
+        const { strengths, weaknesses, suggestions, improvementPlan, interviewerName, performanceStatus, topicScores, interviewDate } = req.body;
         
         const feedback = await MockInterviewFeedback.findById(req.params.id);
         if (!feedback) return res.status(404).json({ success: false, message: 'Feedback not found' });
@@ -266,6 +268,7 @@ exports.updateFeedback = async (req, res) => {
         if (interviewerName !== undefined) feedback.interviewerName = interviewerName;
         if (performanceStatus !== undefined) feedback.performanceStatus = performanceStatus;
         if (topicScores !== undefined) feedback.topicScores = topicScores;
+        if (interviewDate !== undefined) feedback.interviewDate = interviewDate ? new Date(interviewDate) : undefined;
 
         await feedback.save();
         res.status(200).json({ success: true, data: feedback });

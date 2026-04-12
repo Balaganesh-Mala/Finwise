@@ -8,6 +8,8 @@ import {
 
 const MockInterviewForm = () => {
     const [students, setStudents] = useState([]);
+    const [batches, setBatches] = useState([]);
+    const [selectedBatch, setSelectedBatch] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [search, setSearch] = useState('');
@@ -39,15 +41,28 @@ const MockInterviewForm = () => {
         weaknesses: '',
         suggestions: '',
         improvementPlan: [],
-        recordingUrl: ''
+        recordingUrl: '',
+        interviewDate: new Date().toISOString().split('T')[0]
     });
 
     const categories = ['KYC', 'AML', 'Excel', 'Trade Life Cycle', 'Corporate Actions', 'Reconciliation', 'Financial Statements', 'Journal Entries'];
 
     useEffect(() => {
-        fetchStudents();
+        fetchBatches();
         fetchDbSettings();
     }, []);
+
+    const fetchBatches = async () => {
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const { data } = await axios.get(`${API_URL}/api/batches`);
+            if (data.success) {
+                setBatches(data.batches || []);
+            }
+        } catch (error) {
+            console.error("Error fetching batches:", error);
+        }
+    };
 
     const fetchDbSettings = async () => {
         try {
@@ -65,18 +80,24 @@ const MockInterviewForm = () => {
         }
     };
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (batchId) => {
+        if (!batchId) {
+            setStudents([]);
+            return;
+        }
         setLoading(true);
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             const token = localStorage.getItem('trainerToken');
-            const { data } = await axios.get(`${API_URL}/api/trainer/students?limit=1000`, {
+            const { data } = await axios.get(`${API_URL}/api/batches/${batchId}/students`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setStudents(data.students || []);
+            if (data.success) {
+                setStudents(data.students.map(s => s.studentId).filter(Boolean));
+            }
         } catch (error) {
             console.error("Error fetching students:", error);
-            toast.error("Failed to load students");
+            toast.error("Failed to load students for this batch");
         } finally {
             setLoading(false);
         }
@@ -145,20 +166,28 @@ const MockInterviewForm = () => {
 
             if (res.data.success) {
                 toast.success("Feedback submitted successfully!");
-                // Show rewards
                 const { points, coins, newLevel } = res.data.walletUpdates;
                 toast(`Earned: +${points} Points, +${coins} 🪙`, { icon: '🎁' });
                 
-                // Reset form optionally or redirect
-                setFormData({
-                    ...formData,
+                // Reset form completely
+                setSelectedBatch("");
+                setFormData(prev => ({
+                    ...prev,
                     studentId: '',
                     overallScore: 0,
+                    communicationScore: 0,
+                    technicalScore: 0,
+                    confidenceScore: 0,
+                    problemSolvingScore: 0,
+                    bodyLanguageScore: 0,
+                    practicalScore: 0,
                     topicScores: [{ topic: '', score: 0 }],
                     strengths: '',
                     weaknesses: '',
-                    suggestions: ''
-                });
+                    suggestions: '',
+                    recordingUrl: '',
+                    improvementPlan: dbSettings.improvementPlans.map(task => ({ task, completed: false }))
+                }));
             }
         } catch (error) {
             console.error("Error submitting feedback:", error);
@@ -191,20 +220,42 @@ const MockInterviewForm = () => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
+                            <label className="text-sm font-semibold text-slate-700">Select Batch</label>
+                            <select
+                                value={selectedBatch}
+                                onChange={(e) => {
+                                    setSelectedBatch(e.target.value);
+                                    fetchStudents(e.target.value);
+                                }}
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                            >
+                                <option value="">-- Select Batch First --</option>
+                                {batches.map(b => (
+                                    <option key={b._id} value={b._id}>{b.name} ({b.courseId?.title})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-1">
                             <label className="text-sm font-semibold text-slate-700">Select Student</label>
                             <div className="relative">
                                 <select
                                     name="studentId"
                                     value={formData.studentId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                                     required
+                                    disabled={!selectedBatch || loading}
                                 >
-                                    <option value="">-- Select Student --</option>
-                                    {filteredStudents.map(s => (
+                                    <option value="">{loading ? 'Loading students...' : !selectedBatch ? 'Select Batch First' : '-- Select Student --'}</option>
+                                    {students.map(s => (
                                         <option key={s._id} value={s._id}>{s.name} ({s.email})</option>
                                     ))}
                                 </select>
+                                {loading && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                        <Loader2 size={16} className="animate-spin text-indigo-500" />
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="space-y-1">
@@ -228,6 +279,17 @@ const MockInterviewForm = () => {
                                 value={formData.interviewerName}
                                 onChange={handleInputChange}
                                 placeholder="Enter trainer name"
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-sm font-semibold text-slate-700">Interview Date</label>
+                            <input
+                                type="date"
+                                name="interviewDate"
+                                value={formData.interviewDate}
+                                onChange={handleInputChange}
                                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                                 required
                             />

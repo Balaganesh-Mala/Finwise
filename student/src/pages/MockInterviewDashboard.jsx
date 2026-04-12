@@ -6,7 +6,7 @@ import {
     Shield, ArrowRight, History,
     LayoutGrid, List, Calendar, UserCheck,
     Zap, Clock, AlertCircle, Sparkles, BookOpen,
-    Info, X, Trophy, Megaphone, Check, Wallet
+    Info, X, Trophy, Megaphone, Check, Wallet, Rocket
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -103,19 +103,18 @@ const MockInterviewDashboard = () => {
 
         if (dateFilter === 'All Time') return matchesType;
 
-        const interviewDate = new Date(h.interviewDate || h.createdAt);
+        const dateToCompare = h.interviewDate || h.createdAt;
+        const interviewDateObj = new Date(dateToCompare);
         const now = new Date();
-        const diffDays = (now - interviewDate) / (1000 * 60 * 60 * 24);
+        const diffDays = (now - interviewDateObj) / (1000 * 60 * 60 * 24);
 
         if (dateFilter === 'Last 30 Days') return matchesType && diffDays <= 30;
         if (dateFilter === 'Last 7 Days') return matchesType && diffDays <= 7;
 
         if (dateFilter === 'Particular Date' && customDate) {
-            const selected = new Date(customDate);
-            return matchesType &&
-                interviewDate.getFullYear() === selected.getFullYear() &&
-                interviewDate.getMonth() === selected.getMonth() &&
-                interviewDate.getDate() === selected.getDate();
+            // Use string comparison (YYYY-MM-DD) to be timezone-agnostic
+            const interviewDateStr = new Date(dateToCompare).toISOString().split('T')[0];
+            return matchesType && interviewDateStr === customDate;
         }
 
         return matchesType;
