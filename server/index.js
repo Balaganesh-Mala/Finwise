@@ -45,6 +45,7 @@ app.use(cors({
         process.env.CLIENT_URL,
         process.env.ADMIN_URL,
         process.env.STUDENT_URL,
+        'https://trainer.finwisecareers.com',
         'https://finwise-3tlb.vercel.app',
         'https://vapi.ai',
         'https://*.vapi.ai'
