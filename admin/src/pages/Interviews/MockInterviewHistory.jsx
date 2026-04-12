@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { Search, Loader2, Filter, Eye, X, User, Star, CheckSquare, Award, Trash2, Edit2, Save } from 'lucide-react';
+import { Search, Loader2, Filter, Eye, X, User, Star, CheckSquare, Award, Trash2, Edit2, Save, Sparkles } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const MockInterviewHistory = () => {
@@ -81,8 +81,12 @@ const MockInterviewHistory = () => {
                     performanceStatus: edited.performanceStatus,
                     strengths: edited.strengths,
                     weaknesses: edited.weaknesses,
+                    suggestions: edited.suggestions,
+                    skillRemarks: edited.skillRemarks,
                     topicScores: edited.topicScores,
                     improvementPlan: edited.improvementPlan,
+                    improvementPlanText: edited.improvementPlanText,
+                    overallRemark: edited.overallRemark,
                     interviewDate: edited.interviewDate
                 }, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -206,21 +210,68 @@ const MockInterviewHistory = () => {
 
                         <div>
                             <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-                                <Star size={16} className="text-amber-500" /> Topic Highlights
+                                <Award size={16} className="text-indigo-500" /> Topic Performance & Remarks
                             </h4>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-3">
                                 {edited.topicScores?.map((t, idx) => (
-                                    <div key={idx} className="flex justify-between items-center text-sm p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <div key={idx} className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
+                                        <div className="flex justify-between items-center text-sm">
+                                            {isEditing ? (
+                                                <input 
+                                                    value={t.topic} 
+                                                    onChange={(e) => handleTopicNameChange(idx, e.target.value)}
+                                                    className="bg-white border border-slate-200 outline-none px-2 py-1 rounded font-bold text-slate-700 w-2/3"
+                                                />
+                                            ) : (
+                                                <span className="font-bold text-slate-700">{t.topic || 'Untitled'}</span>
+                                            )}
+                                            <span className="font-bold text-indigo-600 bg-indigo-100 px-2.5 py-1 rounded-lg text-xs">{t.score}/10</span>
+                                        </div>
                                         {isEditing ? (
                                             <input 
-                                                value={t.topic} 
-                                                onChange={(e) => handleTopicNameChange(idx, e.target.value)}
-                                                className="bg-white border border-slate-200 outline-none px-2 py-1 rounded w-2/3"
+                                                value={t.remark || ''} 
+                                                onChange={(e) => {
+                                                    const newTopics = [...edited.topicScores];
+                                                    newTopics[idx].remark = e.target.value;
+                                                    setEdited({ ...edited, topicScores: newTopics });
+                                                }}
+                                                className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-indigo-500"
+                                                placeholder="Specific remark for this topic..."
+                                            />
+                                        ) : t.remark && (
+                                            <p className="text-[10px] text-slate-500 italic font-medium bg-white/50 p-2 rounded-lg">{t.remark}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Skill Remarks */}
+                        <div>
+                            <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <Star size={16} className="text-amber-500" /> Skill-Specific Remarks
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {['communication', 'technical', 'confidence', 'problemSolving', 'bodyLanguage', 'practical'].map(skill => (
+                                    <div key={skill} className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                                        <span className="text-[9px] font-bold text-indigo-600 uppercase block mb-1">{skill}</span>
+                                        {isEditing ? (
+                                            <input 
+                                                value={edited.skillRemarks?.[skill] || ''}
+                                                onChange={(e) => {
+                                                    setEdited({
+                                                        ...edited,
+                                                        skillRemarks: { ...edited.skillRemarks, [skill]: e.target.value }
+                                                    });
+                                                }}
+                                                className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none"
+                                                placeholder={`Remark for ${skill}...`}
                                             />
                                         ) : (
-                                            <span className="font-medium text-slate-600">{t.topic || 'Untitled'}</span>
+                                            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                                                {feedback.skillRemarks?.[skill] || 'No remark'}
+                                            </p>
                                         )}
-                                        <span className="font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md text-xs">{t.score}</span>
                                     </div>
                                 ))}
                             </div>
@@ -233,11 +284,11 @@ const MockInterviewHistory = () => {
                                     <textarea 
                                         value={edited.strengths} 
                                         onChange={e => setEdited({...edited, strengths: e.target.value})}
-                                        className="w-full h-24 bg-transparent border-none outline-none resize-none text-sm text-emerald-900 font-medium"
+                                        className="w-full h-32 bg-transparent border-none outline-none resize-none text-sm text-emerald-900 font-medium leading-relaxed"
                                         placeholder="Add strengths..."
                                     />
                                 ) : (
-                                    <p className="text-sm text-emerald-900 leading-relaxed font-medium">{feedback.strengths || 'None recorded'}</p>
+                                    <p className="text-sm text-emerald-900 leading-relaxed font-medium whitespace-pre-wrap">{feedback.strengths || 'None recorded'}</p>
                                 )}
                             </div>
                             
@@ -247,19 +298,69 @@ const MockInterviewHistory = () => {
                                     <textarea 
                                         value={edited.weaknesses} 
                                         onChange={e => setEdited({...edited, weaknesses: e.target.value})}
-                                        className="w-full h-24 bg-transparent border-none outline-none resize-none text-sm text-rose-900 font-medium"
+                                        className="w-full h-32 bg-transparent border-none outline-none resize-none text-sm text-rose-900 font-medium leading-relaxed"
                                         placeholder="Add weaknesses..."
                                     />
                                 ) : (
-                                    <p className="text-sm text-rose-900 leading-relaxed font-medium">{feedback.weaknesses || 'None recorded'}</p>
+                                    <p className="text-sm text-rose-900 leading-relaxed font-medium whitespace-pre-wrap">{feedback.weaknesses || 'None recorded'}</p>
                                 )}
                             </div>
+
+                            <div className={`p-4 rounded-2xl md:col-span-2 ${isEditing ? 'bg-white border-2 border-indigo-200' : 'bg-indigo-50/30 border border-indigo-100'}`}>
+                                <h4 className="text-xs font-bold text-indigo-600 uppercase mb-2">Suggestions</h4>
+                                {isEditing ? (
+                                    <textarea 
+                                        value={edited.suggestions} 
+                                        onChange={e => setEdited({...edited, suggestions: e.target.value})}
+                                        className="w-full h-32 bg-transparent border-none outline-none resize-none text-sm text-indigo-900 font-medium leading-relaxed"
+                                        placeholder="Add suggestions..."
+                                    />
+                                ) : (
+                                    <p className="text-sm text-indigo-900 leading-relaxed font-medium whitespace-pre-wrap">{feedback.suggestions || 'None recorded'}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Overall Remark */}
+                        <div className={`p-4 rounded-2xl ${isEditing ? 'bg-white border-2 border-amber-200' : 'bg-amber-50/30 border border-amber-100'}`}>
+                            <h4 className="text-xs font-bold text-amber-600 uppercase mb-2">Overall Remark</h4>
+                            {isEditing ? (
+                                <textarea 
+                                    value={edited.overallRemark} 
+                                    onChange={e => setEdited({...edited, overallRemark: e.target.value})}
+                                    className="w-full h-24 bg-transparent border-none outline-none resize-none text-sm text-amber-900 font-bold leading-relaxed"
+                                    placeholder="Final summary remark..."
+                                />
+                            ) : (
+                                <p className="text-sm text-amber-900 leading-relaxed font-bold italic whitespace-pre-wrap">{feedback.overallRemark || 'None recorded'}</p>
+                            )}
+                        </div>
+
+                        {/* Formatted Improvement Plan Text */}
+                        <div>
+                            <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <Sparkles size={16} className="text-indigo-500" /> Structured Improvement Roadmap
+                            </h4>
+                            {isEditing ? (
+                                <textarea 
+                                    value={edited.improvementPlanText} 
+                                    onChange={e => setEdited({...edited, improvementPlanText: e.target.value})}
+                                    className="w-full h-48 bg-slate-900 text-slate-300 font-mono text-xs p-4 rounded-2xl outline-none resize-none leading-relaxed"
+                                    placeholder="Paste structured plan here..."
+                                />
+                            ) : (
+                                feedback.improvementPlanText && (
+                                    <div className="bg-slate-900 p-4 rounded-2xl font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed shadow-inner">
+                                        {feedback.improvementPlanText}
+                                    </div>
+                                )
+                            )}
                         </div>
 
                         {edited.improvementPlan && edited.improvementPlan.length > 0 && (
                             <div>
                                 <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-                                    <CheckSquare size={16} className="text-blue-500" /> Prescribed Action Plan
+                                    <CheckSquare size={16} className="text-blue-500" /> Action Checklist
                                 </h4>
                                 <div className="space-y-2">
                                     {edited.improvementPlan.map((plan, idx) => (

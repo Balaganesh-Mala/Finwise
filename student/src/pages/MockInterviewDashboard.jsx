@@ -486,11 +486,21 @@ const MockInterviewDashboard = () => {
                                             className="grid grid-cols-1 md:grid-cols-2 gap-6"
                                         >
                                             <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                                                {target.overallRemark && (
+                                                    <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                                                        <h4 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                            <Award size={12} /> Final Conclusion
+                                                        </h4>
+                                                        <p className="text-slate-700 text-sm font-medium leading-relaxed italic whitespace-pre-wrap">
+                                                            "{target.overallRemark}"
+                                                        </p>
+                                                    </div>
+                                                )}
                                                 <div>
                                                     <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                                                         <CheckCircle size={12} /> Key Strengths
                                                     </h4>
-                                                    <p className="text-slate-600 text-sm leading-relaxed">
+                                                    <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
                                                         {target.strengths || 'Professional delivery and interaction.'}
                                                     </p>
                                                 </div>
@@ -498,7 +508,7 @@ const MockInterviewDashboard = () => {
                                                     <h4 className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                                                         <AlertCircle size={12} /> Improvement Areas
                                                     </h4>
-                                                    <p className="text-slate-600 text-sm leading-relaxed mb-3">
+                                                    <p className="text-slate-600 text-sm leading-relaxed mb-3 whitespace-pre-wrap">
                                                         {target.weaknesses || 'Continue practices for consistency.'}
                                                     </p>
                                                     <div className="flex flex-wrap gap-1.5">
@@ -513,10 +523,27 @@ const MockInterviewDashboard = () => {
                                                     <h4 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                                                         <Sparkles size={12} /> Trainer's Suggestions
                                                     </h4>
-                                                    <p className="text-slate-600 text-sm leading-relaxed">
+                                                    <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
                                                         {target.suggestions || 'Maintain your performance and keep practicing.'}
                                                     </p>
                                                 </div>
+
+                                                {/* Skill Remarks Display */}
+                                                {target.skillRemarks && Object.values(target.skillRemarks).some(r => r) && (
+                                                    <div className="pt-6 border-t border-slate-50">
+                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                                            <TrendingUp size={12} /> Skill-Specific Analysis
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {Object.entries(target.skillRemarks).map(([key, remark]) => remark && (
+                                                                <div key={key} className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                                                                    <span className="text-[9px] font-bold text-indigo-600 uppercase block mb-1">{key}</span>
+                                                                    <p className="text-xs text-slate-600 leading-relaxed font-medium capitalize-first">{remark}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
@@ -534,51 +561,61 @@ const MockInterviewDashboard = () => {
 
                                                 <div className="space-y-6 relative ml-1">
                                                     {/* Connecting Roadmap Line */}
-                                                    <div className="absolute left-[11px] top-8 bottom-8 w-[2px] bg-slate-100" />
+                                                    {!target.improvementPlanText && <div className="absolute left-[11px] top-8 bottom-8 w-[2px] bg-slate-100" />}
 
-                                                    {((target.improvementPlan && target.improvementPlan.length > 0) ? target.improvementPlan : [
-                                                        { task: 'Revise KYC & AML frameworks', completed: false },
-                                                        { task: 'Practice advanced Excel functions', completed: false },
-                                                        { task: 'Improve Corporate Actions knowledge', completed: false },
-                                                        { task: 'Improve Journal entries', completed: false }
-                                                    ]).map((step, idx) => (
+                                                    {target.improvementPlanText ? (
                                                         <motion.div
-                                                            key={idx}
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: 0.1 * idx }}
-                                                            className="relative pl-10"
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            className="bg-slate-900 rounded-2xl p-6 font-mono text-[13px] leading-relaxed text-slate-300 border border-slate-800 whitespace-pre-wrap overflow-x-auto shadow-inner"
                                                         >
-                                                            {/* Roadmap Marker */}
-                                                            <div className={`absolute left-0 top-1.5 w-6 h-6 rounded-full border-4 flex items-center justify-center z-10 transition-all duration-300 ${step.completed
-                                                                ? 'bg-emerald-100 border-white shadow-[0_0_0_2px_#10b981]'
-                                                                : 'bg-white border-slate-100 shadow-sm'
-                                                                }`}>
-                                                                {step.completed && <Check size={10} className="text-emerald-600 font-medium" />}
-                                                            </div>
+                                                            {target.improvementPlanText}
+                                                        </motion.div>
+                                                    ) : (
+                                                        ((target.improvementPlan && target.improvementPlan.length > 0) ? target.improvementPlan : [
+                                                            { task: 'Revise KYC & AML frameworks', completed: false },
+                                                            { task: 'Practice advanced Excel functions', completed: false },
+                                                            { task: 'Improve Corporate Actions knowledge', completed: false },
+                                                            { task: 'Improve Journal entries', completed: false }
+                                                        ]).map((step, idx) => (
+                                                            <motion.div
+                                                                key={idx}
+                                                                initial={{ opacity: 0, y: 10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                transition={{ delay: 0.1 * idx }}
+                                                                className="relative pl-10"
+                                                            >
+                                                                {/* Roadmap Marker */}
+                                                                <div className={`absolute left-0 top-1.5 w-6 h-6 rounded-full border-4 flex items-center justify-center z-10 transition-all duration-300 ${step.completed
+                                                                    ? 'bg-emerald-100 border-white shadow-[0_0_0_2px_#10b981]'
+                                                                    : 'bg-white border-slate-100 shadow-sm'
+                                                                    }`}>
+                                                                    {step.completed && <Check size={10} className="text-emerald-600 font-medium" />}
+                                                                </div>
 
-                                                            <div className={`p-4 rounded-2xl border transition-all ${step.completed
-                                                                ? 'bg-slate-50/50 border-slate-100 opacity-60'
-                                                                : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-md hover:-translate-y-0.5'
-                                                                }`}>
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className={`text-sm font-medium ${step.completed ? 'text-slate-400' : 'text-slate-700'}`}>
-                                                                        {step.task}
-                                                                    </span>
-                                                                    {!step.completed && idx === 0 && (
-                                                                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-medium uppercase rounded-full">Next Step</span>
+                                                                <div className={`p-4 rounded-2xl border transition-all ${step.completed
+                                                                    ? 'bg-slate-50/50 border-slate-100 opacity-60'
+                                                                    : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-md hover:-translate-y-0.5'
+                                                                    }`}>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className={`text-sm font-medium ${step.completed ? 'text-slate-400' : 'text-slate-700'}`}>
+                                                                            {step.task}
+                                                                        </span>
+                                                                        {!step.completed && idx === 0 && (
+                                                                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-medium uppercase rounded-full">Next Step</span>
+                                                                        )}
+                                                                    </div>
+                                                                    {!step.completed && (
+                                                                        <div className="mt-2 flex items-center gap-1.5">
+                                                                            <div className="w-full h-1 bg-slate-50 rounded-full overflow-hidden">
+                                                                                <div className="w-1/3 h-full bg-indigo-200 animate-pulse" />
+                                                                            </div>
+                                                                        </div>
                                                                     )}
                                                                 </div>
-                                                                {!step.completed && (
-                                                                    <div className="mt-2 flex items-center gap-1.5">
-                                                                        <div className="w-full h-1 bg-slate-50 rounded-full overflow-hidden">
-                                                                            <div className="w-1/3 h-full bg-indigo-200 animate-pulse" />
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </motion.div>
-                                                    ))}
+                                                            </motion.div>
+                                                        ))
+                                                    )}
                                                 </div>
 
                                                 <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
@@ -609,16 +646,21 @@ const MockInterviewDashboard = () => {
                                             animate={{ opacity: 1, y: 0 }}
                                             className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm"
                                         >
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                 {target.topicScores.map((topic, idx) => (
-                                                    <div key={idx} className="p-4 bg-slate-50 rounded-2xl">
-                                                        <div className="flex justify-between items-center mb-3">
+                                                    <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
+                                                        <div className="flex justify-between items-center mb-2">
                                                             <span className="font-bold text-slate-700 text-xs">{topic.topic}</span>
-                                                            <span className="text-sm font-bold text-indigo-600">{topic.score}</span>
+                                                            <span className="text-sm font-bold text-indigo-600 bg-white px-2 py-0.5 rounded-lg border border-slate-100">{topic.score}/10</span>
                                                         </div>
-                                                        <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
+                                                        <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mb-3">
                                                             <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${topic.score * 10}%` }}></div>
                                                         </div>
+                                                        {topic.remark && (
+                                                            <p className="text-[10px] text-slate-500 italic font-medium leading-relaxed bg-white/50 p-2 rounded-lg border border-slate-50 whitespace-pre-wrap">
+                                                                {topic.remark}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>

@@ -28,11 +28,21 @@ const MockInterviewForm = () => {
         problemSolvingScore: 0,
         bodyLanguageScore: 0,
         practicalScore: 0,
-        topicScores: [{ topic: '', score: 0 }],
+        skillRemarks: {
+            communication: '',
+            technical: '',
+            confidence: '',
+            problemSolving: '',
+            bodyLanguage: '',
+            practical: ''
+        },
+        topicScores: [{ topic: '', score: 0, remark: '' }],
         strengths: '',
         weaknesses: '',
         suggestions: '',
         improvementPlan: [], // Loaded from DB
+        improvementPlanText: '', // For formatted textarea input
+        overallRemark: '',
         recordingUrl: '',
         interviewDate: new Date().toISOString().split('T')[0]
     });
@@ -121,10 +131,20 @@ const MockInterviewForm = () => {
         setFormData(prev => ({ ...prev, topicScores: newTopics }));
     };
 
+    const handleSkillRemarkChange = (skillKey, value) => {
+        setFormData(prev => ({
+            ...prev,
+            skillRemarks: {
+                ...prev.skillRemarks,
+                [skillKey]: value
+            }
+        }));
+    };
+
     const addTopic = () => {
         setFormData(prev => ({
             ...prev,
-            topicScores: [...prev.topicScores, { topic: '', score: 0 }]
+            topicScores: [...prev.topicScores, { topic: '', score: 0, remark: '' }]
         }));
     };
 
@@ -175,10 +195,20 @@ const MockInterviewForm = () => {
                     problemSolvingScore: 0,
                     bodyLanguageScore: 0,
                     practicalScore: 0,
-                    topicScores: [{ topic: '', score: 0 }],
+                    skillRemarks: {
+                        communication: '',
+                        technical: '',
+                        confidence: '',
+                        problemSolving: '',
+                        bodyLanguage: '',
+                        practical: ''
+                    },
+                    topicScores: [{ topic: '', score: 0, remark: '' }],
                     strengths: '',
                     weaknesses: '',
                     suggestions: '',
+                    improvementPlanText: '',
+                    overallRemark: '',
                     recordingUrl: '',
                     improvementPlan: dbSettings.improvementPlans.map(task => ({ task, completed: false }))
                 }));
@@ -312,19 +342,20 @@ const MockInterviewForm = () => {
                         <Star size={20} />
                         Skill-Based Ratings (out of 10)
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
-                            { label: dbSettings.skillLabels?.[0] || 'Communication Skills', name: 'communicationScore' },
-                            { label: dbSettings.skillLabels?.[1] || 'Technical Knowledge', name: 'technicalScore' },
-                            { label: dbSettings.skillLabels?.[2] || 'Confidence', name: 'confidenceScore' },
-                            { label: dbSettings.skillLabels?.[3] || 'Problem Solving', name: 'problemSolvingScore' },
-                            { label: dbSettings.skillLabels?.[4] || 'Body Language', name: 'bodyLanguageScore' },
-                            { label: dbSettings.skillLabels?.[5] || 'Domain / Practical Skills', name: 'practicalScore' },
-                        ].map(skill => (
-                            <div key={skill.name} className="space-y-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    {[
+                        { label: dbSettings.skillLabels?.[0] || 'Communication Skills', name: 'communicationScore', key: 'communication' },
+                        { label: dbSettings.skillLabels?.[1] || 'Technical Knowledge', name: 'technicalScore', key: 'technical' },
+                        { label: dbSettings.skillLabels?.[2] || 'Confidence', name: 'confidenceScore', key: 'confidence' },
+                        { label: dbSettings.skillLabels?.[3] || 'Problem Solving', name: 'problemSolvingScore', key: 'problemSolving' },
+                        { label: dbSettings.skillLabels?.[4] || 'Body Language', name: 'bodyLanguageScore', key: 'bodyLanguage' },
+                        { label: dbSettings.skillLabels?.[5] || 'Domain / Practical Skills', name: 'practicalScore', key: 'practical' },
+                    ].map(skill => (
+                        <div key={skill.name} className="space-y-3 p-4 bg-slate-50/50 rounded-2xl border border-slate-50">
+                            <div className="space-y-1">
                                 <div className="flex justify-between items-center">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{skill.label}</label>
-                                    <span className="text-indigo-600 font-bold">{formData[skill.name]}</span>
+                                    <span className="text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-lg">{formData[skill.name]}</span>
                                 </div>
                                 <input
                                     type="range"
@@ -333,11 +364,22 @@ const MockInterviewForm = () => {
                                     step="1"
                                     value={formData[skill.name]}
                                     onChange={(e) => handleRatingChange(skill.name, e.target.value)}
-                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                                 />
                             </div>
-                        ))}
-                    </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Remark for {skill.label.split(' ')[0]}</label>
+                                <input
+                                    type="text"
+                                    value={formData.skillRemarks[skill.key]}
+                                    onChange={(e) => handleSkillRemarkChange(skill.key, e.target.value)}
+                                    placeholder={`Remark for ${skill.label.toLowerCase()}...`}
+                                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
                 </div>
 
                 {/* Topic Wise Performance */}
@@ -355,110 +397,126 @@ const MockInterviewForm = () => {
                             + Add Topic
                         </button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
                         {formData.topicScores.map((ts, index) => (
-                            <div key={index} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <div className="flex-1 flex gap-2">
-                                    <select
-                                        value={customTopicInput[index] ? 'Custom' : ts.topic}
-                                        onChange={(e) => {
-                                            if (e.target.value === 'Custom') {
-                                                setCustomTopicInput(prev => ({ ...prev, [index]: true }));
-                                                handleTopicChange(index, 'topic', '');
-                                            } else {
-                                                setCustomTopicInput(prev => ({ ...prev, [index]: false }));
-                                                handleTopicChange(index, 'topic', e.target.value);
-                                            }
-                                        }}
-                                        className="w-full bg-transparent font-semibold text-slate-700 outline-none p-1 border-b border-transparent focus:border-indigo-300 transition-colors"
-                                    >
-                                        <option value="">Select Topic</option>
-                                        {dbSettings.topics.map(c => <option key={c} value={c}>{c}</option>)}
-                                        <option value="Custom">+ Add Custom Topic</option>
-                                    </select>
-                                    {customTopicInput[index] && (
-                                        <input
-                                            type="text"
-                                            value={ts.topic}
-                                            onChange={(e) => handleTopicChange(index, 'topic', e.target.value)}
-                                            placeholder="Type custom topic label..."
-                                            className="w-full bg-white border border-indigo-200 rounded-lg px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                                            autoFocus
-                                        />
-                                    )}
-                                </div>
-                                <div className="w-20">
+                            <div key={index} className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <div className="w-full md:flex-1 flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={customTopicInput[index] ? 'Custom' : ts.topic}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'Custom') {
+                                                    setCustomTopicInput(prev => ({ ...prev, [index]: true }));
+                                                    handleTopicChange(index, 'topic', '');
+                                                } else {
+                                                    setCustomTopicInput(prev => ({ ...prev, [index]: false }));
+                                                    handleTopicChange(index, 'topic', e.target.value);
+                                                }
+                                            }}
+                                            className="flex-1 bg-transparent font-bold text-slate-700 outline-none p-1 border-b border-indigo-100 focus:border-indigo-500 transition-colors"
+                                        >
+                                            <option value="">Select Topic</option>
+                                            {dbSettings.topics.map(c => <option key={c} value={c}>{c}</option>)}
+                                            <option value="Custom">+ Add Custom Topic</option>
+                                        </select>
+                                        {customTopicInput[index] && (
+                                            <input
+                                                type="text"
+                                                value={ts.topic}
+                                                onChange={(e) => handleTopicChange(index, 'topic', e.target.value)}
+                                                placeholder="Type custom topic label..."
+                                                className="flex-1 bg-white border border-indigo-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                                autoFocus
+                                            />
+                                        )}
+                                        <div className="w-24">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="10"
+                                                value={ts.score}
+                                                onChange={(e) => handleTopicChange(index, 'score', e.target.value)}
+                                                placeholder="Score"
+                                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeTopic(index)}
+                                            className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        max="10"
-                                        value={ts.score}
-                                        onChange={(e) => handleTopicChange(index, 'score', e.target.value)}
-                                        placeholder="Score"
-                                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-center font-bold text-indigo-600"
+                                        type="text"
+                                        value={ts.remark}
+                                        onChange={(e) => handleTopicChange(index, 'remark', e.target.value)}
+                                        placeholder="Specific remark for this topic (optional)..."
+                                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => removeTopic(index)}
-                                    className="text-red-400 hover:text-red-600"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Detailed Feedback */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
                     <div className="flex items-center gap-2 text-indigo-600 font-bold mb-2">
                         <MessageSquare size={20} />
                         Feedback Summary
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-1">
-                            <label className="text-sm font-semibold text-slate-700">Strengths</label>
+                            <label className="text-sm font-bold text-emerald-600 flex items-center gap-2">
+                                <Plus size={16} /> Strengths
+                            </label>
                             <textarea
                                 name="strengths"
                                 value={formData.strengths}
                                 onChange={handleInputChange}
-                                rows="4"
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                                placeholder="What went well?"
+                                rows="6"
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-sm font-medium leading-relaxed"
+                                placeholder="Highlight the candidate's key strengths..."
                             ></textarea>
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-semibold text-slate-700">Weaknesses</label>
+                            <label className="text-sm font-bold text-rose-500 flex items-center gap-2">
+                                <Trash2 size={16} /> Weaknesses
+                            </label>
                             <textarea
                                 name="weaknesses"
                                 value={formData.weaknesses}
                                 onChange={handleInputChange}
-                                rows="4"
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                                placeholder="Areas of improvement"
+                                rows="6"
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-sm font-medium leading-relaxed"
+                                placeholder="Identify core areas for improvement..."
                             ></textarea>
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-semibold text-slate-700">Suggestions</label>
+                            <label className="text-sm font-bold text-indigo-500 flex items-center gap-2">
+                                <BookOpen size={16} /> Tips & Suggestions
+                            </label>
                             <textarea
                                 name="suggestions"
                                 value={formData.suggestions}
                                 onChange={handleInputChange}
-                                rows="4"
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                                placeholder="Actionable tips"
+                                rows="6"
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-sm font-medium leading-relaxed"
+                                placeholder="Give actionable advice..."
                             ></textarea>
                         </div>
                     </div>
                 </div>
 
                 {/* Improvement Plan */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                    <div className="flex items-center gap-2 text-indigo-600 font-bold mb-2">
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+                    <div className="flex items-center gap-2 text-indigo-600 font-bold">
                         <CheckSquare size={20} />
                         Recommended Improvement Plan
                     </div>
+                    
+                    {/* Checkbox Plan */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {formData.improvementPlan.map((item, index) => (
                             <div 
@@ -479,6 +537,38 @@ const MockInterviewForm = () => {
                             </div>
                         ))}
                     </div>
+
+                    {/* Formatted Textarea Plan */}
+                    <div className="space-y-3 pt-4 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-bold text-slate-700">Detailed Roadmap & Structured Plan</label>
+                            <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Paste Plan from Notes</span>
+                        </div>
+                        <textarea
+                            name="improvementPlanText"
+                            value={formData.improvementPlanText}
+                            onChange={handleInputChange}
+                            rows="12"
+                            className="w-full px-5 py-4 bg-slate-900 text-slate-300 font-mono text-sm border border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none leading-relaxed"
+                            placeholder="🚀 Recommended Improvement Plan&#10;1. Communication Improvement (Daily)..."
+                        ></textarea>
+                    </div>
+
+                    {/* Overall Remark */}
+                    <div className="space-y-3 pt-4 border-t border-slate-100">
+                        <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                            <Star size={16} className="text-amber-500 fill-amber-500" /> Final Remark & Conclusion
+                        </label>
+                        <textarea
+                            name="overallRemark"
+                            value={formData.overallRemark}
+                            onChange={handleInputChange}
+                            rows="3"
+                            className="w-full px-4 py-3 bg-indigo-50/30 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-sm font-medium"
+                            placeholder="Final thoughts on the interview performance..."
+                        ></textarea>
+                    </div>
+
                     {/* Add Custom Action Line */}
                     <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2 w-full md:w-2/3 lg:w-1/2">
                         <input
@@ -496,7 +586,7 @@ const MockInterviewForm = () => {
                                     }
                                 }
                             }}
-                            placeholder="Type an unsaved custom action for this student..."
+                            placeholder="Add individual custom action item..."
                             className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                         <button
@@ -511,7 +601,7 @@ const MockInterviewForm = () => {
                             }}
                             className="bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors whitespace-nowrap"
                         >
-                            + Add Custom Note
+                            + Quick Add
                         </button>
                     </div>
                 </div>

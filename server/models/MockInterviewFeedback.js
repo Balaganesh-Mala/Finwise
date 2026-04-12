@@ -32,6 +32,16 @@ const MockInterviewFeedbackSchema = new mongoose.Schema({
   bodyLanguageScore: { type: Number, required: true },
   practicalScore: { type: Number, required: true },
 
+  // Remarks for each skill
+  skillRemarks: {
+    communication: { type: String, default: '' },
+    technical: { type: String, default: '' },
+    confidence: { type: String, default: '' },
+    problemSolving: { type: String, default: '' },
+    bodyLanguage: { type: String, default: '' },
+    practical: { type: String, default: '' }
+  },
+
   // Gamification Data
   status: {
     type: String,
@@ -44,7 +54,8 @@ const MockInterviewFeedbackSchema = new mongoose.Schema({
   // Topic-wise Performance
   topicScores: [{
     topic: { type: String, required: true },
-    score: { type: Number, required: true }
+    score: { type: Number, required: true },
+    remark: { type: String, default: '' }
   }],
 
   // Text Feedback
@@ -57,6 +68,10 @@ const MockInterviewFeedbackSchema = new mongoose.Schema({
     task: { type: String },
     completed: { type: Boolean, default: false }
   }],
+  improvementPlanText: { type: String }, // For formatted textarea input
+
+  // Final Remark
+  overallRemark: { type: String },
 
   // Recording
   recordingUrl: { type: String },
