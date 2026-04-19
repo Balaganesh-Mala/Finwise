@@ -24,7 +24,8 @@
     "openai": "^6.22.0",
     "qrcode": "^1.5.4",
     "slugify": "^1.6.6",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

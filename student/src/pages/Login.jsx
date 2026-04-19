@@ -83,8 +83,9 @@ const Login = () => {
             });
 
             if (res.data.success) {
-                // Save user to local storage (Simple session management)
+                // Save user and token to local storage
                 localStorage.setItem('studentUser', JSON.stringify(res.data.user));
+                localStorage.setItem('studentToken', res.data.token);
                 navigate('/');
             }
         } catch (err) {

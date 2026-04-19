@@ -57,6 +57,7 @@ const navCategories = [
     links: [
       { name: 'Courses', path: '/courses', icon: BookOpen },
       { name: 'Trainers', path: '/trainers', icon: Users },
+      { name: 'Study Materials', path: '/materials', icon: FileText },
       { name: 'Meetings', path: '/meetings', icon: Calendar }
     ]
   },
@@ -64,6 +65,7 @@ const navCategories = [
     title: 'Interviews Preparation',
     icon: MonitorPlay,
     links: [
+      { name: 'Schedule Interview', path: '/interviews/schedule', icon: Calendar },
       { name: 'Settings', path: '/interviews/settings', icon: Settings },
       { name: 'Conduct Mock', path: '/interviews/conduct', icon: FileText },
       { name: 'Mock History', path: '/interviews/history', icon: ClipboardList },
@@ -354,7 +356,7 @@ const Layout = () => {
       </aside>
 
       {/* Main Content Wrapper */}
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
 
         {/* Navbar */}
         <header className="h-20 flex items-center justify-between px-8 bg-white border-b border-gray-100 sticky top-0 z-10">

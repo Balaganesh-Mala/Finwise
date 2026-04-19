@@ -19,6 +19,8 @@ import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import AddFeeStructureModal from '../components/AddFeeStructureModal';
 import ReceiptModal from '../components/ReceiptModal';
+import EditInstallmentModal from '../components/EditInstallmentModal';
+import AddCustomInstallmentModal from '../components/AddCustomInstallmentModal';
 import MarkPaidModal from '../components/MarkPaidModal';
 import { generateReceiptPdfBase64 } from '../utils/pdfGenerator';
 
@@ -31,6 +33,8 @@ export default function FeeManagement() {
     const [selectedReceipt, setSelectedReceipt] = useState(null);
     const [paymentModalData, setPaymentModalData] = useState(null);
     const [recordingPayment, setRecordingPayment] = useState(false);
+    const [editInstallmentData, setEditInstallmentData] = useState(null);
+    const [addCustomStudent, setAddCustomStudent] = useState(null);
 
     const [stats, setStats] = useState({
         totalStudents: 0,
@@ -186,6 +190,8 @@ export default function FeeManagement() {
         }
         return true;
     });
+
+    const displayTotalAmount = displayData.reduce((sum, inst) => sum + (inst.amount || 0), 0);
 
     const getStatusBadge = (inst) => {
         const status = inst.status;
@@ -350,6 +356,20 @@ export default function FeeManagement() {
                                                 {inst.status !== 'Paid' && (
                                                     <>
                                                         <button
+                                                            onClick={() => setAddCustomStudent({ studentId: inst.student_id?._id, feeId: inst.fee_structure_id })}
+                                                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors tooltip-trigger border border-transparent hover:border-emerald-100"
+                                                            title="Add Custom Installment to this Student"
+                                                        >
+                                                            <Plus size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditInstallmentData(inst)}
+                                                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors tooltip-trigger border border-transparent hover:border-indigo-100"
+                                                            title="Edit Installment Amount / Date"
+                                                        >
+                                                            <div className="w-4 h-4 flex items-center justify-center font-serif italic font-bold">E</div>
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleSendReminder(inst._id)}
                                                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors tooltip-trigger border border-transparent hover:border-blue-100"
                                                             title="Send Reminder"
@@ -365,7 +385,7 @@ export default function FeeManagement() {
                                                         </button>
                                                         <button
                                                             onClick={() => setPaymentModalData(inst)}
-                                                            className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
+                                                            className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium rounded-lg transition-colors shadow-sm flex items-center gap-1.5 ml-1"
                                                         >
                                                             <CheckCircle size={14} /> Mark Paid
                                                         </button>
@@ -402,6 +422,21 @@ export default function FeeManagement() {
                                 </tr>
                             )}
                         </tbody>
+                        {!loading && displayData.length > 0 && (
+                            <tfoot className="bg-gray-50 border-t border-gray-200">
+                                <tr>
+                                    <td colSpan="2" className="px-6 py-4 font-bold text-gray-900 text-right">
+                                        Total Amount:
+                                    </td>
+                                    <td colSpan="3" className="px-6 py-4 font-bold text-gray-900">
+                                        <div className="flex items-center gap-1">
+                                            <IndianRupee size={15} className="text-gray-500" />
+                                            {displayTotalAmount.toLocaleString()}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        )}
                     </table>
                 </div>
 
@@ -426,6 +461,22 @@ export default function FeeManagement() {
                 installment={paymentModalData}
                 loading={recordingPayment}
             />
+
+            <EditInstallmentModal
+                isOpen={!!editInstallmentData}
+                onClose={() => setEditInstallmentData(null)}
+                onSuccess={fetchInstallments}
+                installment={editInstallmentData}
+            />
+
+            <AddCustomInstallmentModal
+                isOpen={!!addCustomStudent}
+                onClose={() => setAddCustomStudent(null)}
+                onSuccess={fetchInstallments}
+                preselectedStudentId={addCustomStudent?.studentId}
+                feeStructureId={addCustomStudent?.feeId}
+            />
+    
 
         </div>
     );

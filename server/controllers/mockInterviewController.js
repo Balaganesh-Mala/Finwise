@@ -1,4 +1,5 @@
 const MockInterviewFeedback = require('../models/MockInterviewFeedback');
+const MockInterviewSchedule = require('../models/MockInterviewSchedule');
 const StudentWallet = require('../models/StudentWallet');
 const Transaction = require('../models/Transaction');
 const Student = require('../models/Student');
@@ -25,6 +26,12 @@ exports.submitFeedback = async (req, res) => {
 
         // Clean topicScores: Filter out any entries with empty topic names
         const topicScores = rawTopicScores.filter(ts => ts.topic && ts.topic.trim() !== '');
+
+        // Safely parse array fields to strings for Mongoose schema compatibility
+        const parseStringField = (field) => Array.isArray(field) ? field.join('\n') : field;
+        const parsedStrengths = parseStringField(strengths);
+        const parsedWeaknesses = parseStringField(weaknesses);
+        const parsedSuggestions = parseStringField(suggestions);
 
         // 1. Strict Validation
         const skills = [communicationScore, technicalScore, confidenceScore, problemSolvingScore, bodyLanguageScore, practicalScore];
@@ -115,7 +122,7 @@ exports.submitFeedback = async (req, res) => {
             communicationScore, technicalScore, confidenceScore,
             problemSolvingScore, bodyLanguageScore, practicalScore,
             skillRemarks,
-            topicScores, strengths, weaknesses, suggestions,
+            topicScores, strengths: parsedStrengths, weaknesses: parsedWeaknesses, suggestions: parsedSuggestions,
             improvementPlan, improvementPlanText, overallRemark, 
             recordingUrl, 
             interviewDate: interviewDate ? new Date(interviewDate) : undefined,
@@ -139,6 +146,32 @@ exports.submitFeedback = async (req, res) => {
         else wallet.level = 1;
 
         await wallet.save();
+        
+        // --- C (NEW): Auto-Mark Interview Schedule as Completed ---
+        try {
+            // Find any pending schedule for this student today
+            const todayStart = new Date(targetDate);
+            todayStart.setHours(0, 0, 0, 0);
+            const todayEnd = new Date(targetDate);
+            todayEnd.setHours(23, 59, 59, 999);
+
+            await MockInterviewSchedule.updateMany(
+                {
+                    studentId,
+                    status: { $in: ['Scheduled', 'Rescheduled'] },
+                    date: { $gte: todayStart, $lte: todayEnd }
+                },
+                {
+                    $set: {
+                        status: 'Completed',
+                        attendance: 'Present'
+                    }
+                }
+            );
+        } catch (scheduleErr) {
+            console.error("Non-critical error updating schedule status:", scheduleErr);
+            // We don't fail the whole request if schedule update fails
+        }
         
         // Sync with primary Student points for Dashboard and Leaderboard
         await Student.findByIdAndUpdate(studentId, {
@@ -261,13 +294,16 @@ exports.updateFeedback = async (req, res) => {
         const { 
             strengths, weaknesses, suggestions, improvementPlan, 
             improvementPlanText, overallRemark, skillRemarks,
-            interviewerName, performanceStatus, topicScores, interviewDate 
+            interviewerName, performanceStatus, topicScores, interviewDate,
+            overallScore, communicationScore, technicalScore, confidenceScore,
+            problemSolvingScore, bodyLanguageScore, practicalScore,
+            recordingUrl, interviewType
         } = req.body;
         
         const feedback = await MockInterviewFeedback.findById(req.params.id);
         if (!feedback) return res.status(404).json({ success: false, message: 'Feedback not found' });
 
-        // Only qualitative items are updated
+        // Update fields if provided
         if (strengths !== undefined) feedback.strengths = strengths;
         if (weaknesses !== undefined) feedback.weaknesses = weaknesses;
         if (suggestions !== undefined) feedback.suggestions = suggestions;
@@ -276,9 +312,20 @@ exports.updateFeedback = async (req, res) => {
         if (overallRemark !== undefined) feedback.overallRemark = overallRemark;
         if (skillRemarks !== undefined) feedback.skillRemarks = skillRemarks;
         if (interviewerName !== undefined) feedback.interviewerName = interviewerName;
-        if (performanceStatus !== undefined) feedback.performanceStatus = performanceStatus;
+        if (performanceStatus !== undefined) feedback.status = performanceStatus; // Map to correct schema field
         if (topicScores !== undefined) feedback.topicScores = topicScores;
         if (interviewDate !== undefined) feedback.interviewDate = interviewDate ? new Date(interviewDate) : undefined;
+        
+        // New fields
+        if (overallScore !== undefined) feedback.overallScore = overallScore;
+        if (communicationScore !== undefined) feedback.communicationScore = communicationScore;
+        if (technicalScore !== undefined) feedback.technicalScore = technicalScore;
+        if (confidenceScore !== undefined) feedback.confidenceScore = confidenceScore;
+        if (problemSolvingScore !== undefined) feedback.problemSolvingScore = problemSolvingScore;
+        if (bodyLanguageScore !== undefined) feedback.bodyLanguageScore = bodyLanguageScore;
+        if (practicalScore !== undefined) feedback.practicalScore = practicalScore;
+        if (recordingUrl !== undefined) feedback.recordingUrl = recordingUrl;
+        if (interviewType !== undefined) feedback.interviewType = interviewType;
 
         await feedback.save();
         res.status(200).json({ success: true, data: feedback });
@@ -339,5 +386,72 @@ exports.deleteFeedback = async (req, res) => {
     } catch (err) {
         console.error('Error deleting feedback:', err);
         res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Download Mock Interview Feedback PDF
+// @route   GET /api/mock-interviews/download/:id
+// @access  Public (Restricted by route in next step)
+exports.downloadInterviewPDF = async (req, res) => {
+    try {
+        const { spawn } = require('child_process');
+        const path = require('path');
+        const feedbackId = req.params.id;
+
+        // 1. Fetch Feedback with Student Details
+        const feedback = await MockInterviewFeedback.findById(feedbackId)
+            .populate('studentId', 'name email');
+
+        if (!feedback) {
+            return res.status(404).json({ success: false, message: 'Feedback not found' });
+        }
+
+        // 2. Prepare Data for Python
+        const reportData = {
+            studentName: feedback.studentId ? feedback.studentId.name : 'Student',
+            interviewType: feedback.interviewType,
+            interviewDate: feedback.interviewDate ? new Date(feedback.interviewDate).toLocaleDateString('en-GB') : new Date(feedback.createdAt).toLocaleDateString('en-GB'),
+            overallScore: feedback.overallScore,
+            overallRemark: feedback.overallRemark,
+            strengths: feedback.strengths,
+            weaknesses: feedback.weaknesses,
+            topicScores: feedback.topicScores || feedback.topics || [],
+            improvementPlanText: feedback.improvementPlanText
+        };
+
+        // 3. Spawn Python Process
+        const pythonPath = process.platform === 'win32' ? 'python' : 'python3';
+        const scriptPath = path.join(__dirname, '../utils/report_generator.py');
+        
+        const pyProcess = spawn(pythonPath, [scriptPath]);
+
+        // 4. Pass Data via Stdin (Safer for Windows & Large Reports)
+        pyProcess.stdin.write(JSON.stringify(reportData));
+        pyProcess.stdin.end();
+
+        // 5. Handle Response
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Interview_Report_${reportData.studentName.replace(/\s+/g, '_')}.pdf`);
+
+        pyProcess.stdout.pipe(res);
+
+        pyProcess.stderr.on('data', (data) => {
+            console.error(`Python PDF Error: ${data.toString()}`);
+        });
+
+        pyProcess.on('close', (code) => {
+            if (code !== 0) {
+                console.error(`Python process exited with code ${code}`);
+                if (!res.headersSent) {
+                    res.status(500).json({ success: false, message: 'Error generating PDF report' });
+                }
+            }
+        });
+
+    } catch (err) {
+        console.error('PDF Download Controller Error:', err);
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: 'Server Error' });
+        }
     }
 };

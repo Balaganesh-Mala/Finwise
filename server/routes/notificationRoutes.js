@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
+const PushSubscription = require('../models/PushSubscription');
 
 // @route   GET /api/notifications
 // @desc    Get all notifications for a user (Student or Trainer)
@@ -69,6 +70,30 @@ router.put('/mark-all-read', async (req, res) => {
         res.json({ message: 'All marked as read' });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// @route   POST /api/notifications/subscribe
+// @desc    Store push subscription for a student
+router.post('/subscribe', async (req, res) => {
+    try {
+        const { studentId, subscription, deviceType } = req.body;
+        
+        if (!studentId || !subscription) {
+            return res.status(400).json({ message: 'Student ID and subscription are required' });
+        }
+
+        // Use upsert to avoid duplicate subscriptions for same student/endpoint
+        await PushSubscription.findOneAndUpdate(
+            { studentId, 'subscription.endpoint': subscription.endpoint },
+            { studentId, subscription, deviceType },
+            { upsert: true, new: true }
+        );
+
+        res.status(201).json({ success: true, message: 'Subscription saved successfully' });
+    } catch (err) {
+        console.error('Push Subscription Error:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 });

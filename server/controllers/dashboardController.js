@@ -5,6 +5,7 @@ const Attendance = require('../models/Attendance');
 const Module = require('../models/Module');
 const Topic = require('../models/Topic');
 const BatchStudent = require('../models/BatchStudent');
+const MockInterviewFeedback = require('../models/MockInterviewFeedback');
 
 // @desc    Get Student Dashboard Statistics
 // @route   GET /api/students/dashboard/:studentId
@@ -460,6 +461,77 @@ exports.getStudentActivity = async (req, res) => {
 
     } catch (err) {
         console.error('Error fetching student activity:', err);
+        res.status(500).json({ message: 'Server Error', error: err.message });
+    }
+};
+
+// @desc    Get Mock Interview Leaderboard (Batch-based)
+// @route   GET /api/students/leaderboard/interviews?studentId=...
+// @access  Student
+exports.getInterviewLeaderboard = async (req, res) => {
+    try {
+        const { studentId } = req.query;
+        if (!studentId) return res.status(400).json({ message: 'studentId is required' });
+
+        // 1. Get Student's Batch
+        const myBatchEntry = await BatchStudent.findOne({ studentId });
+        if (!myBatchEntry) {
+            return res.json({ success: true, leaderboard: [], message: 'No batch found for this student' });
+        }
+
+        // 2. Get all students in the batch
+        const batchSiblings = await BatchStudent.find({ batchId: myBatchEntry.batchId }).select('studentId');
+        const studentIds = batchSiblings.map(s => s.studentId);
+
+        // 3. Aggregate Latest Interview Feedback for each student
+        const leaderboard = await MockInterviewFeedback.aggregate([
+            { $match: { studentId: { $in: studentIds }, isSubmitted: true } },
+            // Sort by date to get the LATEST feedback per student
+            { $sort: { interviewDate: -1, createdAt: -1 } },
+            {
+                $group: {
+                    _id: "$studentId",
+                    latestScore: { $first: "$overallScore" },
+                    status: { $first: "$status" },
+                    feedbackId: { $first: "$_id" },
+                    date: { $first: "$interviewDate" }
+                }
+            },
+            // Join with Student info
+            {
+                $lookup: {
+                    from: 'students',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'studentInfo'
+                }
+            },
+            { $unwind: "$studentInfo" },
+            // Filter out students who requested to be hidden
+            { $match: { "studentInfo.preferences.showOnLeaderboard": { $ne: false } } },
+            // Sort by score desc, then date
+            { $sort: { latestScore: -1, date: -1 } },
+            {
+                $project: {
+                    id: "$_id",
+                    name: "$studentInfo.name",
+                    profilePicture: "$studentInfo.profilePicture",
+                    points: "$latestScore", // Using points key for frontend compatibility
+                    status: 1,
+                    isMock: { $literal: true }
+                }
+            }
+        ]);
+
+        const formattedLeaderboard = leaderboard.map((entry, index) => ({
+            ...entry,
+            rank: index + 1
+        }));
+
+        res.json({ success: true, leaderboard: formattedLeaderboard });
+
+    } catch (err) {
+        console.error('Error fetching interview leaderboard:', err);
         res.status(500).json({ message: 'Server Error', error: err.message });
     }
 };

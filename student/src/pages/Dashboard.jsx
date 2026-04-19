@@ -572,6 +572,7 @@ const Dashboard = () => {
     const [leaderboard, setLeaderboard] = useState([]);
     const [dailyLeaderboard, setDailyLeaderboard] = useState([]);
     const [weeklyLeaderboard, setWeeklyLeaderboard] = useState([]);
+    const [interviewLeaderboard, setInterviewLeaderboard] = useState([]);
     const [leaderboardPeriod, setLeaderboardPeriod] = useState('weekly');
     const [loading, setLoading] = useState(true);
     const [showRankCard, setShowRankCard] = useState(false);
@@ -596,6 +597,7 @@ const Dashboard = () => {
                         axios.get(`${import.meta.env.VITE_API_URL}/api/students/dashboard/${parsedUser._id}`),
                         axios.get(`${import.meta.env.VITE_API_URL}/api/students/leaderboard?studentId=${parsedUser._id}&period=weekly`),
                         axios.get(`${import.meta.env.VITE_API_URL}/api/students/leaderboard?studentId=${parsedUser._id}&period=daily`),
+                        axios.get(`${import.meta.env.VITE_API_URL}/api/students/leaderboard/interviews?studentId=${parsedUser._id}`),
                         axios.get(`${import.meta.env.VITE_API_URL}/api/settings`),
                         axios.get(`${import.meta.env.VITE_API_URL}/api/mock-interviews/student/${parsedUser._id}`)
                     ]);
@@ -603,8 +605,9 @@ const Dashboard = () => {
                     const dashboardRes = results[0].status === 'fulfilled' ? results[0].value : null;
                     const weeklyRes = results[1].status === 'fulfilled' ? results[1].value : null;
                     const dailyRes = results[2].status === 'fulfilled' ? results[2].value : null;
-                    const settingsRes = results[3].status === 'fulfilled' ? results[3].value : null;
-                    const mockRes = results[4].status === 'fulfilled' ? results[4].value : null;
+                    const interviewRes = results[3].status === 'fulfilled' ? results[3].value : null;
+                    const settingsRes = results[4].status === 'fulfilled' ? results[4].value : null;
+                    const mockRes = results[5].status === 'fulfilled' ? results[5].value : null;
 
                     if (dashboardRes && dashboardRes.data.success) {
                         setStats(dashboardRes.data.stats);
@@ -642,6 +645,13 @@ const Dashboard = () => {
                         setDailyLeaderboard(dailyRes.data.leaderboard);
                         if (leaderboardPeriod === 'daily') {
                             setLeaderboard(dailyRes.data.leaderboard);
+                        }
+                    }
+
+                    if (interviewRes && interviewRes.data.success) {
+                        setInterviewLeaderboard(interviewRes.data.leaderboard);
+                        if (leaderboardPeriod === 'mocks') {
+                            setLeaderboard(interviewRes.data.leaderboard);
                         }
                     }
                 }
@@ -841,12 +851,15 @@ const Dashboard = () => {
                 {/* Leaderboard Widget - Executive Grid Refined v4.2 */}
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-xl flex flex-col h-full overflow-hidden">
                     <div className="p-4 pb-3 flex items-center justify-between bg-white border-b border-gray-50">
+                        <h2 className="text-lg font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+                            <Trophy className="text-amber-500" size={20} />
+                            {leaderboardPeriod === 'mocks' ? 'Interview Readiness' : 'Top Learners'}
+                        </h2>
+                    </div>
+                    <div className="p-4 pb-3 flex items-center justify-between bg-white border-b border-gray-50">
+
                         <div className="flex items-center gap-4">
-                            <div>
-                                <h2 className="text-lg font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-                                    <Trophy className="text-amber-500" size={20} /> Top Learners
-                                </h2>
-                            </div>
+
                             {/* Period Toggle */}
                             <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100">
                                 <button
@@ -860,6 +873,12 @@ const Dashboard = () => {
                                     className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${leaderboardPeriod === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                 >
                                     Week
+                                </button>
+                                <button
+                                    onClick={() => { setLeaderboardPeriod('mocks'); setLeaderboard(interviewLeaderboard); }}
+                                    className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${leaderboardPeriod === 'mocks' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    Mocks
                                 </button>
                             </div>
                         </div>
@@ -888,10 +907,10 @@ const Dashboard = () => {
                                             <div className="relative shrink-0">
                                                 <div className="w-12 h-12 rounded-xl overflow-hidden ring-2 ring-amber-50 shadow-inner">
                                                     {leaderboard[0].profilePicture ? (
-                                                        <img 
-                                                            src={leaderboard[0].profilePicture} 
-                                                            className="w-full h-full object-cover pointer-events-none select-none" 
-                                                            crossOrigin="anonymous" 
+                                                        <img
+                                                            src={leaderboard[0].profilePicture}
+                                                            className="w-full h-full object-cover pointer-events-none select-none"
+                                                            crossOrigin="anonymous"
                                                             onContextMenu={(e) => e.preventDefault()}
                                                             draggable="false"
                                                         />
@@ -907,7 +926,12 @@ const Dashboard = () => {
                                                 <h3 className="text-gray-900 font-extrabold text-sm truncate tracking-tight leading-none uppercase">{leaderboard[0].name}</h3>
                                                 <div className="flex items-center gap-1.5 mt-1">
                                                     <Crown size={10} className="text-amber-500" />
-                                                    <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">{leaderboard[0].points} PTS • TOP OF BATCH</span>
+                                                    <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">
+                                                        {leaderboardPeriod === 'mocks'
+                                                            ? `${leaderboard[0].points}/10 • ${leaderboard[0].status || 'READY'}`
+                                                            : `${leaderboard[0].points} PTS • TOP OF BATCH`
+                                                        }
+                                                    </span>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -926,10 +950,10 @@ const Dashboard = () => {
                                                 <div className="relative shrink-0">
                                                     <div className={`w-8 h-8 rounded-lg overflow-hidden border p-0.5 bg-white ${i === 0 ? 'border-gray-200' : 'border-orange-100'}`}>
                                                         {student.profilePicture ? (
-                                                            <img 
-                                                                src={student.profilePicture} 
-                                                                className="w-full h-full object-cover rounded-md pointer-events-none select-none" 
-                                                                crossOrigin="anonymous" 
+                                                            <img
+                                                                src={student.profilePicture}
+                                                                className="w-full h-full object-cover rounded-md pointer-events-none select-none"
+                                                                crossOrigin="anonymous"
                                                                 onContextMenu={(e) => e.preventDefault()}
                                                                 draggable="false"
                                                             />
@@ -945,7 +969,9 @@ const Dashboard = () => {
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-gray-900 font-bold text-[10px] truncate leading-none mb-0.5">{student.name.split(' ')[0]}</p>
-                                                    <span className="text-gray-500 font-black text-[9px]">{student.points} <span className="text-[7px] font-bold">PTS</span></span>
+                                                    <span className="text-gray-500 font-black text-[9px]">
+                                                        {student.points} {leaderboardPeriod === 'mocks' ? '/10' : <span className="text-[7px] font-bold">PTS</span>}
+                                                    </span>
                                                 </div>
                                             </motion.div>
                                         ))}
@@ -955,7 +981,9 @@ const Dashboard = () => {
                                 {/* NORMAL LIST - RANK 4-10 */}
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 px-1 mb-2">
-                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Batch Top 10</span>
+                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                                            {leaderboardPeriod === 'mocks' ? 'Batch Readiness Ranks' : 'Batch Top 10'}
+                                        </span>
                                         <div className="h-[1px] flex-1 bg-gray-50"></div>
                                     </div>
                                     {leaderboard.slice(3, 10).map((student, idx) => (
@@ -973,11 +1001,11 @@ const Dashboard = () => {
                                                 <span className="text-[10px] font-black text-gray-300 w-4 text-center">{idx + 4}</span>
                                                 <div className="h-7 w-7 rounded-full overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
                                                     {student.profilePicture ? (
-                                                        <img 
-                                                            src={student.profilePicture} 
-                                                            alt={student.name} 
-                                                            className="w-full h-full object-cover pointer-events-none select-none" 
-                                                            crossOrigin="anonymous" 
+                                                        <img
+                                                            src={student.profilePicture}
+                                                            alt={student.name}
+                                                            className="w-full h-full object-cover pointer-events-none select-none"
+                                                            crossOrigin="anonymous"
                                                             onContextMenu={(e) => e.preventDefault()}
                                                             draggable="false"
                                                         />
@@ -993,8 +1021,18 @@ const Dashboard = () => {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center">
-                                                <span className="text-[10px] font-black text-gray-500 uppercase">{student.points} <span className="text-[8px] font-bold opacity-60">PTS</span></span>
+                                            <div className="flex items-center gap-2">
+                                                {leaderboardPeriod === 'mocks' && (
+                                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-lg uppercase tracking-tight ${student.status === 'Job Ready' ? 'bg-green-100 text-green-700' :
+                                                        student.status === 'Highly Capable' ? 'bg-indigo-100 text-indigo-700' :
+                                                            'bg-gray-100 text-gray-600'
+                                                        }`}>
+                                                        {student.status?.split(' ')[0]}
+                                                    </span>
+                                                )}
+                                                <span className="text-[10px] font-black text-gray-500 uppercase">
+                                                    {student.points} <span className="text-[8px] font-bold opacity-60">{leaderboardPeriod === 'mocks' ? '/10' : 'PTS'}</span>
+                                                </span>
                                             </div>
                                         </motion.div>
                                     ))}

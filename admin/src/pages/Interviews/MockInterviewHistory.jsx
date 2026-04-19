@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { Search, Loader2, Filter, Eye, X, User, Star, CheckSquare, Award, Trash2, Edit2, Save, Sparkles } from 'lucide-react';
+import { Search, Loader2, Filter, Eye, X, User, Star, CheckSquare, Award, Trash2, Edit2, Save, Sparkles, Youtube } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const MockInterviewHistory = () => {
@@ -13,6 +13,25 @@ const MockInterviewHistory = () => {
     useEffect(() => {
         fetchHistory();
     }, []);
+
+    const calculateOverallScore = (skills, topics) => {
+        let sum = 0;
+        let count = 0;
+        const skillKeys = ['communicationScore', 'technicalScore', 'confidenceScore', 'problemSolvingScore', 'bodyLanguageScore', 'practicalScore'];
+        skillKeys.forEach(k => {
+            sum += parseFloat(skills[k] || 0);
+            count++;
+        });
+
+        topics.forEach(t => {
+            if (t.topic && t.topic.trim() !== '') {
+                sum += parseFloat(t.score || 0);
+                count++;
+            }
+        });
+
+        return count > 0 ? Number((sum / count).toFixed(1)) : 0;
+    };
 
     const fetchHistory = async () => {
         try {
@@ -61,7 +80,8 @@ const MockInterviewHistory = () => {
     const filteredHistory = history.filter(h => 
         h.studentId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         h.studentId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        h.interviewerName.toLowerCase().includes(searchTerm.toLowerCase())
+        h.interviewerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (h.status || h.performanceStatus || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const FeedbackModal = ({ feedback, onClose }) => {
@@ -78,7 +98,7 @@ const MockInterviewHistory = () => {
                 const token = localStorage.getItem('adminToken');
                 const { data } = await axios.put(`${API_URL}/api/mock-interviews/${edited._id}`, {
                     interviewerName: edited.interviewerName,
-                    performanceStatus: edited.performanceStatus,
+                    performanceStatus: edited.status || edited.performanceStatus,
                     strengths: edited.strengths,
                     weaknesses: edited.weaknesses,
                     suggestions: edited.suggestions,
@@ -87,7 +107,16 @@ const MockInterviewHistory = () => {
                     improvementPlan: edited.improvementPlan,
                     improvementPlanText: edited.improvementPlanText,
                     overallRemark: edited.overallRemark,
-                    interviewDate: edited.interviewDate
+                    interviewDate: edited.interviewDate,
+                    interviewType: edited.interviewType,
+                    recordingUrl: edited.recordingUrl,
+                    overallScore: edited.overallScore,
+                    communicationScore: edited.communicationScore,
+                    technicalScore: edited.technicalScore,
+                    confidenceScore: edited.confidenceScore,
+                    problemSolvingScore: edited.problemSolvingScore,
+                    bodyLanguageScore: edited.bodyLanguageScore,
+                    practicalScore: edited.practicalScore
                 }, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -111,10 +140,24 @@ const MockInterviewHistory = () => {
             setEdited({ ...edited, improvementPlan: newPlan });
         };
 
+        const handleTopicScoreChange = (idx, val) => {
+            const newTopics = [...edited.topicScores];
+            newTopics[idx].score = parseFloat(val) || 0;
+            const overall = calculateOverallScore(edited, newTopics);
+            setEdited({ ...edited, topicScores: newTopics, overallScore: overall });
+        };
+
+        const handleRatingChange = (field, val) => {
+            const updated = { ...edited, [field]: parseFloat(val) || 0 };
+            const overall = calculateOverallScore(updated, updated.topicScores);
+            setEdited({ ...updated, overallScore: overall });
+        };
+
         const handleTopicNameChange = (idx, val) => {
             const newTopics = [...edited.topicScores];
             newTopics[idx].topic = val;
-            setEdited({ ...edited, topicScores: newTopics });
+            const overall = calculateOverallScore(edited, newTopics);
+            setEdited({ ...edited, topicScores: newTopics, overallScore: overall });
         };
 
         return (
@@ -131,7 +174,20 @@ const MockInterviewHistory = () => {
                             )}
                             <div>
                                 <h3 className="text-lg font-bold text-slate-800 tracking-tight">{feedback.studentId?.name || 'Unknown Student'}</h3>
-                                <p className="text-xs font-medium text-slate-500">{feedback.interviewType} Interview</p>
+                                {isEditing ? (
+                                    <select 
+                                        value={edited.interviewType} 
+                                        onChange={(e) => setEdited({...edited, interviewType: e.target.value})}
+                                        className="text-xs font-bold text-indigo-600 bg-indigo-50 border-none outline-none rounded p-1"
+                                    >
+                                        <option value="HR">HR Interview</option>
+                                        <option value="Technical">Technical Interview</option>
+                                        <option value="Mixed">Mixed Interview</option>
+                                        <option value="Finance">Finance Interview</option>
+                                    </select>
+                                ) : (
+                                    <p className="text-xs font-medium text-slate-500">{feedback.interviewType} Interview</p>
+                                )}
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -153,15 +209,15 @@ const MockInterviewHistory = () => {
                     <div className="p-6 overflow-y-auto flex-1 space-y-6">
                         <div className="flex flex-wrap gap-4">
                             <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex-1 min-w-[120px]">
-                                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Overall Score</p>
-                                <p className="text-2xl font-bold text-indigo-700">{feedback.overallScore}/10</p>
+                                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Calculated Score</p>
+                                <p className="text-2xl font-bold text-indigo-700">{isEditing ? edited.overallScore : feedback.overallScore}/10</p>
                             </div>
                             <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex-1 min-w-[120px]">
                                 <p className="text-xs font-bold text-slate-500 uppercase">Status</p>
                                 {isEditing ? (
                                     <select 
-                                        value={edited.performanceStatus} 
-                                        onChange={(e) => setEdited({...edited, performanceStatus: e.target.value})}
+                                        value={edited.status || edited.performanceStatus} 
+                                        onChange={(e) => setEdited({...edited, status: e.target.value})}
                                         className="mt-1 w-full bg-white border border-slate-300 rounded-lg p-1 font-bold text-slate-700"
                                     >
                                         <option value="Job Ready">Job Ready</option>
@@ -172,10 +228,10 @@ const MockInterviewHistory = () => {
                                     </select>
                                 ) : (
                                     <p className={`text-lg font-bold mt-1 ${
-                                        feedback.performanceStatus === 'Job Ready' ? 'text-emerald-600' :
-                                        feedback.performanceStatus === 'Highly Capable' ? 'text-blue-600' :
-                                        feedback.performanceStatus === 'Needs Improvement' ? 'text-rose-500' : 'text-amber-500'
-                                    }`}>{feedback.performanceStatus || 'Evaluated'}</p>
+                                        (feedback.status || feedback.performanceStatus) === 'Job Ready' ? 'text-emerald-600' :
+                                        (feedback.status || feedback.performanceStatus) === 'Highly Capable' ? 'text-blue-600' :
+                                        (feedback.status || feedback.performanceStatus) === 'Needs Improvement' ? 'text-rose-500' : 'text-amber-500'
+                                    }`}>{feedback.status || feedback.performanceStatus || 'Evaluated'}</p>
                                 )}
                             </div>
                             <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex-1 min-w-[120px]">
@@ -206,6 +262,26 @@ const MockInterviewHistory = () => {
                                     </p>
                                 )}
                             </div>
+                            
+                            {isEditing ? (
+                                <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex-[2] min-w-[200px]">
+                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Video Recording URL</p>
+                                    <input 
+                                        type="text" 
+                                        value={edited.recordingUrl || ''} 
+                                        onChange={(e) => setEdited({...edited, recordingUrl: e.target.value})}
+                                        placeholder="https://youtube.com/..."
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white outline-none focus:ring-1 focus:ring-red-500"
+                                    />
+                                </div>
+                            ) : feedback.recordingUrl && (
+                                <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex-1 min-w-[120px] flex items-center justify-center">
+                                    <a href={feedback.recordingUrl} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-1 group">
+                                        <Youtube size={24} className="text-red-500 group-hover:scale-110 transition-transform" />
+                                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">Watch Recording</span>
+                                    </a>
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -217,32 +293,65 @@ const MockInterviewHistory = () => {
                                     <div key={idx} className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
                                         <div className="flex justify-between items-center text-sm">
                                             {isEditing ? (
-                                                <input 
-                                                    value={t.topic} 
-                                                    onChange={(e) => handleTopicNameChange(idx, e.target.value)}
-                                                    className="bg-white border border-slate-200 outline-none px-2 py-1 rounded font-bold text-slate-700 w-2/3"
-                                                />
+                                                <div className="flex items-center gap-2 w-full">
+                                                    <input 
+                                                        value={t.topic} 
+                                                        onChange={(e) => handleTopicNameChange(idx, e.target.value)}
+                                                        className="bg-white border border-slate-200 outline-none px-2 py-1 rounded font-bold text-slate-700 flex-1"
+                                                    />
+                                                    <div className="flex items-center gap-1">
+                                                        <input 
+                                                            type="number" 
+                                                            min="0" max="10" step="0.5"
+                                                            value={t.score} 
+                                                            onChange={(e) => handleTopicScoreChange(idx, e.target.value)}
+                                                            className="w-12 bg-white border border-slate-200 rounded px-1 py-1 text-center font-bold text-indigo-600 outline-none"
+                                                        />
+                                                        <span className="text-[10px] font-bold text-slate-400">/10</span>
+                                                    </div>
+                                                </div>
                                             ) : (
-                                                <span className="font-bold text-slate-700">{t.topic || 'Untitled'}</span>
+                                                <>
+                                                    <span className="font-bold text-slate-700">{t.topic || 'Untitled'}</span>
+                                                    <span className="font-bold text-indigo-600 bg-indigo-100 px-2.5 py-1 rounded-lg text-xs">{t.score}/10</span>
+                                                </>
                                             )}
-                                            <span className="font-bold text-indigo-600 bg-indigo-100 px-2.5 py-1 rounded-lg text-xs">{t.score}/10</span>
                                         </div>
                                         {isEditing ? (
-                                            <input 
-                                                value={t.remark || ''} 
-                                                onChange={(e) => {
-                                                    const newTopics = [...edited.topicScores];
-                                                    newTopics[idx].remark = e.target.value;
-                                                    setEdited({ ...edited, topicScores: newTopics });
-                                                }}
-                                                className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder="Specific remark for this topic..."
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <input 
+                                                    value={t.remark || ''} 
+                                                    onChange={(e) => {
+                                                        const newTopics = [...edited.topicScores];
+                                                        newTopics[idx].remark = e.target.value;
+                                                        setEdited({ ...edited, topicScores: newTopics });
+                                                    }}
+                                                    className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-indigo-500"
+                                                    placeholder="Specific remark for this topic..."
+                                                />
+                                                <button onClick={() => {
+                                                    const newTopics = edited.topicScores.filter((_, i) => i !== idx);
+                                                    setEdited({...edited, topicScores: newTopics, overallScore: calculateOverallScore(edited, newTopics)});
+                                                }} className="text-rose-500 p-1 hover:bg-rose-50 rounded">
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         ) : t.remark && (
                                             <p className="text-[10px] text-slate-500 italic font-medium bg-white/50 p-2 rounded-lg">{t.remark}</p>
                                         )}
                                     </div>
                                 ))}
+                                {isEditing && (
+                                    <button 
+                                        onClick={() => {
+                                            const newTopics = [...(edited.topicScores || []), { topic: '', score: 0, remark: '' }];
+                                            setEdited({...edited, topicScores: newTopics});
+                                        }}
+                                        className="text-xs font-bold text-indigo-600 py-2 border border-dashed border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors"
+                                    >
+                                        + Add Custom Topic
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -252,24 +361,51 @@ const MockInterviewHistory = () => {
                                 <Star size={16} className="text-amber-500" /> Skill-Specific Remarks
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {['communication', 'technical', 'confidence', 'problemSolving', 'bodyLanguage', 'practical'].map(skill => (
-                                    <div key={skill} className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                                        <span className="text-[9px] font-bold text-indigo-600 uppercase block mb-1">{skill}</span>
+                                {[
+                                    { key: 'communication', label: 'Communication Score', scoreKey: 'communicationScore' },
+                                    { key: 'technical', label: 'Subject Knowledge', scoreKey: 'technicalScore' },
+                                    { key: 'confidence', label: 'Confidence', scoreKey: 'confidenceScore' },
+                                    { key: 'problemSolving', label: 'Problem Solving', scoreKey: 'problemSolvingScore' },
+                                    { key: 'bodyLanguage', label: 'Body Language', scoreKey: 'bodyLanguageScore' },
+                                    { key: 'practical', label: 'Practical Skills', scoreKey: 'practicalScore' },
+                                ].map(skill => (
+                                    <div key={skill.key} className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-[9px] font-bold text-indigo-600 uppercase block">{skill.label}</span>
+                                            {isEditing ? (
+                                                <input 
+                                                    type="number" min="0" max="10" step="1"
+                                                    value={edited[skill.scoreKey]}
+                                                    onChange={(e) => handleRatingChange(skill.scoreKey, e.target.value)}
+                                                    className="w-10 text-xs font-bold text-indigo-700 bg-white border border-slate-200 rounded text-center"
+                                                />
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-indigo-700">{feedback[skill.scoreKey]}/10</span>
+                                            )}
+                                        </div>
                                         {isEditing ? (
-                                            <input 
-                                                value={edited.skillRemarks?.[skill] || ''}
-                                                onChange={(e) => {
-                                                    setEdited({
-                                                        ...edited,
-                                                        skillRemarks: { ...edited.skillRemarks, [skill]: e.target.value }
-                                                    });
-                                                }}
-                                                className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none"
-                                                placeholder={`Remark for ${skill}...`}
-                                            />
+                                            <div className="space-y-2">
+                                                <input 
+                                                    type="range" min="0" max="10" step="1"
+                                                    value={edited[skill.scoreKey]}
+                                                    onChange={(e) => handleRatingChange(skill.scoreKey, e.target.value)}
+                                                    className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                                />
+                                                <input 
+                                                    value={edited.skillRemarks?.[skill.key] || ''}
+                                                    onChange={(e) => {
+                                                        setEdited({
+                                                            ...edited,
+                                                            skillRemarks: { ...edited.skillRemarks, [skill.key]: e.target.value }
+                                                        });
+                                                    }}
+                                                    className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none"
+                                                    placeholder={`Remark for ${skill.key}...`}
+                                                />
+                                            </div>
                                         ) : (
                                             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                                                {feedback.skillRemarks?.[skill] || 'No remark'}
+                                                {feedback.skillRemarks?.[skill.key] || 'No remark'}
                                             </p>
                                         )}
                                     </div>
@@ -483,11 +619,11 @@ const MockInterviewHistory = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
-                                                h.performanceStatus === 'Job Ready' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                h.performanceStatus === 'Highly Capable' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                h.performanceStatus === 'Needs Improvement' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                                (h.status || h.performanceStatus) === 'Job Ready' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                (h.status || h.performanceStatus) === 'Highly Capable' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                (h.status || h.performanceStatus) === 'Needs Improvement' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'
                                             }`}>
-                                                {h.performanceStatus || 'Evaluated'}
+                                                {h.status || h.performanceStatus || 'Evaluated'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">

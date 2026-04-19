@@ -85,7 +85,7 @@ const BatchStudents = () => {
     const [allBatches, setAllBatches] = useState([]);
     const [newBatchId, setNewBatchId] = useState('');
     const [enrollDate, setEnrollDate] = useState(new Date().toISOString().split('T')[0]);
-    const [assignStudentId, setAssignStudentId] = useState('');
+    const [selectedStudentIds, setSelectedStudentIds] = useState([]);
     const [saving, setSaving] = useState(false);
     const [studentSearch, setStudentSearch] = useState('');
     const [feeStatusFilter, setFeeStatusFilter] = useState('All'); 
@@ -155,20 +155,20 @@ const BatchStudents = () => {
 
     const handleAssignStudent = async (e) => {
         e.preventDefault();
-        if (!assignStudentId) return;
+        if (selectedStudentIds.length === 0) return;
         setSaving(true);
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/api/batches/${batchId}/assign`, {
-                studentId: assignStudentId,
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/batches/${batchId}/assign`, {
+                studentIds: selectedStudentIds,
                 enrollmentDate: enrollDate
             });
-            toast.success('Student assigned to batch');
+            toast.success(res.data.message || 'Students assigned to batch');
             setIsAssignOpen(false);
-            setAssignStudentId('');
+            setSelectedStudentIds([]);
             fetchEnrollments();
             fetchBatch();
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to assign student');
+            toast.error(err.response?.data?.message || 'Failed to assign students');
         } finally {
             setSaving(false);
         }
@@ -253,12 +253,9 @@ const BatchStudents = () => {
         setIsBonusOpen(true);
     };
 
-    // Already enrolled student IDs
-    const enrolledIds = new Set(enrollments.map(e => e.studentId?._id));
-
-    // Filtered students for assignment modal
+    // Filtered students for assignment modal (Exclude if they exist in ANY batch)
     const assignModalFiltered = allStudents.filter(s =>
-        !enrolledIds.has(s._id) &&
+        (!s.batchNames || s.batchNames.length === 0) &&
         (s.name.toLowerCase().includes(search.toLowerCase()) ||
             s.email.toLowerCase().includes(search.toLowerCase()))
     );
@@ -314,7 +311,7 @@ const BatchStudents = () => {
                         <Gift size={18} /> Gift Bonus Course
                     </button>
                     <button
-                        onClick={() => { setAssignStudentId(''); setSearch(''); setIsAssignOpen(true); }}
+                        onClick={() => { setSelectedStudentIds([]); setSearch(''); setIsAssignOpen(true); }}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm"
                     >
                         <UserPlus size={18} /> Assign Student
@@ -506,26 +503,53 @@ const BatchStudents = () => {
                                     className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg focus:border-indigo-500 outline-none text-sm"
                                 />
                             </div>
-                            <div className="overflow-y-auto flex-1 rounded-lg border border-gray-200 divide-y divide-gray-50">
+                            <div className="overflow-y-auto flex-1 flex flex-col rounded-lg border border-gray-200">
                                 {assignModalFiltered.length === 0 ? (
                                     <div className="py-8 text-center text-gray-400 text-sm">No available students found</div>
                                 ) : (
-                                    assignModalFiltered.map(s => (
-                                        <label key={s._id} className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors ${assignStudentId === s._id ? 'bg-indigo-50' : ''}`}>
-                                            <input
-                                                type="radio"
-                                                name="studentSelect"
-                                                value={s._id}
-                                                checked={assignStudentId === s._id}
-                                                onChange={() => setAssignStudentId(s._id)}
-                                                className="text-indigo-600"
-                                            />
-                                            <div className="min-w-0">
-                                                <p className="font-medium text-sm text-gray-800 truncate">{s.name}</p>
-                                                <p className="text-xs text-gray-500 truncate">{s.email}</p>
-                                            </div>
-                                        </label>
-                                    ))
+                                    <>
+                                        <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50 shrink-0">
+                                            <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedStudentIds.length > 0 && selectedStudentIds.length === assignModalFiltered.length}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedStudentIds(assignModalFiltered.map(s => s._id));
+                                                        } else {
+                                                            setSelectedStudentIds([]);
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                                                />
+                                                <span className="text-sm font-semibold text-gray-700 shrink-0">Select All ({assignModalFiltered.length})</span>
+                                            </label>
+                                            <span className="text-xs text-gray-600 font-medium bg-white px-2 py-1 rounded-md border border-gray-200">
+                                                Selected: <span className="font-bold text-indigo-600">{selectedStudentIds.length}</span>
+                                            </span>
+                                        </div>
+                                        <div className="overflow-y-auto divide-y divide-gray-50">
+                                            {assignModalFiltered.map(s => (
+                                                <label key={s._id} className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors ${selectedStudentIds.includes(s._id) ? 'bg-indigo-50' : ''}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        value={s._id}
+                                                        checked={selectedStudentIds.includes(s._id)}
+                                                        onChange={() => {
+                                                            setSelectedStudentIds(prev =>
+                                                                prev.includes(s._id) ? prev.filter(id => id !== s._id) : [...prev, s._id]
+                                                            );
+                                                        }}
+                                                        className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="font-medium text-sm text-gray-800 truncate">{s.name}</p>
+                                                        <p className="text-xs text-gray-500 truncate">{s.email}</p>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </>
                                 )}
                             </div>
                             <div>
@@ -540,8 +564,8 @@ const BatchStudents = () => {
                             </div>
                             <div className="flex gap-3">
                                 <button type="button" onClick={() => setIsAssignOpen(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-medium hover:bg-gray-200">Cancel</button>
-                                <button type="submit" disabled={!assignStudentId || saving} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50">
-                                    {saving ? 'Assigning...' : 'Assign'}
+                                <button type="submit" disabled={selectedStudentIds.length === 0 || saving} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50">
+                                    {saving ? 'Assigning...' : `Assign (${selectedStudentIds.length})`}
                                 </button>
                             </div>
                         </form>

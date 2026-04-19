@@ -47,6 +47,17 @@ const Inquiries = () => {
         }
     };
 
+    const handleRemarksUpdate = async (id, newRemarks) => {
+        try {
+            const res = await axios.patch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries/${id}`, { remarks: newRemarks });
+            setInquiries(inquiries.map(item => item._id === id ? res.data : item));
+            toast.success('Remarks saved automatically', { position: 'bottom-right' });
+        } catch (err) {
+            console.error('Error saving remarks:', err);
+            toast.error('Failed to save remarks');
+        }
+    };
+
     const handleStatusUpdate = async (id, newStatus) => {
         try {
             const res = await axios.patch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/inquiries/${id}`, { status: newStatus });
@@ -106,6 +117,7 @@ const Inquiries = () => {
                                 <th className="p-4">Student</th>
                                 <th className="p-4">Contact Info</th>
                                 <th className="p-4">Interest / Message</th>
+                                <th className="p-4 w-48">Admin Remarks</th>
                                 <th className="p-4">Source</th>
                                 <th className="p-4">Status</th>
                                 <th className="p-4">Date</th>
@@ -115,7 +127,7 @@ const Inquiries = () => {
                         <tbody className="divide-y divide-gray-100">
                             {filteredInquiries.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="p-8 text-center text-gray-500">
+                                    <td colSpan="8" className="p-8 text-center text-gray-500">
                                         No inquiries found matching your filter.
                                     </td>
                                 </tr>
@@ -148,6 +160,18 @@ const Inquiries = () => {
                                                     {inquiry.message}
                                                 </p>
                                             </div>
+                                        </td>
+                                        <td className="p-4 align-top">
+                                            <textarea 
+                                                className="w-full text-xs p-2 border border-gray-200 rounded min-h-[60px] bg-yellow-50 focus:bg-white transition-colors focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-y" 
+                                                placeholder="Add notes..."
+                                                defaultValue={inquiry.remarks || ''}
+                                                onBlur={(e) => {
+                                                    if(e.target.value !== (inquiry.remarks || '')) {
+                                                        handleRemarksUpdate(inquiry._id, e.target.value);
+                                                    }
+                                                }}
+                                            />
                                         </td>
                                         <td className="p-4 align-top">
                                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${inquiry.source === 'quote_popup' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>

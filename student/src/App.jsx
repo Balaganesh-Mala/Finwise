@@ -12,6 +12,8 @@ import AttendanceHistory from './pages/AttendanceHistory';
 import TypingPractice from './pages/TypingPractice';
 import TypingTrainer from './pages/TypingTrainer';
 import MockInterviewDashboard from './pages/MockInterviewDashboard';
+import InterviewSchedules from './pages/InterviewSchedules';
+import StudyMaterials from './pages/Materials/StudyMaterials';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import ResetPassword from './pages/ResetPassword';
@@ -44,6 +46,8 @@ function App() {
           <Route path="/typing-practice" element={<TypingPractice />} />
           <Route path="/typing-trainer" element={<TypingTrainer />} />
           <Route path="/mock-interview" element={<MockInterviewDashboard />} />
+          <Route path="/my-interviews" element={<InterviewSchedules />} />
+          <Route path="/materials" element={<StudyMaterials />} />
           <Route path="/jobs" element={<JobPortal />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/reward-store" element={<RewardStore />} />

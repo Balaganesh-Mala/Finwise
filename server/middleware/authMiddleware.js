@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const Trainer = require('../models/Trainer');
 const Admin = require('../models/Admin');
+const Student = require('../models/Student');
 
 exports.protect = async (req, res, next) => {
     let token;
@@ -8,6 +9,12 @@ exports.protect = async (req, res, next) => {
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
             token = req.headers.authorization.split(' ')[1];
+
+            // Defensive: Handle case where 'null' or 'undefined' string is sent
+            if (!token || token === 'null' || token === 'undefined') {
+                return res.status(401).json({ message: 'Not authorized, invalid token format' });
+            }
+
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             
             // Try to find in Trainer first
@@ -16,6 +23,12 @@ exports.protect = async (req, res, next) => {
             // If not found in Trainer, check Admin
             if (!user) {
                 user = await Admin.findById(decoded.id).select('-password');
+            }
+
+            // If still not found, check Student
+            if (!user) {
+                user = await Student.findById(decoded.id).select('-passwordHash');
+                if (user) user.role = 'Student'; // Assign role for consistency
             }
 
             if (!user) {

@@ -24,8 +24,8 @@ export const typingLessons = {
     intermediate: [
         { id: 1,  title: "Common Finance Words",  content: "accounting finance investment capital market trading stock dividend interest yield" },
         { id: 2,  title: "Short Sentences",       content: "The quick accountant balanced the ledger perfectly. Cash flow statements reveal liquidity." },
-        { id: 3,  title: "Punctuation Practice",  content: "Revenue: $1,000.00! (Net Income = $500.00) [FY2024] Total: $1,500.00." },
-        { id: 4,  title: "Numbers and Symbols",   content: "100 200 1000 5000 3.14 0.05 10% 20% 50% $250 #1" },
+        { id: 3,  title: "Punctuation Practice",  content: "Revenue dollars net income total fiscal year annual summary profit margin financial report business growth cash balance income statement." },
+        { id: 4,  title: "Numbers and Symbols",   content: "revenue expense profit loss balance invoice payment salary budget target tax audit finance accounts ledger capital market." },
         { id: 5,  title: "Financial Terms",       content: "amortization depreciation liquidity solvency leverage portfolio valuation equity" },
         { id: 6,  title: "Professional Phrases",  content: "Please find the attached report for your review and approval by end of day." },
         { id: 7,  title: "Mixed Sentences",       content: "Strong cash flow ensures business stability. Margins improved by 12% in Q3 2024." },

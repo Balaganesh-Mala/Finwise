@@ -12,25 +12,16 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 30000, // 30 seconds
   greetingTimeout: 15000,   // 15 seconds
   socketTimeout: 30000,     // 30 seconds
-  debug: true,              // show debug output
-  logger: true              // log information in console
+  // Disable verbose debug/logger to clean up console
+  debug: false,
+  logger: false
 });
 
-console.log('Email Service Config:', {
-  host: process.env.MAIL_HOST,
-  port: process.env.MAIL_PORT,
-  secure: process.env.MAIL_PORT == 465,
-  user: process.env.MAIL_USER ? 'Set' : 'Not Set'
-});
 
 // Verify connection configuration immediately
 transporter.verify(function (error, success) {
   if (error) {
-    console.error('❌ SMTP Connection Error (Startup):');
-    console.error(`Attempted connection to ${process.env.MAIL_HOST}:${process.env.MAIL_PORT}`);
-    console.error('Error Details:', error);
-  } else {
-    console.log('✅ SMTP Server is ready to take our messages');
+    console.error(`❌ SMTP Connection Error: ${error.message} (${process.env.MAIL_HOST})`);
   }
 });
 

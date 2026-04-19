@@ -20,7 +20,8 @@ import {
     Award,
     Activity,
     BarChart2,
-    ArrowRight
+    ArrowRight,
+    Monitor
 } from 'lucide-react';
 
 // Inline hand icon — avoids lucide-react's Hand conflicting with browser XRHand API
@@ -101,6 +102,15 @@ const TypingPractice = () => {
         wpm: 0, accuracy: 100, correctChars: 0, incorrectChars: 0,
     });
 
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const [totalKeystrokes, setTotalKeystrokes] = useState(0);
     const [cumulativeErrors, setCumulativeErrors] = useState(0);
 
@@ -160,8 +170,8 @@ const TypingPractice = () => {
     }, [filteredHistoryData]);
 
     // Which UI helpers are visible based on category
-    const handsVisible = showHands && category === 'beginner';
-    const keyboardVisible = showKeyboard && (category === 'beginner' || category === 'intermediate');
+    const handsVisible = showHands && category === 'beginner' && !isMobile;
+    const keyboardVisible = showKeyboard && (category === 'beginner' || category === 'intermediate') && !isMobile;
 
     useEffect(() => {
         const fetchStudentData = async () => {
@@ -444,7 +454,7 @@ const TypingPractice = () => {
             if (inputChar == null) className += 'text-gray-400';
             else if (inputChar === char) className += 'text-green-600';
             else className += 'text-red-500 bg-red-100 rounded';
-            return <span key={index} className={className}>{char}</span>;
+            return <span key={index} className={`${className} ${isMobile ? 'text-lg' : 'text-2xl'}`}>{char}</span>;
         });
     };
 
@@ -452,7 +462,23 @@ const TypingPractice = () => {
         <div className="min-h-[calc(100vh-80px)] w-full flex flex-col items-center bg-gray-50 text-gray-800 p-3 md:p-6 font-sans transition-colors duration-300">
             <Toaster position="top-center" reverseOrder={false} />
 
-            {/* ── Top Bar ─────────────────────────────────────────────── */}
+            {isMobile ? (
+                <div className="flex-1 w-full max-w-2xl flex flex-col items-center justify-center text-center p-6 animate-in fade-in zoom-in duration-500">
+                    <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl shadow-indigo-100 flex items-center justify-center mb-8 border border-slate-100">
+                        <Monitor size={48} className="text-indigo-600" />
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-4">Desktop Recommended</h2>
+                    <p className="text-slate-500 font-medium mb-8 max-w-md">
+                        Typing Practice is designed for professional skill development using a physical keyboard. 
+                        For the best learning experience, please log in from a computer.
+                    </p>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100/50">
+                        <Keyboard size={12} /> Optimized for Physical Keyboards
+                    </div>
+                </div>
+            ) : (
+                <>
+                    {/* ── Top Bar ─────────────────────────────────────────────── */}
             <div className="w-full max-w-5xl flex flex-col md:flex-row items-stretch md:items-center justify-between bg-white p-4 rounded-xl shadow-sm mb-4 md:mb-6 gap-4">
 
                 {/* Lesson selector */}
@@ -772,7 +798,7 @@ const TypingPractice = () => {
                         onClick={() => inputRef.current?.focus()}
                     >
                         <div className="absolute top-4 left-6 text-xs font-bold text-gray-300 uppercase tracking-widest pointer-events-none">
-                            {isActive ? 'Typing...' : 'Click to Focus'}
+                            {isActive ? 'Typing...' : isMobile ? 'Tap to Focus & Type' : 'Click to Focus'}
                         </div>
 
                         <input
@@ -786,6 +812,8 @@ const TypingPractice = () => {
                             autoCorrect="off"
                             autoCapitalize="off"
                             spellCheck="false"
+                            inputMode="text"
+                            enterKeyHint="done"
                         />
 
                         <div
@@ -1005,6 +1033,8 @@ const TypingPractice = () => {
                     );
                 })()}
             </AnimatePresence>
+            </>
+            )}
         </div>
     );
 };

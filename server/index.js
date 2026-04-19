@@ -21,7 +21,6 @@ const path = require('path');
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
-    console.log('✅ Created uploads directory for multer/image uploads');
 }
 
 const app = express();
@@ -95,7 +94,9 @@ app.use('/api/finance', require('./routes/financeRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
 app.use('/api/mock-interviews', require('./routes/mockInterviewRoutes'));
 app.use('/api/mock-interview-settings', require('./routes/mockInterviewSettingsRoutes'));
+app.use('/api/interview-schedules', require('./routes/interviewScheduleRoutes'));
 app.use('/api/rewards', require('./routes/rewardRoutes'));
+app.use('/api/study-materials', require('./routes/studyMaterialRoutes'));
 
 // Course Module Routes
 app.use('/api', require('./routes/moduleRoutes'));

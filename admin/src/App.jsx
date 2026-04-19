@@ -38,6 +38,8 @@ import ConductMockInterview from './pages/Interviews/ConductMockInterview';
 import MockInterviewHistory from './pages/Interviews/MockInterviewHistory';
 import QuestionBank from './pages/Interviews/QuestionBank';
 import PerformanceAnalytics from './pages/Interviews/PerformanceAnalytics';
+import InterviewScheduler from './pages/Interviews/InterviewScheduler';
+import StudyMaterialsManagement from './pages/Materials/StudyMaterialsManagement';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -92,6 +94,8 @@ function App() {
           <Route path="interviews/history" element={<MockInterviewHistory />} />
           <Route path="interviews/questions" element={<QuestionBank />} />
           <Route path="interviews/analytics" element={<PerformanceAnalytics />} />
+          <Route path="interviews/schedule" element={<InterviewScheduler />} />
+          <Route path="materials" element={<StudyMaterialsManagement />} />
 
           {/* Add more routes here as we migrate */}
           <Route path="*" element={<Navigate to="/" replace />} />

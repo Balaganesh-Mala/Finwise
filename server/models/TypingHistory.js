@@ -48,7 +48,8 @@ const typingHistorySchema = new mongoose.Schema({
     default: 0
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  suppressReservedKeysWarning: true
 });
 
 // Index for fast per-student queries

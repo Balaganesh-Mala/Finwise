@@ -7,7 +7,9 @@ const {
   sendManualReminder,
   getDashboardMetrics,
   getPaymentDetails,
-  deleteInstallment
+  deleteInstallment,
+  editInstallment,
+  createStandaloneInstallment
 } = require('../controllers/financeController');
 // const { protect, admin } = require('../middleware/authMiddleware'); // Uncomment and use as per your setup
 
@@ -22,7 +24,11 @@ router.route('/installments')
   .get(getInstallments);
 
 router.route('/installments/:id')
+  .put(editInstallment)
   .delete(deleteInstallment);
+
+router.route('/installments/standalone')
+  .post(createStandaloneInstallment);
 
 router.route('/installments/:id/pay')
   .post(markInstallmentPaid);

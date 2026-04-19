@@ -4,10 +4,16 @@ const Setting = require('../models/Setting');
 const { sendEmail } = require('../utils/emailService');
 const { generateFeeReminderTemplate } = require('../utils/emailTemplates');
 
-const startCronJobs = () => {
-  console.log('Finance cron jobs initialized...');
+const { checkAndSendInterviewReminders } = require('./interviewReminderService');
 
-  // Run every day at 08:00 AM
+const startCronJobs = () => {
+
+  // 1. Interview Reminders - Run every 5 minutes
+  cron.schedule('*/5 * * * *', async () => {
+    await checkAndSendInterviewReminders();
+  });
+
+  // 2. Finance Reminders - Run every day at 08:00 AM
   cron.schedule('0 8 * * *', async () => {
     try {
       console.log('Running daily fee reminder check...');

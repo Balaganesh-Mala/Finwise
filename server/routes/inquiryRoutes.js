@@ -113,7 +113,7 @@ router.delete('/:id', async (req, res) => {
 // @access  Public (Should be Admin only)
 router.patch('/:id', async (req, res) => {
     try {
-        const { status } = req.body;
+        const { status, remarks } = req.body;
         
         const inquiry = await Inquiry.findById(req.params.id);
         
@@ -121,7 +121,9 @@ router.patch('/:id', async (req, res) => {
             return res.status(404).json({ msg: 'Inquiry not found' });
         }
 
-        inquiry.status = status;
+        if (status !== undefined) inquiry.status = status;
+        if (remarks !== undefined) inquiry.remarks = remarks;
+
         await inquiry.save();
 
         res.json(inquiry);

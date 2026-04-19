@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Keyboard, Trophy, Target, Clock, Zap, Volume2, VolumeX,
     ChevronDown, RotateCcw, TrendingUp, RefreshCw, Play, History,
-    Hand as HandIcon, BarChart2, Award, ChevronRight
+    Hand as HandIcon, BarChart2, Award, ChevronRight, Monitor
 } from 'lucide-react';
 import TypingKeyboard from '../components/Keyboard/TypingKeyboard';
 import TypingHeatmap from '../components/TypingHeatmap';
@@ -85,6 +85,14 @@ const TypingTrainer = () => {
     const [saving, setSaving] = useState(false);
     const [lastSubmissionResult, setLastSubmissionResult] = useState(null);
     const [completedLessons, setCompletedLessons] = useState(new Set());
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     const inputRef = useRef(null);
     const containerRef = useRef(null);
@@ -92,8 +100,8 @@ const TypingTrainer = () => {
     // Derived
     const nextChar = text[input.length] || '';
     const progress = calcProgress(input.length, text.length);
-    const handsVis = showHands && category === 'beginner';
-    const keyboardVis = showKeyboard && category !== 'advanced';
+    const handsVis = showHands && category === 'beginner' && !isMobile;
+    const keyboardVis = showKeyboard && category !== 'advanced' && !isMobile;
 
     // ── Init ──────────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -208,42 +216,55 @@ const TypingTrainer = () => {
         }
     }, [isFinished, text, input, startTime, user, category, lessonIdx, duration, mode, errorMap]);
 
-    // ── Keyboard Handler ──────────────────────────────────────────────────────
-    const handleKeyDown = useCallback((e) => {
+    // ── Keyboard Handler (Refactored for Mobile Compatibility) ──
+    const handleInputChange = (e) => {
         if (isFinished) return;
-
-        const key = e.key;
-        if (key === 'Tab') { e.preventDefault(); return; }
+        const val = e.target.value;
+        const prevLen = input.length;
+        const newLen = val.length;
 
         if (!isActive) { setIsActive(true); setStartTime(Date.now()); }
 
-        if (key === 'Backspace') {
-            setInput(prev => prev.slice(0, -1));
+        // Backspace handling
+        if (newLen < prevLen) {
+            setInput(val);
             return;
         }
 
-        if (key.length !== 1) return;
+        // New character entry
+        const diff = val.length - prevLen;
+        if (diff <= 0) return;
 
-        const expected = text[input.length];
-        if (!expected) return;
+        // Process each new character (usually just one)
+        let updatedInput = input;
+        for (let i = 0; i < diff; i++) {
+            const char = val[prevLen + i];
+            const expected = text[updatedInput.length];
+            if (!expected) break;
 
-        const isCorrect = key === expected;
-        if (soundOn) playBeep(isCorrect ? 'click' : 'error');
+            const isCorrect = char === expected;
+            if (soundOn) playBeep(isCorrect ? 'click' : 'error');
 
-        if (!isCorrect) {
-            setErrorMap(prev => recordError(prev, expected));
-            setErrorKey(expected);
-            setTimeout(() => setErrorKey(''), 350);
+            if (!isCorrect) {
+                setErrorMap(prev => recordError(prev, expected));
+                setErrorKey(expected);
+                setTimeout(() => setErrorKey(''), 350);
+            }
+            updatedInput += char;
         }
 
-        const nextInput = input + key;
-        setInput(nextInput);
+        setInput(updatedInput);
 
         // Word mode: end when all text is typed
-        if (mode === 'words' && nextInput.length >= text.length) {
+        if (mode === 'words' && updatedInput.length >= text.length) {
             finishTest();
         }
-    }, [isFinished, isActive, text, input, soundOn, mode, finishTest]);
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Tab') e.preventDefault();
+        if (e.key === 'Enter' && !isActive && !isFinished) resetTest();
+    };
 
     // ── Render chars ──────────────────────────────────────────────────────────
     const renderChars = () =>
@@ -251,7 +272,7 @@ const TypingTrainer = () => {
             let cls = 'text-gray-300 ';
             if (i === input.length) cls = 'text-gray-700 bg-indigo-100 rounded px-px animate-pulse ';
             else if (i < input.length) cls = input[i] === char ? 'text-green-600 ' : 'text-red-500 bg-red-50 rounded ';
-            return <span key={i} className={cls}>{char}</span>;
+            return <span key={i} className={`${cls} ${isMobile ? 'text-lg' : 'text-xl'}`}>{char}</span>;
         });
 
     // ── History chart data ────────────────────────────────────────────────────
@@ -373,8 +394,23 @@ const TypingTrainer = () => {
             <Toaster position="top-center" />
             <ResultsModal />
 
-            {/* ── Top Bar ────────────────────────────────────────────────────── */}
-            {/* ── Top Bar ────────────────────────────────────────────────────── */}
+            {isMobile ? (
+                <div className="flex-1 w-full max-w-2xl flex flex-col items-center justify-center text-center p-6 animate-in fade-in zoom-in duration-500">
+                    <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl shadow-indigo-100 flex items-center justify-center mb-8 border border-slate-100">
+                        <Monitor size={48} className="text-indigo-600" />
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-4">Desktop Recommended</h2>
+                    <p className="text-slate-500 font-medium mb-8 max-w-md">
+                        The Typing Trainer is designed for professional skill development using a physical keyboard. 
+                        For the best learning experience, please log in from a computer.
+                    </p>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100/50">
+                        <Keyboard size={12} /> Optimized for Physical Keyboards
+                    </div>
+                </div>
+            ) : (
+                <>
+                    {/* ── Top Bar ────────────────────────────────────────────────────── */}
             <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
 
                 {/* Category tabs */}
@@ -518,16 +554,20 @@ const TypingTrainer = () => {
                 <input
                     ref={inputRef}
                     value={input}
-                    onChange={() => { }}
+                    onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
                     className="opacity-0 absolute w-0 h-0"
                     autoFocus
                     spellCheck={false}
                     autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    inputMode="text"
+                    enterKeyHint="done"
                 />
                 {!isActive && (
-                    <p className="text-center text-gray-300 text-sm mt-4">
-                        Start typing to begin — <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-400 text-xs font-mono">Backspace</kbd> to correct
+                    <p className="text-center text-gray-400 text-xs mt-4 uppercase tracking-widest font-bold">
+                        {isMobile ? 'Tap here to start — Focus on accuracy' : 'Start typing to begin — Backspace to correct'}
                     </p>
                 )}
             </div>
@@ -597,6 +637,8 @@ const TypingTrainer = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+                </>
+            )}
         </div>
     );
 };

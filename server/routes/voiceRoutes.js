@@ -9,8 +9,6 @@ if (process.env.OPENAI_API_KEY) {
     openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY
     });
-} else {
-    console.warn("WARNING: OPENAI_API_KEY is missing. AI analysis will not work.");
 }
 
 // Rate limiting map (simple in-memory for demo, use Redis for production)
@@ -112,7 +110,6 @@ router.post('/vapi-webhook', async (req, res) => {
                     feedback = analysis?.summary || "Analysis failed.";
                 }
             } else {
-                 if (!openai) console.warn("Skipping AI analysis: OpenAI key missing.");
                  feedback = analysis?.summary || "AI Analysis unavailable (Missing API Key).";
             }
 

@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
 const Setting = require('../models/Setting'); // Import Settings Model
 const { sendEmail } = require('../utils/emailService');
 const { studentRegistrationTemplate, resetPasswordTemplate } = require('../templates/emailTemplates');
 const crypto = require('crypto');
-const { getStudentDashboardStats, getLeaderboard, getStudentActivity } = require('../controllers/dashboardController');
+const { getStudentDashboardStats, getLeaderboard, getStudentActivity, getInterviewLeaderboard } = require('../controllers/dashboardController');
 const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Topic = require('../models/Topic');
@@ -68,9 +69,15 @@ router.post('/login', async (req, res) => {
             return res.status(403).json({ message: 'Account is not active' });
         }
 
+        // Generate Token
+        const token = jwt.sign({ id: student._id }, process.env.JWT_SECRET, {
+            expiresIn: '30d'
+        });
+        
         // Return user data (excluding password)
         res.json({
             success: true,
+            token,
             user: {
                 _id: student._id,
                 name: student.name,
@@ -289,6 +296,12 @@ router.post('/create', upload.single('profilePicture'), async (req, res) => {
 // @desc    Get student leaderboard
 // @access  Public
 router.get('/leaderboard', getLeaderboard);
+
+
+// @route   GET /api/students/leaderboard/interviews
+// @desc    Get mock interview leaderboard (Batch-based)
+// @access  Public
+router.get('/leaderboard/interviews', getInterviewLeaderboard);
 
 // @route   GET /api/students/list
 // @desc    Get all students

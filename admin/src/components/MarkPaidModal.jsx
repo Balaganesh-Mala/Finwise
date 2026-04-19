@@ -68,6 +68,7 @@ export default function MarkPaidModal({ isOpen, onClose, onConfirm, installment,
                         </div>
                     </div>
 
+
                     {/* Mode Selection - Horizontal Grid */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Payment Mode</label>

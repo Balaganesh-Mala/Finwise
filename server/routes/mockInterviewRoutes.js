@@ -6,9 +6,13 @@ const {
     getInterviewHistory,
     getAllHistory,
     updateFeedback,
-    deleteFeedback
+    deleteFeedback,
+    downloadInterviewPDF
 } = require('../controllers/mockInterviewController');
 const { protect } = require('../middleware/authMiddleware');
+
+// Download Route (Publicly accessible within portal constraints)
+router.get('/download/:id', downloadInterviewPDF);
 
 // Trainer Routes
 router.post('/submit', protect, submitFeedback);

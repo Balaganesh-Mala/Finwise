@@ -125,38 +125,56 @@ router.delete('/:id', async (req, res) => {
 });
 
 // @route   POST /api/batches/:id/assign
-// @desc    Assign a student to a batch
+// @desc    Assign students to a batch
 // @access  Admin
 router.post('/:id/assign', async (req, res) => {
     try {
-        const { studentId, enrollmentDate } = req.body;
+        // Support both studentId (for backwards compatibility) and studentIds array
+        const { studentId, studentIds, enrollmentDate } = req.body;
         const batchId = req.params.id;
+
+        let idsToAssign = [];
+        if (studentIds && Array.isArray(studentIds)) {
+            idsToAssign = studentIds;
+        } else if (studentId) {
+            idsToAssign = [studentId];
+        }
+
+        if (idsToAssign.length === 0) {
+            return res.status(400).json({ message: 'No students selected' });
+        }
 
         const batch = await Batch.findById(batchId);
         if (!batch) return res.status(404).json({ message: 'Batch not found' });
 
-        const student = await Student.findById(studentId);
-        if (!student) return res.status(404).json({ message: 'Student not found' });
-
         // Check capacity
         const currentCount = await BatchStudent.countDocuments({ batchId });
-        if (currentCount >= batch.maxStudents) {
-            return res.status(400).json({ message: 'Batch is full' });
+        if (currentCount + idsToAssign.length > batch.maxStudents) {
+            return res.status(400).json({ 
+                message: `Batch capacity exceeded. Can only add ${batch.maxStudents - currentCount} more students.` 
+            });
         }
 
-        // Upsert: if student is already in a batch for this course, update it
-        const enrollment = await BatchStudent.findOneAndUpdate(
-            { studentId, courseId: batch.courseId },
-            {
-                batchId,
-                courseId: batch.courseId,
-                enrollmentDate: enrollmentDate || new Date(),
-                status: 'active'
-            },
-            { upsert: true, new: true }
-        );
+        const enrollments = [];
+        for (const sId of idsToAssign) {
+            const student = await Student.findById(sId);
+            if (!student) continue;
 
-        res.json({ success: true, enrollment });
+            // Upsert: if student is already in a batch for this course, update it
+            const enrollment = await BatchStudent.findOneAndUpdate(
+                { studentId: sId, courseId: batch.courseId },
+                {
+                    batchId,
+                    courseId: batch.courseId,
+                    enrollmentDate: enrollmentDate || new Date(),
+                    status: 'active'
+                },
+                { upsert: true, new: true }
+            );
+            enrollments.push(enrollment);
+        }
+
+        res.json({ success: true, enrollments, message: `Successfully assigned ${enrollments.length} student(s)` });
     } catch (err) {
         console.error('Assign Batch Error:', err);
         res.status(500).json({ message: 'Server Error' });

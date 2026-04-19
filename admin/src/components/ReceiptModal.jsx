@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, Printer, IndianRupee, Building2, MapPin, Phone, Mail, Download, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { 
+    X, 
+    Printer, 
+    IndianRupee, 
+    Building2, 
+    MapPin, 
+    Phone, 
+    Mail, 
+    Download, 
+    CheckCircle2, 
+    ShieldCheck, 
+    Loader,
+    Globe
+} from 'lucide-react';
+import logoImg from '../assets/logo.jpeg';
 import sigImg from '../assets/sig.jpeg';
 
 export default function ReceiptModal({ isOpen, onClose, installment }) {
     const [settings, setSettings] = useState(null);
+    const [payment, setPayment] = useState(null);
     const [feeSummary, setFeeSummary] = useState({ total: 0, pending: 0, previousPaid: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -14,7 +29,6 @@ export default function ReceiptModal({ isOpen, onClose, installment }) {
                 setLoading(true);
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-                // Fetch Settings, Payment Details & All Installments for Student
                 const [settingsRes, paymentRes, installmentsRes] = await Promise.all([
                     axios.get(`${apiUrl}/api/settings`),
                     installment?.status === 'Paid'
@@ -22,18 +36,16 @@ export default function ReceiptModal({ isOpen, onClose, installment }) {
                         : Promise.resolve({ data: null }),
                     axios.get(`${apiUrl}/api/finance/installments?student_id=${installment.student_id._id || installment.student_id}`)
                 ]);
-                
+
                 const allInst = installmentsRes.data;
-                const totalFee = allInst.reduce((sum, i) => sum + i.amount, 0);
-                
-                // Calculate point-in-time total paid (up to this installment)
                 const totalPaidAtTime = allInst
                     .filter(i => (i.status === 'Paid' || i._id === installment._id) && i.installment_no <= installment.installment_no)
                     .reduce((sum, i) => sum + i.amount, 0);
-                
+                const totalFee = allInst.reduce((sum, i) => sum + i.amount, 0);
                 const previousPaid = totalPaidAtTime - installment.amount;
 
                 setFeeSummary({ total: totalFee, pending: totalFee - totalPaidAtTime, previousPaid });
+
                 setSettings(settingsRes.data);
                 if (paymentRes.data) setPayment(paymentRes.data);
             } catch (error) {
@@ -51,12 +63,16 @@ export default function ReceiptModal({ isOpen, onClose, installment }) {
     if (!isOpen || !installment) return null;
 
     const handlePrint = () => {
+        const originalTitle = document.title;
+        const receiptId = installment._id.substring(18).toUpperCase();
+        document.title = `Receipt_#REC-${receiptId}`;
         window.print();
+        document.title = originalTitle;
     };
 
-    const { student_id: student, amount, paid_date, installment_no } = installment;
+    const student = installment.student_id;
+    const { amount, paid_date, installment_no } = installment;
 
-    // Use actual payment date if available, otherwise fallback
     const displayDate = payment?.paid_at || paid_date || new Date();
     const formattedDate = new Date(displayDate).toLocaleDateString('en-IN', {
         year: 'numeric',
@@ -65,227 +81,213 @@ export default function ReceiptModal({ isOpen, onClose, installment }) {
     });
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:p-0 print:bg-white overflow-hidden">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[95vh] print:shadow-none print:max-h-none print:w-full print:rounded-none">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:p-0 print:bg-white overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[96vh] print:shadow-none print:max-h-none print:w-full print:rounded-none">
 
-                {/* Header - Hidden in print */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white print:hidden">
+                {/* Navbar Header - Hidden in print */}
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white print:hidden shrink-0">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                            <ShieldCheck size={20} />
+                        <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                            <ShieldCheck size={18} />
                         </div>
-                        <h2 className="text-lg font-bold text-gray-900">Official Payment Receipt</h2>
+                        <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Official Receipt Viewer</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all">
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-full transition-all border border-transparent hover:border-slate-100">
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Receipt Content */}
-                <div className="overflow-y-auto flex-1 bg-gray-50/30 print:bg-white p-0 md:p-8" id="receipt-content">
-                    <div className="bg-white mx-auto shadow-sm border border-gray-100 print:border-none print:shadow-none relative">
+                <div className="overflow-y-auto flex-1 bg-slate-50/30 print:bg-white p-0 md:p-8" id="receipt-content">
+                    {loading ? (
+                         <div className="flex flex-col items-center justify-center py-48 bg-white rounded-xl">
+                             <Loader className="w-10 h-10 animate-spin text-slate-200" />
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-6">Generating secure copy...</p>
+                         </div>
+                    ) : (
+                        <div className="bg-white mx-auto shadow-sm print:shadow-none border border-slate-100 print:border-none relative">
+                            
+                            {/* Watermark Section */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.015] select-none print:opacity-[0.02] z-0 overflow-hidden">
+                                <h1 className="text-[3.2rem] md:text-[3.5rem] font-black -rotate-12 uppercase tracking-[0.2em] text-center whitespace-nowrap">
+                                    FINWISE CAREER SOLUTIONS
+                                </h1>
+                            </div>
 
-                        {/* Premium Watermark for Print */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] overflow-hidden select-none print:opacity-[0.05]">
-                            <h1 className="text-[12rem] font-black -rotate-45 uppercase tracking-tighter">OFFICIAL</h1>
-                        </div>
-
-                        {/* Removed Banner Image as per user request */}
-
-                        <div className="p-8 md:p-12 relative z-10">
-                            {/* Business Header */}
-                            <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-12">
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex items-center gap-4">
-                                        {settings?.logoUrl ? (
-                                            <img src={settings.logoUrl} alt="Logo" className="h-14 w-auto object-contain" />
-                                        ) : (
-                                            <div className="h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                                                <Building2 size={24} />
-                                            </div>
-                                        )}
-                                        <div>
-                                            <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">
-                                                {settings?.siteTitle || 'Finwise Career Solutions'}
-                                            </h1>
-                                            <p className="text-[10px] font-bold text-blue-600 tracking-[0.2em] mt-1 ml-0.5 uppercase">Career Solutions</p>
-                                        </div>
+                            {/* Modern "Fitted" Header - Light gray with subtle branding */}
+                            <div className="bg-gray-50 px-8 py-6 md:px-12 md:py-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 relative border-t-4 border-gray-900">
+                                <div className="flex items-center gap-5 relative z-10 text-center md:text-left">
+                                    <div className="p-1 bg-white rounded-lg shadow-sm border border-gray-200">
+                                        <img src={settings?.logoUrl || logoImg} alt="Logo" className="h-12 w-auto object-contain" />
                                     </div>
-                                    <div className="text-sm text-gray-500 space-y-1 mt-2">
-                                        {settings?.contact?.address && <p className="flex items-start gap-2 italic"><MapPin size={14} className="mt-0.5 text-gray-400" /> {settings.contact.address}</p>}
-                                        <div className="flex flex-wrap gap-x-4 gap-y-1">
-                                            {settings?.contact?.phone && <span className="flex items-center gap-1.5"><Phone size={14} className="text-gray-400" /> {settings.contact.phone}</span>}
-                                            {settings?.contact?.email && <span className="flex items-center gap-1.5"><Mail size={14} className="text-gray-400" /> {settings.contact.email}</span>}
-                                        </div>
+                                    <div>
+                                        <h1 className="text-xl font-bold tracking-tight uppercase text-gray-900">
+                                            Finwise Career Solutions
+                                        </h1>
+                                        <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-widest mt-0.5">Academic Excellence • Career Success</p>
                                     </div>
                                 </div>
 
-                                <div className="text-left md:text-right flex flex-col md:items-end w-full md:w-auto">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-wider mb-4 border border-emerald-100">
-                                        <CheckCircle2 size={12} /> Payment Verified
-                                    </div>
-                                    <h2 className="text-5xl font-black text-gray-200 uppercase tracking-tighter mb-4 leading-none select-none">Receipt</h2>
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Receipt Number</p>
-                                        <p className="font-mono text-lg font-bold text-gray-900">#REC-{installment._id.substring(18).toUpperCase()}</p>
-                                    </div>
-                                    <div className="space-y-1 mt-4">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Date Issued</p>
-                                        <p className="font-bold text-gray-900">{formattedDate}</p>
-                                    </div>
+                                <div className="text-center md:text-right relative z-10">
+                                    <h2 className="text-4xl font-black text-gray-200/60 absolute -top-4 -right-2 uppercase leading-none select-none -z-10">RECEIPT</h2>
+                                    <p className="font-mono text-sm font-semibold text-gray-600 tracking-tight">
+                                        #{installment._id.substring(18).toUpperCase()}
+                                    </p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Date: {formattedDate}</p>
                                 </div>
                             </div>
 
-                            {/* Info Section */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12 border-y border-gray-100 py-8">
-                                <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Student Details</p>
-                                    <p className="text-xl font-black text-gray-900">{student?.name || 'Valued Student'}</p>
-                                    <p className="text-sm text-gray-500 mt-1 font-medium">{student?.email || 'N/A'}</p>
-                                    <p className="text-sm text-gray-500 font-medium">{student?.phone || ''}</p>
-                                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg text-xs font-bold text-gray-600 border border-gray-200">
-                                        Course: <span className="text-blue-600">{student?.courseName || 'Investment Banking Operations & Accounting Analyst Program'}</span>
+                            {/* Main Body - Table Format for Info */}
+                            <div className="px-8 py-6 md:px-12 md:py-8 relative z-10">
+                                
+                                {/* Unified Info Table */}
+                                {/* Unified Info Sections */}
+                                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 border-b border-gray-100">
+                                    <div className="py-6 align-top pr-0 md:pr-8 border-b md:border-b-0 md:border-r border-gray-100">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Bill To:</span>
+                                        <h3 className="text-xl font-bold text-gray-900 uppercase mb-1">{student?.name}</h3>
+                                        <p className="text-xs font-semibold text-gray-500 lowercase">{student?.email}</p>
                                     </div>
-                                </div>
-                                <div className="md:text-right">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Payment Summary</p>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between md:justify-end gap-10">
-                                            <span className="text-sm font-bold text-gray-400 uppercase">Payment Mode:</span>
-                                            <span className="text-sm font-black text-gray-900 uppercase">
-                                                {payment?.payment_mode || 'Mobile Payment / Cash'}
-                                            </span>
-                                        </div>
-                                        {payment?.reference_id && (
-                                            <div className="flex justify-between md:justify-end gap-10">
-                                                <span className="text-sm font-bold text-gray-400 uppercase">Ref ID:</span>
-                                                <span className="text-sm font-mono font-bold text-blue-600">{payment.reference_id}</span>
+                                    <div className="py-6 align-top pl-0 md:pl-8">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Payment Details:</span>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[11px]">
+                                                <span className="text-gray-400 font-semibold uppercase tracking-wide">Method:</span>
+                                                <span className="font-bold text-gray-800 uppercase">{payment?.payment_mode || 'Online'}</span>
                                             </div>
-                                        )}
-                                        <div className="flex justify-between md:justify-end gap-10 pt-2">
-                                            <span className="text-sm font-bold text-gray-400 uppercase">Status:</span>
-                                            <span className="text-sm font-black text-emerald-600 uppercase">Successful</span>
-                                        </div>
-                                        
-                                        {/* New Fee Summary Section */}
-                                        <div className="flex justify-between md:justify-end gap-10 pt-4 mt-2 border-t border-gray-100">
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Course Fee:</span>
-                                            <span className="text-xs font-bold text-gray-700">₹{feeSummary.total.toLocaleString('en-IN')}</span>
-                                        </div>
-                                        {feeSummary.previousPaid > 0 && (
-                                            <div className="flex justify-between md:justify-end gap-10">
-                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Amount Previously Paid:</span>
-                                                <span className="text-xs font-bold text-gray-600">₹{feeSummary.previousPaid.toLocaleString('en-IN')}</span>
+                                            <div className="flex justify-between text-[11px]">
+                                                <span className="text-gray-400 font-semibold uppercase tracking-wide">Status:</span>
+                                                <span className="text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                                                    <CheckCircle2 size={10} /> Paid
+                                                </span>
                                             </div>
-                                        )}
-                                        <div className="flex justify-between md:justify-end gap-10">
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">This Installment:</span>
-                                            <span className="text-xs font-bold text-blue-600">₹{installment.amount.toLocaleString('en-IN')}</span>
-                                        </div>
-                                        <div className="flex justify-between md:justify-end gap-10 pt-1 border-t border-gray-50">
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Remaining Balance:</span>
-                                            <span className="text-xs font-bold text-rose-500">₹{feeSummary.pending.toLocaleString('en-IN')}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Particulars Table */}
-                            <div className="rounded-xl border border-gray-200 overflow-hidden mb-12 shadow-sm">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-gray-50/80 text-[10px] font-black uppercase tracking-[0.1em] text-gray-400 border-b border-gray-200">
-                                            <th className="px-8 py-5">Description</th>
-                                            <th className="px-8 py-5 text-right">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        <tr>
-                                            <td className="px-8 py-6">
-                                                <p className="text-lg font-black text-gray-900">Installment #{installment_no}</p>
-                                                <p className="text-sm text-gray-500 mt-1 font-medium italic">Course fee payment for the current academic session.</p>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <div className="flex items-center justify-end text-xl font-black text-gray-900">
-                                                    <IndianRupee size={20} className="mr-1 mt-0.5" />
-                                                    {amount.toLocaleString('en-IN')}
+                                            {payment?.reference_id && (
+                                                <div className="flex justify-between text-[11px] pt-1 border-t border-gray-100">
+                                                    <span className="text-gray-400 font-semibold uppercase tracking-wide">Ref ID:</span>
+                                                    <span className="font-mono text-[9px] text-gray-500 truncate max-w-[120px]">{payment.reference_id}</span>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr className="bg-blue-600 text-white">
-                                            <td className="px-8 py-6 text-sm font-black uppercase tracking-[0.2em]">Total Amount Collected</td>
-                                            <td className="px-8 py-6 text-right">
-                                                <div className="flex items-center justify-end text-2xl font-black">
-                                                    <IndianRupee size={24} className="mr-1 mt-0.5" />
-                                                    {amount.toLocaleString('en-IN')}
+                                            )}
+
+                                            {/* Fee Summary Stats */}
+                                            <div className="flex justify-between text-[11px] pt-3 border-t-2 border-slate-100">
+                                                <span className="text-slate-400 font-bold uppercase tracking-wide">Total Course Fee:</span>
+                                                <span className="font-bold text-slate-800">₹{feeSummary.total.toLocaleString('en-IN')}</span>
+                                            </div>
+                                            {feeSummary.previousPaid > 0 && (
+                                                <div className="flex justify-between text-[11px]">
+                                                    <span className="text-slate-400 font-bold uppercase tracking-wide">Amount Previously Paid:</span>
+                                                    <span className="font-bold text-slate-600">₹{feeSummary.previousPaid.toLocaleString('en-IN')}</span>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-
-                            {/* Terms & Signature */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-end mt-16 pb-8">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                                        <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Important Notes</h3>
+                                            )}
+                                            <div className="flex justify-between text-[11px] pb-1 border-b border-slate-100">
+                                                <span className="text-slate-400 font-bold uppercase tracking-wide">This Installment:</span>
+                                                <span className="font-bold text-indigo-600">₹{installment.amount.toLocaleString('en-IN')}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[11px] pt-1">
+                                                <span className="text-slate-400 font-bold uppercase tracking-wide">Remaining Balance:</span>
+                                                <span className="font-bold text-rose-500">₹{feeSummary.pending.toLocaleString('en-IN')}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <ul className="space-y-2 text-[10px] font-bold text-gray-500 uppercase leading-relaxed tracking-wider list-none">
-                                        <li className="flex gap-2"><span>&bull;</span> This is a computer-generated official receipt.</li>
-                                        <li className="flex gap-2"><span>&bull;</span> Fees once paid are non-refundable & non-transferable.</li>
-                                        <li className="flex gap-2"><span>&bull;</span> Valid across all Finwise Career Solutions branches.</li>
-                                    </ul>
                                 </div>
 
-                                <div className="flex flex-col items-center">
-                                    <div className="relative w-48 h-24 flex items-center justify-center">
-                                        {/* Signature Line Decor */}
-                                        <div className="absolute inset-x-0 bottom-6 border-b-2 border-gray-900/10"></div>
+                                {/* Items Table - Simplified & Professional */}
+                                <div className="mb-6 overflow-x-auto">
+                                    <table className="w-full min-w-[500px]">
+                                        <thead>
+                                            <tr className="bg-gray-50 text-gray-500 text-[9px] font-bold uppercase tracking-[0.2em] border-y border-gray-100">
+                                                <th className="px-6 py-4 font-bold text-left">Particulars of Settlement</th>
+                                                <th className="px-6 py-4 text-right font-bold">Amount Paid</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            <tr>
+                                                <td className="px-6 py-8">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="text-xs font-bold text-gray-300">#{installment_no}</div>
+                                                        <div>
+                                                            <p className="text-sm font-bold text-gray-800 uppercase">Training Fee Installment</p>
+                                                            <p className="text-[9px] text-indigo-600 mt-1 font-bold uppercase tracking-wider">{student?.courseName || 'Career Training Program'}</p>
+                                                            <p className="text-[9px] text-gray-400 mt-0.5 font-medium italic">Standard payment towards selected career coaching program.</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-8 text-right">
+                                                    <div className="text-lg font-bold text-gray-900">
+                                                        <span className="text-gray-300 mr-1 text-sm font-normal">₹</span>
+                                                        {amount.toLocaleString('en-IN')}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr className="border-t-2 border-gray-900">
+                                                <td className="px-6 py-5 text-[10px] font-bold text-gray-900 uppercase tracking-widest text-right">Total Amount Collected</td>
+                                                <td className="px-6 py-5 text-right bg-gray-50">
+                                                    <div className="text-xl font-bold text-gray-900 tracking-tight">
+                                                        <span className="text-gray-400 mr-1 text-sm font-normal">₹</span>
+                                                        {amount.toLocaleString('en-IN')}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
 
-                                        <img
-                                            src={sigImg}
-                                            alt="Authorized Signature"
-                                            className="max-h-20 w-auto object-contain relative z-10 filter mix-blend-multiply brightness-90 contrast-125"
-                                            onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block'; }}
-                                        />
-                                        <div className="hidden text-[10px] font-black text-gray-300 uppercase tracking-widest absolute">Seal & Sign</div>
+                                {/* Simplified Footer Block */}
+                                <div className="flex flex-col md:flex-row items-start justify-between gap-12 pt-6 border-t border-gray-100">
+                                    <div className="max-w-xs">
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase leading-relaxed tracking-wider">
+                                            * Fees are non-refundable.<br />
+                                            * Official digital record of Finwise Career Solutions.<br />
+                                            * Verify at finwisecareers.com
+                                        </p>
                                     </div>
-                                    <p className="text-xs font-black text-gray-900 uppercase tracking-[0.2em] mb-1 mt-2">Authorized Signatory</p>
-                                    <p className="text-[10px] font-bold text-gray-400 capitalize whitespace-nowrap">For {settings?.siteTitle || 'Finwise Career Solutions'}</p>
+
+                                    <div className="text-center min-w-[180px]">
+                                        <div className="h-16 flex items-center justify-center relative mb-2">
+                                            {sigImg && (
+                                                <img 
+                                                    src={sigImg} 
+                                                    alt="Signature" 
+                                                    className="max-h-12 w-auto object-contain mix-blend-multiply opacity-80" 
+                                                />
+                                            )}
+                                        </div>
+                                        <div className="h-px bg-gray-200 w-full mb-2"></div>
+                                        <p className="text-[10px] font-bold text-gray-900 uppercase tracking-widest leading-none">Authorized Official</p>
+                                        <p className="text-[8px] font-semibold text-gray-400 uppercase tracking-tight mt-1">Seal & Signature</p>
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Bottom decorative bar */}
-                            <div className="h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 mt-12 rounded-full"></div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
-                {/* Footer - Hidden in print */}
-                <div className="px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-6 bg-white border-t border-gray-100 print:hidden shrink-0">
-                    <div className="flex items-center gap-2 text-gray-400">
-                        <Printer size={16} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Premium PDF Generation Available</span>
-                    </div>
-                    <div className="flex gap-4 w-full sm:w-auto">
+                {/* Footer Controls - Hidden in print */}
+                <div className="px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-6 bg-white border-t border-slate-100 print:hidden shrink-0">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full sm:w-auto px-6 py-3 text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                        <span>←</span> Back to Payments
+                    </button>
+
+                    <div className="flex gap-3 w-full sm:w-auto">
                         <button
                             type="button"
-                            onClick={onClose}
-                            className="flex-1 sm:flex-none px-8 py-3 text-sm font-bold text-gray-600 bg-white border-2 border-gray-100 rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-all uppercase tracking-widest"
+                            onClick={handlePrint}
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest"
                         >
-                            Back
+                            <Printer size={14} /> Print Receipt
                         </button>
                         <button
                             type="button"
                             onClick={handlePrint}
-                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-10 py-3 text-sm font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 active:scale-95 transition-all uppercase tracking-widest"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 text-[10px] font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-100 transition-all uppercase tracking-widest"
                         >
-                            <Download size={18} />
-                            Download Receipt
+                            <Download size={14} /> Download PDF
                         </button>
                     </div>
                 </div>
@@ -296,31 +298,65 @@ export default function ReceiptModal({ isOpen, onClose, installment }) {
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @media print {
-                    /* Hide everything except our receipt */
-                    #root, .print\\:hidden, button, .shrink-0, [role="dialog"] > div:first-child { display: none !important; }
-                    body { background: white !important; margin: 0; padding: 0; }
-                    
-                    /* Show only the targeted content */
+                    /* Robust Visibility Isolation Strategy */
+                    html, body { 
+                        visibility: hidden !important; 
+                        margin: 0 !important; 
+                        padding: 0 !important;
+                        height: auto !important;
+                        background: white !important;
+                    }
+
                     #receipt-content {
-                        display: block !important;
+                        visibility: visible !important;
                         position: absolute !important;
                         left: 0 !important;
                         top: 0 !important;
                         width: 100% !important;
-                        height: auto !important;
                         margin: 0 !important;
-                        padding: 0 !important;
+                        padding: 20px !important;
+                        display: block !important;
+                        height: auto !important;
                         background: white !important;
-                        z-index: 9999 !important;
+                        z-index: 99999 !important;
+                        overflow: visible !important;
                     }
 
-                    /* Clean backgrounds and borders */
-                    .shadow-sm, .shadow-2xl, .shadow-lg { box-shadow: none !important; }
-                    .border { border: 1px solid #e5e7eb !important; }
-                    .bg-gray-50, .bg-gray-50\\/80, .bg-gray-50\\/30 { background-color: #f9fafb !important; -webkit-print-color-adjust: exact; }
-                    .bg-blue-600 { background-color: #2563eb !important; -webkit-print-color-adjust: exact; color: white !important; }
-                    .text-blue-600 { color: #2563eb !important; -webkit-print-color-adjust: exact; }
-                    .text-emerald-700 { color: #047857 !important; -webkit-print-color-adjust: exact; }
+                    /* Ensure all descendants are visible */
+                    #receipt-content * {
+                        visibility: visible !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+
+                    /* Helper to hide UI elements that might still linger */
+                    aside, header, navbar, .print\\:hidden, button, .shrink-0 { 
+                        display: none !important; 
+                    }
+
+                    /* Force Background Styles */
+                    .bg-slate-50 { background-color: #f8fafc !important; }
+                    .bg-slate-900 { background-color: #0f172a !important; color: white !important; }
+                    .bg-white { background-color: white !important; }
+                    .border-slate-900 { border-color: #0f172a !important; }
+                    .border-slate-100 { border-color: #f1f5f9 !important; }
+                    
+                    /* Text Colors */
+                    .text-slate-900 { color: #0f172a !important; }
+                    .text-slate-400 { color: #94a3b8 !important; }
+                    .text-slate-200 { color: #e2e8f0 !important; }
+                    .text-slate-500 { color: #64748b !important; }
+                                        /* Watermark */
+                    .opacity-\\[0\\.015\\], .opacity-\\[0\\.02\\] { 
+                        opacity: 0.03 !important; 
+                    }
+
+                    /* Page Break Control */
+                    #receipt-content > div {
+                        page-break-inside: avoid !important;
+                        height: 297mm !important; /* Force A4 height */
+                        overflow: hidden !important;
+                    }
                 }
             `}} />
         </div>

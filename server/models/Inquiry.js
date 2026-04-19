@@ -30,6 +30,10 @@ const InquirySchema = new mongoose.Schema({
         enum: ['new', 'contacted', 'closed'],
         default: 'new'
     },
+    remarks: {
+        type: String,
+        default: ''
+    },
     createdAt: {
         type: Date,
         default: Date.now

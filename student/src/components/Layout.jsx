@@ -26,7 +26,8 @@ import {
     AlertCircle,
     CreditCard,
     Coins,
-    BotIcon
+    BotIcon,
+    Video
 } from 'lucide-react';
 
 
@@ -274,6 +275,7 @@ const Layout = () => {
             label: 'Learning',
             children: [
                 { label: 'My Courses', path: '/courses', accessKey: 'myCourses' },
+                { label: 'Study Materials', path: '/materials', accessKey: 'myCourses' },
                 { label: 'Typing Practice', path: '/typing-practice', accessKey: 'typingPractice' }
             ]
         },
@@ -286,7 +288,14 @@ const Layout = () => {
             ]
         },
 
-        { icon: BotIcon, label: 'Interview Preparation', path: '/mock-interview', accessKey: 'aiMockInterview' }, // Accessible to everyone who has dashboard access
+        { 
+            icon: BotIcon, 
+            label: 'Interview Prep', 
+            children: [
+                { label: 'Mock Performance', path: '/mock-interview', accessKey: 'aiMockInterview' },
+                { label: 'My Interviews', path: '/my-interviews', accessKey: 'aiMockInterview' }
+            ]
+        },
 
         { icon: Briefcase, label: 'Jobs', path: '/jobs', accessKey: 'jobs' }, // Managed via Admin Feature Access
         { icon: CreditCard, label: 'Payments', path: '/payments', accessKey: 'payments' },
