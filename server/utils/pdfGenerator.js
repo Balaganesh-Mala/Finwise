@@ -6,10 +6,10 @@ exports.generateInterviewPDF = (data, res) => {
       const doc = new PDFDocument({
         size: "A4",
         margin: 45,
+        bufferPages: true,
       });
 
       /* ---------------- RESPONSE HEADERS ---------------- */
-
       const fileName = `Interview_Report_${(data.studentName || "Student")
         .replace(/\s+/g, "_")
         .trim()}.pdf`;
@@ -23,44 +23,28 @@ exports.generateInterviewPDF = (data, res) => {
       doc.pipe(res);
 
       /* ---------------- COLORS ---------------- */
-
       const primary = "#4f46e5";
       const dark = "#0f172a";
       const text = "#334155";
       const gray = "#64748b";
+      const light = "#f8fafc";
       const border = "#e2e8f0";
       const green = "#16a34a";
       const red = "#dc2626";
 
-      const contentWidth = doc.page.width - 90;
+      const pageWidth = doc.page.width;
+      const contentWidth = pageWidth - 90;
 
       /* ---------------- HELPERS ---------------- */
 
-      const checkPageBreak = (space = 80) => {
-        if (doc.y + space > doc.page.height - 60) {
+      const checkPageBreak = (spaceNeeded = 80) => {
+        if (doc.y + spaceNeeded > doc.page.height - 60) {
           doc.addPage();
         }
       };
 
-      const footer = () => {
-        doc
-          .font("Helvetica")
-          .fontSize(7)
-          .fillColor(gray)
-          .text(
-            "This is a computer-generated report based on your mock interview performance evaluated by Finwise Career Solutions.",
-            45,
-            doc.page.height - 28,
-            {
-              width: contentWidth,
-              align: "center",
-              lineBreak: false,
-            }
-          );
-      };
-
       const sectionTitle = (title) => {
-        checkPageBreak(70);
+        checkPageBreak(60);
 
         doc
           .fillColor(dark)
@@ -87,18 +71,28 @@ exports.generateInterviewPDF = (data, res) => {
           .text(txt || "N/A", x, y, { width });
       };
 
-      /* ---------------- FOOTER EVERY PAGE ---------------- */
-
-      doc.on("pageAdded", () => {
-        footer();
-      });
+      const footer = () => {
+        doc
+          .fillColor(gray)
+          .font("Helvetica")
+          .fontSize(7)
+          .text(
+            "This is a computer-generated report based on your mock interview performance evaluated by Finwise Career Solutions.",
+            45,
+            doc.page.height - 28,
+            {
+              width: contentWidth,
+              align: "center",
+            }
+          );
+      };
 
       /* ---------------- HEADER ---------------- */
 
       doc
         .fillColor(primary)
         .font("Helvetica-Bold")
-        .fontSize(20)
+        .fontSize(22)
         .text("FINWISE CAREER SOLUTIONS", 45, 45);
 
       doc
@@ -113,19 +107,21 @@ exports.generateInterviewPDF = (data, res) => {
           72
         );
 
-      doc.moveDown(2.2);
+      doc.moveDown(2.3);
 
       /* ---------------- INFO GRID ---------------- */
 
       const drawInfoGrid = () => {
         const startY = doc.y;
 
+        // Row 1
         label("CANDIDATE NAME", 45, startY);
         label("INTERVIEW TYPE", 255, startY);
 
         value(data.studentName, 45, startY + 12, 180);
         value(data.interviewType, 255, startY + 12, 280);
 
+        // Row 2
         const row2 = startY + 38;
 
         label("TRAINER NAME", 45, row2);
@@ -151,27 +147,27 @@ exports.generateInterviewPDF = (data, res) => {
 
         const verdictHeight = doc.heightOfString(verdict, {
           width: 320,
-          lineGap: 3,
+          lineGap: 2,
         });
 
-        const boxHeight = Math.max(82, verdictHeight + 34);
+        const boxHeight = Math.max(78, verdictHeight + 34);
 
         // Outer box
         doc
           .rect(45, boxY, contentWidth, boxHeight)
           .fillAndStroke("#ffffff", border);
 
-        // Left score panel
+        // Left score box
         doc
           .rect(45, boxY, 145, boxHeight)
-          .fill("#f1f5f9");
+          .fill("#f8fafc");
 
         // Score
         doc
           .fillColor(primary)
           .font("Helvetica-Bold")
           .fontSize(42)
-          .text(`${data.overallScore || 0}`, 58, boxY + 24, {
+          .text(`${data.overallScore || 0}`, 58, boxY + 22, {
             continued: true,
           })
           .fillColor("#94a3b8")
@@ -184,14 +180,14 @@ exports.generateInterviewPDF = (data, res) => {
           .fillColor(gray)
           .font("Helvetica-Bold")
           .fontSize(8)
-          .text("VERDICT", 210, boxY + 14);
+          .text("VERDICT", 210, boxY + 12);
 
-        // Verdict body
+        // Verdict text
         doc
           .fillColor(text)
           .font("Helvetica-Bold")
           .fontSize(11)
-          .text(verdict, 210, boxY + 30, {
+          .text(verdict, 210, boxY + 28, {
             width: 320,
             lineGap: 3,
           });
@@ -210,16 +206,16 @@ exports.generateInterviewPDF = (data, res) => {
         const rightText = data.weaknesses || "N/A";
 
         const leftHeight = doc.heightOfString(leftText, {
-          width: 214,
+          width: 215,
         });
 
         const rightHeight = doc.heightOfString(rightText, {
-          width: 214,
+          width: 215,
         });
 
-        const cardHeight = Math.max(leftHeight, rightHeight) + 38;
+        const cardHeight = Math.max(leftHeight, rightHeight) + 35;
 
-        // Left
+        // Left card
         doc
           .roundedRect(45, startY, 240, cardHeight, 6)
           .fillAndStroke("#f0fdf4", border);
@@ -234,12 +230,11 @@ exports.generateInterviewPDF = (data, res) => {
           .fillColor(text)
           .font("Helvetica")
           .fontSize(10)
-          .text(leftText, 58, startY + 28, {
+          .text(leftText, 58, startY + 26, {
             width: 214,
-            lineGap: 2,
           });
 
-        // Right
+        // Right card
         doc
           .roundedRect(300, startY, 240, cardHeight, 6)
           .fillAndStroke("#fef2f2", border);
@@ -254,9 +249,8 @@ exports.generateInterviewPDF = (data, res) => {
           .fillColor(text)
           .font("Helvetica")
           .fontSize(10)
-          .text(rightText, 313, startY + 28, {
+          .text(rightText, 313, startY + 26, {
             width: 214,
-            lineGap: 2,
           });
 
         doc.y = startY + cardHeight + 20;
@@ -275,7 +269,6 @@ exports.generateInterviewPDF = (data, res) => {
         if (!topics.length) {
           doc
             .fillColor(text)
-            .font("Helvetica")
             .fontSize(10)
             .text("No topic data available.");
           doc.moveDown(1);
@@ -303,22 +296,23 @@ exports.generateInterviewPDF = (data, res) => {
         drawHeader();
 
         topics.forEach((item) => {
-          const topic = item.topic || "N/A";
-          const score = item.score || 0;
           const remark = item.remark || "-";
-
-          const topicHeight = doc.heightOfString(topic, {
-            width: 160,
-          });
 
           const remarkHeight = doc.heightOfString(remark, {
             width: 220,
           });
 
+          const topicHeight = doc.heightOfString(
+            item.topic || "N/A",
+            {
+              width: 160,
+            }
+          );
+
           const rowHeight = Math.max(
             32,
-            topicHeight + 10,
-            remarkHeight + 10
+            remarkHeight + 10,
+            topicHeight + 10
           );
 
           if (y + rowHeight > doc.page.height - 55) {
@@ -333,11 +327,11 @@ exports.generateInterviewPDF = (data, res) => {
             .fillColor(text)
             .font("Helvetica")
             .fontSize(10)
-            .text(topic, 55, y + 8, {
+            .text(item.topic || "N/A", 55, y + 8, {
               width: 160,
             });
 
-          doc.text(`${score}/10`, 240, y + 8);
+          doc.text(`${item.score || 0}/10`, 240, y + 8);
 
           doc
             .fillColor(gray)
@@ -382,9 +376,32 @@ exports.generateInterviewPDF = (data, res) => {
       drawTopicTable();
       drawRoadmap();
 
-      /* ---------------- FINAL FOOTER ---------------- */
+      /* ---------------- FOOTER ON ALL PAGES ---------------- */
 
-      footer();
+      const range = doc.bufferedPageRange();
+
+for (let i = 0; i < range.count; i++) {
+  doc.switchToPage(i);
+
+  const oldY = doc.y; // save current cursor position
+
+  doc
+    .fillColor(gray)
+    .font("Helvetica")
+    .fontSize(7)
+    .text(
+      "This is a computer-generated report based on your mock interview performance evaluated by Finwise Career Solutions.",
+      45,
+      doc.page.height - 28,
+      {
+        width: contentWidth,
+        align: "center",
+        lineBreak: false
+      }
+    );
+
+  doc.y = oldY; // restore cursor position
+}
 
       /* ---------------- EVENTS ---------------- */
 
