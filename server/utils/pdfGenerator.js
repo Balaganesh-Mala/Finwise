@@ -35,30 +35,44 @@ exports.generateInterviewPDF = (data, res) => {
             // --- Candidate Info Table ---
             const startYTable1 = doc.y;
             
-            // Labels
+            // Row 1: Candidate Name & Interview Type
             doc.fillColor('gray').fontSize(8).font('Helvetica-Bold')
                .text('CANDIDATE NAME', 50, startYTable1)
-               .text('INTERVIEW TYPE', 230, startYTable1)
-               .text('ATTEMPT DATE', 380, startYTable1);
+               .text('INTERVIEW TYPE', 250, startYTable1);
 
-            // Values
             doc.fillColor(colorSecondary).fontSize(10).font('Helvetica')
                .text(data.studentName || 'Student', 50, startYTable1 + 12)
-               .text(data.interviewType || 'N/A', 230, startYTable1 + 12)
-               .text(data.interviewDate, 380, startYTable1 + 12);
+               .text(data.interviewType || 'N/A', 250, startYTable1 + 12, { width: 280 });
 
-            doc.moveDown(2);
+            // Row 2: Trainer Name, Attempt Date, Duration
+            const startYTable2 = startYTable1 + 35;
+            doc.fillColor('gray').fontSize(8).font('Helvetica-Bold')
+               .text('TRAINER NAME', 50, startYTable2)
+               .text('ATTEMPT DATE', 250, startYTable2)
+               .text('DURATION', 400, startYTable2);
+               
+            doc.fillColor(colorSecondary).fontSize(10).font('Helvetica')
+               .text(data.trainerName || 'Trainer', 50, startYTable2 + 12)
+               .text(data.interviewDate || 'N/A', 250, startYTable2 + 12)
+               .text(data.duration || '45 Mins', 400, startYTable2 + 12);
+
+            doc.moveDown(3);
 
             // --- Score Section ---
-            const startYScore = doc.y + 20;
+            const startYScore = doc.y;
             doc.fillColor(colorDark).fontSize(14).font('Helvetica-Bold')
                .text('OVERALL PERFORMANCE', 50, startYScore);
             
             doc.moveDown(1);
             const boxY = doc.y;
 
+            const verdictText = data.overallRemark || 'No remark provided.';
+            // Calculate height
+            const textHeight = doc.heightOfString(verdictText, { width: 330, font: 'Helvetica', fontSize: 10 });
+            const boxHeight = Math.max(60, textHeight + 40);
+
             // Draw Box
-            doc.rect(50, boxY, 495, 60).fillAndStroke(colorLightGray, colorBorder);
+            doc.rect(50, boxY, 495, boxHeight).fillAndStroke(colorLightGray, colorBorder);
 
             // Score Text
             doc.fillColor(colorPrimary).fontSize(40).font('Helvetica-Bold')
@@ -71,9 +85,10 @@ exports.generateInterviewPDF = (data, res) => {
             
             // Verdict Value
             doc.fillColor(colorSecondary).fontSize(10).font('Helvetica')
-               .text(data.overallRemark || 'No remark provided.', 200, boxY + 30, { width: 330 });
+               .text(verdictText, 200, boxY + 30, { width: 330 });
 
-            doc.moveDown(4);
+            // Set doc.y appropriately after the dynamic box
+            doc.y = boxY + boxHeight + 30;
 
             // --- Strengths & Improvement Section ---
             doc.fillColor(colorDark).fontSize(14).font('Helvetica-Bold')

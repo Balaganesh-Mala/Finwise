@@ -408,6 +408,8 @@ exports.downloadInterviewPDF = async (req, res) => {
         // 2. Prepare Data for PDF
         const reportData = {
             studentName: feedback.studentId ? feedback.studentId.name : 'Student',
+            trainerName: feedback.interviewerName || 'Trainer',
+            duration: '45 Mins', // Default mock interview duration
             interviewType: feedback.interviewType,
             interviewDate: feedback.interviewDate ? new Date(feedback.interviewDate).toLocaleDateString('en-GB') : new Date(feedback.createdAt).toLocaleDateString('en-GB'),
             overallScore: feedback.overallScore,
