@@ -37,20 +37,22 @@ exports.generateInterviewPDF = (data, res) => {
 
       /* ---------------- HELPERS ---------------- */
 
+      const checkPageBreak = (spaceNeeded = 80) => {
+        if (doc.y + spaceNeeded > doc.page.height - 60) {
+          doc.addPage();
+        }
+      };
+
       const sectionTitle = (title) => {
         checkPageBreak(60);
+
         doc
           .fillColor(dark)
           .font("Helvetica-Bold")
           .fontSize(13)
           .text(title, 45, doc.y);
-        doc.moveDown(0.6);
-      };
 
-      const checkPageBreak = (spaceNeeded = 80) => {
-        if (doc.y + spaceNeeded > doc.page.height - 60) {
-          doc.addPage();
-        }
+        doc.moveDown(0.6);
       };
 
       const label = (txt, x, y) => {
@@ -71,9 +73,9 @@ exports.generateInterviewPDF = (data, res) => {
 
       const footer = () => {
         doc
+          .fillColor(gray)
           .font("Helvetica")
           .fontSize(7)
-          .fillColor(gray)
           .text(
             "This is a computer-generated report based on your mock interview performance evaluated by Finwise Career Solutions.",
             45,
@@ -84,6 +86,30 @@ exports.generateInterviewPDF = (data, res) => {
             }
           );
       };
+
+      /* ---------------- HEADER ---------------- */
+
+      doc
+        .fillColor(primary)
+        .font("Helvetica-Bold")
+        .fontSize(22)
+        .text("FINWISE CAREER SOLUTIONS", 45, 45);
+
+      doc
+        .fillColor(gray)
+        .font("Helvetica")
+        .fontSize(9)
+        .text(
+          `Official Mock Interview Performance Report | ${new Date().toLocaleDateString(
+            "en-GB"
+          )}`,
+          45,
+          72
+        );
+
+      doc.moveDown(2.3);
+
+      /* ---------------- INFO GRID ---------------- */
 
       const drawInfoGrid = () => {
         const startY = doc.y;
@@ -109,51 +135,67 @@ exports.generateInterviewPDF = (data, res) => {
         doc.y = row2 + 38;
       };
 
+      /* ---------------- SCORE CARD ---------------- */
+
       const drawScoreCard = () => {
         sectionTitle("OVERALL PERFORMANCE");
 
         const boxY = doc.y;
+
         const verdict =
           data.overallRemark || "No overall remark provided.";
 
         const verdictHeight = doc.heightOfString(verdict, {
-          width: 300,
-          align: "left",
+          width: 320,
+          lineGap: 2,
         });
 
-        const boxHeight = Math.max(72, verdictHeight + 34);
+        const boxHeight = Math.max(78, verdictHeight + 34);
 
+        // Outer box
         doc
-          .roundedRect(45, boxY, contentWidth, boxHeight, 8)
-          .fillAndStroke(light, border);
+          .rect(45, boxY, contentWidth, boxHeight)
+          .fillAndStroke("#f8fafc", border);
 
-        // score
+        // Left score box
+        doc
+          .rect(45, boxY, 145, boxHeight)
+          .fill("#e5e7eb");
+
+        // Score
         doc
           .fillColor(primary)
           .font("Helvetica-Bold")
-          .fontSize(34)
-          .text(`${data.overallScore || 0}`, 65, boxY + 14, {
+          .fontSize(42)
+          .text(`${data.overallScore || 0}`, 58, boxY + 22, {
             continued: true,
           })
-          .fillColor(gray)
+          .fillColor("#94a3b8")
           .font("Helvetica")
-          .fontSize(14)
+          .fontSize(16)
           .text("/10");
 
-        // verdict
-        label("VERDICT", 220, boxY + 16);
+        // Verdict title
+        doc
+          .fillColor(gray)
+          .font("Helvetica-Bold")
+          .fontSize(8)
+          .text("VERDICT", 210, boxY + 12);
 
+        // Verdict text
         doc
           .fillColor(text)
-          .font("Helvetica")
-          .fontSize(10)
-          .text(verdict, 220, boxY + 30, {
-            width: 300,
-            align: "left",
+          .font("Helvetica-Bold")
+          .fontSize(11)
+          .text(verdict, 210, boxY + 28, {
+            width: 320,
+            lineGap: 3,
           });
 
-        doc.y = boxY + boxHeight + 20;
+        doc.y = boxY + boxHeight + 22;
       };
+
+      /* ---------------- FEEDBACK ---------------- */
 
       const drawFeedback = () => {
         sectionTitle("CRITICAL FEEDBACK");
@@ -173,7 +215,7 @@ exports.generateInterviewPDF = (data, res) => {
 
         const cardHeight = Math.max(leftHeight, rightHeight) + 35;
 
-        // left card
+        // Left card
         doc
           .roundedRect(45, startY, 240, cardHeight, 6)
           .fillAndStroke("#f0fdf4", border);
@@ -192,7 +234,7 @@ exports.generateInterviewPDF = (data, res) => {
             width: 214,
           });
 
-        // right card
+        // Right card
         doc
           .roundedRect(300, startY, 240, cardHeight, 6)
           .fillAndStroke("#fef2f2", border);
@@ -213,6 +255,8 @@ exports.generateInterviewPDF = (data, res) => {
 
         doc.y = startY + cardHeight + 20;
       };
+
+      /* ---------------- TOPIC TABLE ---------------- */
 
       const drawTopicTable = () => {
         sectionTitle("SUBJECT PROFICIENCY BREAKDOWN");
@@ -265,7 +309,11 @@ exports.generateInterviewPDF = (data, res) => {
             }
           );
 
-          const rowHeight = Math.max(32, remarkHeight + 10, topicHeight + 10);
+          const rowHeight = Math.max(
+            32,
+            remarkHeight + 10,
+            topicHeight + 10
+          );
 
           if (y + rowHeight > doc.page.height - 55) {
             doc.addPage();
@@ -283,8 +331,7 @@ exports.generateInterviewPDF = (data, res) => {
               width: 160,
             });
 
-          doc
-            .text(`${item.score || 0}/10`, 240, y + 8);
+          doc.text(`${item.score || 0}/10`, 240, y + 8);
 
           doc
             .fillColor(gray)
@@ -299,52 +346,29 @@ exports.generateInterviewPDF = (data, res) => {
         doc.y = y + 18;
       };
 
+      /* ---------------- ROADMAP ---------------- */
+
       const drawRoadmap = () => {
         if (!data.improvementPlanText) return;
 
-        checkPageBreak(120);
+        checkPageBreak(140);
 
         sectionTitle("IMPROVEMENT ROADMAP");
-
-        doc
-          .roundedRect(45, doc.y, contentWidth, 90, 6)
-          .fillAndStroke(light, border);
 
         doc
           .fillColor(text)
           .font("Helvetica")
           .fontSize(10)
-          .text(data.improvementPlanText, 58, doc.y + 14, {
-            width: contentWidth - 26,
-            lineGap: 3,
+          .text(data.improvementPlanText, 45, doc.y + 5, {
+            width: contentWidth,
+            lineGap: 4,
+            align: "left",
           });
 
-        doc.moveDown(5);
+        doc.moveDown(2);
       };
 
-      /* ---------------- PAGE HEADER ---------------- */
-
-      doc
-        .fillColor(primary)
-        .font("Helvetica-Bold")
-        .fontSize(22)
-        .text("FINWISE", 45, 45);
-
-      doc
-        .fillColor(gray)
-        .font("Helvetica")
-        .fontSize(9)
-        .text(
-          `Official Mock Interview Performance Report | ${new Date().toLocaleDateString(
-            "en-GB"
-          )}`,
-          45,
-          72
-        );
-
-      doc.moveDown(2.3);
-
-      /* ---------------- CONTENT ---------------- */
+      /* ---------------- DRAW CONTENT ---------------- */
 
       drawInfoGrid();
       drawScoreCard();
@@ -352,7 +376,7 @@ exports.generateInterviewPDF = (data, res) => {
       drawTopicTable();
       drawRoadmap();
 
-      /* ---------------- FOOTER ALL PAGES ---------------- */
+      /* ---------------- FOOTER ON ALL PAGES ---------------- */
 
       const pages = doc.bufferedPageRange();
 
