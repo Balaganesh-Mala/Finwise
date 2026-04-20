@@ -176,6 +176,8 @@ exports.generateInterviewPDF = (data, res) => {
                          { align: 'center', width: doc.page.width - 100, lineBreak: false });
             }
 
+            // Must explicitly flush buffered pages before ending
+            doc.flushPages();
             doc.end();
 
             doc.on('end', () => {
