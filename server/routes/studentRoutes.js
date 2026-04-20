@@ -671,15 +671,22 @@ router.get('/progress/stats/:studentId', async (req, res) => {
 router.post('/change-password/:id', async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
+        
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Current and new passwords are required' });
+        }
+
         const student = await Student.findById(req.params.id);
 
         if (!student) {
-            return res.status(404).json({ success: false, message: 'Student not found' });
+            console.warn(`Change password attempt for non-existent student ID: ${req.params.id}`);
+            return res.status(404).json({ success: false, message: 'Student account not found' });
         }
 
         // Verify current password
         const isMatch = await bcrypt.compare(currentPassword, student.passwordHash);
         if (!isMatch) {
+            console.log(`Failed password change attempt for student: ${student.email} (Incorrect current password)`);
             return res.status(400).json({ success: false, message: 'Current password is incorrect' });
         }
 
@@ -689,10 +696,11 @@ router.post('/change-password/:id', async (req, res) => {
         student.updatedAt = Date.now();
         await student.save();
 
+        console.log(`Password successfully updated for student: ${student.email}`);
         res.json({ success: true, message: 'Password changed successfully' });
     } catch (err) {
         console.error('Change Password Error:', err);
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: 'Server Error. Please try again later.' });
     }
 });
 

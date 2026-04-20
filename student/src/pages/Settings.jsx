@@ -14,6 +14,43 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const SettingItem = ({ icon: Icon, color, title, description, children }) => (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+        <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <div className={`p-2.5 rounded-xl ${color}`}>
+                    <Icon size={22} />
+                </div>
+                <div>
+                    <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+                    <p className="text-sm text-gray-500">{description}</p>
+                </div>
+            </div>
+        </div>
+        <div className="p-6">
+            {children}
+        </div>
+    </div>
+);
+
+const ToggleRow = ({ label, sublabel, checked, onChange }) => (
+    <div className="flex items-center justify-between py-2">
+        <div className="flex flex-col">
+            <span className="text-gray-800 font-semibold text-sm">{label}</span>
+            {sublabel && <span className="text-xs text-gray-400">{sublabel}</span>}
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+            <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={checked}
+                onChange={onChange}
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+        </label>
+    </div>
+);
+
 const Settings = () => {
     const [loading, setLoading] = useState(false);
     const [pwdLoading, setPwdLoading] = useState(false);
@@ -88,26 +125,35 @@ const Settings = () => {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
+        
+        const currentPwd = passwordData.currentPassword.trim();
+        const newPwd = passwordData.newPassword.trim();
+        const confirmPwd = passwordData.confirmPassword.trim();
+
+        if (newPwd !== confirmPwd) {
             return toast.error("New passwords do not match!");
         }
-        if (passwordData.newPassword.length < 6) {
+        if (newPwd.length < 6) {
             return toast.error("Password must be at least 6 characters long");
         }
 
         setPwdLoading(true);
         try {
             const user = JSON.parse(localStorage.getItem('studentUser'));
+            const token = localStorage.getItem('studentToken');
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             
             const res = await axios.post(`${API_URL}/api/students/change-password/${user._id}`, {
-                currentPassword: passwordData.currentPassword,
-                newPassword: passwordData.newPassword
+                currentPassword: currentPwd,
+                newPassword: newPwd
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
             });
 
             if (res.data.success) {
                 toast.success("Password updated successfully!");
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                setShowPassword(false);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to update password");
@@ -116,42 +162,6 @@ const Settings = () => {
         }
     };
 
-    const SettingItem = ({ icon: Icon, color, title, description, children }) => (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className={`p-2.5 rounded-xl ${color}`}>
-                        <Icon size={22} />
-                    </div>
-                    <div>
-                        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-                        <p className="text-sm text-gray-500">{description}</p>
-                    </div>
-                </div>
-            </div>
-            <div className="p-6">
-                {children}
-            </div>
-        </div>
-    );
-
-    const ToggleRow = ({ label, sublabel, checked, onChange }) => (
-        <div className="flex items-center justify-between py-2">
-            <div className="flex flex-col">
-                <span className="text-gray-800 font-semibold text-sm">{label}</span>
-                {sublabel && <span className="text-xs text-gray-400">{sublabel}</span>}
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={checked}
-                    onChange={onChange}
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-            </label>
-        </div>
-    );
 
     return (
         <div className="max-w-4xl mx-auto py-4 px-4 sm:px-0">

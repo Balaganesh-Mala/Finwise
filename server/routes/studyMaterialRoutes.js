@@ -4,7 +4,8 @@ const {
     createMaterial, 
     getAllMaterials, 
     deleteMaterial, 
-    getStudentMaterials 
+    getStudentMaterials,
+    proxyPdf
 } = require('../controllers/studyMaterialController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -18,5 +19,6 @@ router.delete('/:id', admin, deleteMaterial);
 
 // Student Routes
 router.get('/student/:studentId', getStudentMaterials);
+router.get('/proxy-pdf', proxyPdf);
 
 module.exports = router;

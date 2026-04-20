@@ -161,14 +161,23 @@ exports.createFeeStructure = async (req, res) => {
     await feeStructure.save();
 
     // Create individual Installment records
-    const installmentDocs = installments_data.map((inst, index) => ({
-      student_id,
-      fee_structure_id: feeStructure._id,
-      installment_no: index + 1,
-      amount: inst.amount,
-      due_date: new Date(inst.due_date),
-      status: 'Pending'
-    }));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const installmentDocs = installments_data.map((inst, index) => {
+      const dueDate = new Date(inst.due_date);
+      // Determine initial status based on due date
+      const status = dueDate < today ? 'Overdue' : 'Pending';
+
+      return {
+        student_id,
+        fee_structure_id: feeStructure._id,
+        installment_no: index + 1,
+        amount: inst.amount,
+        due_date: dueDate,
+        status: status
+      };
+    });
 
     await Installment.insertMany(installmentDocs);
 
@@ -381,7 +390,20 @@ exports.editInstallment = async (req, res) => {
     }
 
     if (amount) installment.amount = amount;
-    if (due_date) installment.due_date = new Date(due_date);
+    if (due_date) {
+        const newDueDate = new Date(due_date);
+        installment.due_date = newDueDate;
+
+        // RE-CALCULATE STATUS for non-paid installments
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (newDueDate < today) {
+            installment.status = 'Overdue';
+        } else {
+            installment.status = 'Pending';
+        }
+    }
 
     await installment.save();
     
@@ -412,13 +434,18 @@ exports.createStandaloneInstallment = async (req, res) => {
     const maxInstallment = await Installment.findOne({ fee_structure_id }).sort('-installment_no');
     const nextNo = maxInstallment ? maxInstallment.installment_no + 1 : 1;
 
+    const dueDateObj = new Date(due_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const status = dueDateObj < today ? 'Overdue' : 'Pending';
+
     const installment = new Installment({
       student_id,
       fee_structure_id,
       installment_no: nextNo,
       amount,
-      due_date: new Date(due_date),
-      status: 'Pending'
+      due_date: dueDateObj,
+      status: status
     });
 
     await installment.save();

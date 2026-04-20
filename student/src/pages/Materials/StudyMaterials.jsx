@@ -67,32 +67,39 @@ const StudyMaterials = () => {
     if (selectedMaterial) {
         return (
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                /* Theater Mode: Light backdrop for paper-like feel */
-                className="-m-6 lg:-m-10 h-[calc(100vh-80px)] flex flex-col bg-slate-50 overflow-hidden relative"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                /* Full Screen Theater Mode: Absolute focus */
+                className="fixed inset-0 z-[999] w-screen h-screen flex flex-col bg-slate-50 overflow-hidden"
             >
-                {/* Slim Floating Viewer Header */}
-                <div className="absolute top-6 left-6 right-6 z-[100] pointer-events-none flex items-center justify-between">
-                    <div className="flex items-center gap-3 pointer-events-auto">
+                {/* Premium Glassmorphic Viewer Header */}
+                <div className="w-full h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 flex items-center justify-between z-[100]">
+                    <div className="flex items-center gap-6">
                         <button
                             onClick={() => setSelectedMaterial(null)}
-                            className="p-3 bg-white/90 backdrop-blur-md hover:bg-white rounded-2xl text-slate-800 shadow-xl border border-slate-200 transition-all hover:scale-105 active:scale-95"
+                            className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 transition-all hover:scale-105 active:scale-95 group"
                         >
-                            <ArrowLeft size={18} />
+                            <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
                         </button>
-                        <div className="bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-xl border border-slate-200">
-                            <h2 className="text-sm font-bold text-slate-900 leading-none">{selectedMaterial.title}</h2>
+                        
+                        <div className="flex flex-col">
+                            <h2 className="text-sm font-black text-slate-900 tracking-tight leading-none">{selectedMaterial.title}</h2>
+                            <div className="flex items-center gap-2 mt-1.5">
+                                <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">Secured Instance · Finwise Shield v2</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 pointer-events-auto">
-                        <div className="bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-xl border border-slate-200 flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                            <Shield size={12} className="text-emerald-500" /> Secure Viewer
+                    <div className="flex items-center gap-3">
+                        <div className="hidden sm:flex items-center gap-2 bg-indigo-50/50 border border-indigo-100 px-3 py-1.5 rounded-full">
+                            <Shield size={12} className="text-indigo-600" />
+                            <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Secure Source</span>
                         </div>
                         {selectedMaterial.isProtected && (
-                            <div className="hidden md:flex bg-amber-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-xl text-[10px] font-black uppercase tracking-widest items-center gap-2">
-                                <Lock size={12} /> Deterrent Active
+                            <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-full text-white">
+                                <Lock size={12} className="text-amber-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Protective Deterrent Active</span>
                             </div>
                         )}
                     </div>
