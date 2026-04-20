@@ -394,8 +394,7 @@ exports.deleteFeedback = async (req, res) => {
 // @access  Public (Restricted by route in next step)
 exports.downloadInterviewPDF = async (req, res) => {
     try {
-        const { spawn } = require('child_process');
-        const path = require('path');
+        const { generateInterviewPDF } = require('../utils/pdfGenerator');
         const feedbackId = req.params.id;
 
         // 1. Fetch Feedback with Student Details
@@ -406,7 +405,7 @@ exports.downloadInterviewPDF = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Feedback not found' });
         }
 
-        // 2. Prepare Data for Python
+        // 2. Prepare Data for PDF
         const reportData = {
             studentName: feedback.studentId ? feedback.studentId.name : 'Student',
             interviewType: feedback.interviewType,
@@ -419,39 +418,13 @@ exports.downloadInterviewPDF = async (req, res) => {
             improvementPlanText: feedback.improvementPlanText
         };
 
-        // 3. Spawn Python Process
-        const pythonPath = process.platform === 'win32' ? 'python' : 'python3';
-        const scriptPath = path.join(__dirname, '../utils/report_generator.py');
-        
-        const pyProcess = spawn(pythonPath, [scriptPath]);
-
-        // 4. Pass Data via Stdin (Safer for Windows & Large Reports)
-        pyProcess.stdin.write(JSON.stringify(reportData));
-        pyProcess.stdin.end();
-
-        // 5. Handle Response
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=Interview_Report_${reportData.studentName.replace(/\s+/g, '_')}.pdf`);
-
-        pyProcess.stdout.pipe(res);
-
-        pyProcess.stderr.on('data', (data) => {
-            console.error(`Python PDF Error: ${data.toString()}`);
-        });
-
-        pyProcess.on('close', (code) => {
-            if (code !== 0) {
-                console.error(`Python process exited with code ${code}`);
-                if (!res.headersSent) {
-                    res.status(500).json({ success: false, message: 'Error generating PDF report' });
-                }
-            }
-        });
+        // 3. Generate PDF and Pipe to Response
+        await generateInterviewPDF(reportData, res);
 
     } catch (err) {
         console.error('PDF Download Controller Error:', err);
         if (!res.headersSent) {
-            res.status(500).json({ success: false, message: 'Server Error' });
+            res.status(500).json({ success: false, message: 'Server Error generating PDF' });
         }
     }
 };
