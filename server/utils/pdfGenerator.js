@@ -155,12 +155,12 @@ exports.generateInterviewPDF = (data, res) => {
         // Outer box
         doc
           .rect(45, boxY, contentWidth, boxHeight)
-          .fillAndStroke("#ffffffff", border);
+          .fillAndStroke("#ffffff", border);
 
         // Left score box
         doc
           .rect(45, boxY, 145, boxHeight)
-          .fill("#eef2f6ff");
+          .fill("#f8fafc");
 
         // Score
         doc
