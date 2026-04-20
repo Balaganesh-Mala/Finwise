@@ -3,7 +3,7 @@ const PDFDocument = require('pdfkit');
 exports.generateInterviewPDF = (data, res) => {
     return new Promise((resolve, reject) => {
         try {
-            const doc = new PDFDocument({ margin: 50, size: 'A4' });
+            const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true });
 
             // Ensure the res correctly pipes the document output
             doc.pipe(res);
@@ -163,14 +163,18 @@ exports.generateInterviewPDF = (data, res) => {
             }
 
             // --- Footer ---
-            doc.on('pageAdded', () => {
+            // Draw footer on all pages
+            const pages = doc.bufferedPageRange();
+            for (let i = 0; i < pages.count; i++) {
+                doc.switchToPage(i);
+                
+                // Add footer
                 doc.fillColor('gray').fontSize(7).font('Helvetica')
-                   .text('This is a computer-generated report based on your mock interview performance evaluated by our expert trainers at Finwise Career Solutions. For any queries, reach out to info@finwisecareers.com', 50, doc.page.height - 50, { align: 'center', width: doc.page.width - 100 });
-            });
-
-            // Add footer to first page
-            doc.fillColor('gray').fontSize(7).font('Helvetica')
-               .text('This is a computer-generated report based on your mock interview performance evaluated by our expert trainers at Finwise Career Solutions. For any queries, reach out to info@finwisecareers.com', 50, doc.page.height - 50, { align: 'center', width: doc.page.width - 100 });
+                   .text('This is a computer-generated report based on your mock interview performance evaluated by our expert trainers at Finwise Career Solutions. For any queries, reach out to info@finwisecareers.com', 
+                         50, 
+                         doc.page.height - 35, 
+                         { align: 'center', width: doc.page.width - 100, lineBreak: false });
+            }
 
             doc.end();
 
