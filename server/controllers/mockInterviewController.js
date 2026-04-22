@@ -3,6 +3,8 @@ const MockInterviewSchedule = require('../models/MockInterviewSchedule');
 const StudentWallet = require('../models/StudentWallet');
 const Transaction = require('../models/Transaction');
 const Student = require('../models/Student');
+const Notification = require('../models/Notification');
+const { sendPushToStudent } = require('../services/pushService');
 
 // @desc    Submit mock interview feedback
 // @route   POST /api/mock-interviews
@@ -205,6 +207,32 @@ exports.submitFeedback = async (req, res) => {
                 performanceStatus: status
             }
         });
+
+        // --- Handle Notifications ---
+        try {
+            const notifTitle = 'Interview Feedback Provided';
+            const notifMessage = `Your ${interviewType} interview feedback is ready. Score: ${overallScore}/10.`;
+            const notifLink = '/mock-interview';
+
+            // 1. Database Notification
+            await Notification.create({
+                recipient: studentId,
+                recipientModel: 'Student',
+                title: notifTitle,
+                message: notifMessage,
+                type: 'success',
+                link: notifLink
+            });
+
+            // 2. Push Notification
+            await sendPushToStudent(studentId, {
+                title: notifTitle,
+                body: notifMessage,
+                url: notifLink
+            });
+        } catch (notifErr) {
+            console.error("Failed to send mock interview feedback notification:", notifErr);
+        }
 
     } catch (err) {
         console.error('Submit Feedback Error (Attempting manual rollback):', err);

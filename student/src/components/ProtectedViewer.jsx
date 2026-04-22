@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
     Shield, AlertTriangle, Eye, Lock, Loader2, ExternalLink,
-    Pause, Play, Volume2, VolumeX, Maximize2, Youtube
+    Pause, Play, Volume2, VolumeX, Maximize2, Youtube, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -269,13 +269,32 @@ const ProtectedViewer = ({ type, url, title, studentInfo }) => {
                         </Document>
                     </div>
                 ) : (
-                    <div className="w-full max-w-2xl bg-white p-12 rounded-[2.5rem] shadow-xl flex flex-col items-center text-center mt-20 border border-slate-50">
-                        <Eye size={64} className="text-indigo-600 mb-6" />
-                        <h2 className="text-2xl font-bold text-slate-800 mb-4">{title}</h2>
-                        <div className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-3">
-                            <Shield size={18} /> Secure External Resource
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full max-w-2xl bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl flex flex-col items-center text-center mt-20 border border-slate-50 mx-4"
+                        onViewportEnter={() => setIsLoading(false)}
+                    >
+                        <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center text-indigo-600 mb-8">
+                            <ExternalLink size={40} />
                         </div>
-                    </div>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-4 leading-tight">{title}</h2>
+                        <p className="text-slate-500 mb-10 max-w-md font-medium">This resource is hosted externally. Click below to access the secure link.</p>
+                        
+                        <a 
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="w-full sm:w-auto bg-indigo-600 hover:bg-slate-900 text-white px-10 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-indigo-100 group"
+                        >
+                            <span>Access Resource</span>
+                            <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </a>
+                        
+                        <div className="mt-12 flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                            <Shield size={12} /> Finwise Secure Gateway
+                        </div>
+                    </motion.div>
                 )}
             </div>
 

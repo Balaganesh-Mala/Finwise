@@ -10,9 +10,40 @@ const MockInterviewHistory = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFeedback, setSelectedFeedback] = useState(null);
 
+    // Filter States
+    const [batches, setBatches] = useState([]);
+    const [enrollments, setEnrollments] = useState([]);
+    const [selectedBatch, setSelectedBatch] = useState('All');
+    const [selectedType, setSelectedType] = useState('All');
+    const [selectedInterviewer, setSelectedInterviewer] = useState('All');
+    const [selectedStatus, setSelectedStatus] = useState('All');
+    const [showFilters, setShowFilters] = useState(false);
+
     useEffect(() => {
         fetchHistory();
+        fetchBatches();
+        fetchEnrollments();
     }, []);
+
+    const fetchBatches = async () => {
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const { data } = await axios.get(`${API_URL}/api/batches`);
+            if (data.success) setBatches(data.batches);
+        } catch (error) {
+            console.error("Error fetching batches:", error);
+        }
+    };
+
+    const fetchEnrollments = async () => {
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const { data } = await axios.get(`${API_URL}/api/batches/enrollments/all`);
+            if (data.success) setEnrollments(data.data);
+        } catch (error) {
+            console.error("Error fetching enrollments:", error);
+        }
+    };
 
     const calculateOverallScore = (skills, topics) => {
         let sum = 0;
@@ -77,12 +108,33 @@ const MockInterviewHistory = () => {
         }
     };
 
-    const filteredHistory = history.filter(h => 
-        h.studentId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        h.studentId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        h.interviewerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (h.status || h.performanceStatus || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredHistory = history.filter(h => {
+        const matchesSearch = 
+            h.studentId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            h.studentId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            h.interviewerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (h.status || h.performanceStatus || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesType = selectedType === 'All' || h.interviewType === selectedType;
+        const matchesInterviewer = selectedInterviewer === 'All' || h.interviewerName === selectedInterviewer;
+        const matchesStatus = selectedStatus === 'All' || (h.status || h.performanceStatus) === selectedStatus;
+
+        let matchesBatch = true;
+        if (selectedBatch !== 'All') {
+            const studentEnrollment = enrollments.find(e => 
+                e.studentId?.toString() === h.studentId?._id?.toString() && 
+                e.batchId?._id?.toString() === selectedBatch
+            );
+            matchesBatch = !!studentEnrollment;
+        }
+
+        return matchesSearch && matchesType && matchesInterviewer && matchesStatus && matchesBatch;
+    });
+
+    // Derive unique filter options
+    const uniqueTypes = [...new Set(history.map(h => h.interviewType))].filter(Boolean).sort();
+    const uniqueInterviewers = [...new Set(history.map(h => h.interviewerName))].filter(Boolean).sort();
+    const statuses = ['Job Ready', 'Highly Capable', 'Capable', 'Needs Improvement', 'Critical Risk'];
 
     const FeedbackModal = ({ feedback, onClose }) => {
         const [isEditing, setIsEditing] = useState(false);
@@ -548,17 +600,115 @@ const MockInterviewHistory = () => {
                     <p className="text-slate-500 text-sm mt-1">Review all global feedback and student performance reports.</p>
                 </div>
                 
-                <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm shadow-slate-100">
-                    <Search className="text-slate-400 ml-2" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search student or interviewer..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-transparent border-none outline-none text-sm font-medium text-slate-700 w-64 px-2 py-1 placeholder:text-slate-400"
-                    />
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all ${
+                            showFilters || selectedBatch !== 'All' || selectedType !== 'All' || selectedInterviewer !== 'All' || selectedStatus !== 'All'
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                    >
+                        <Filter size={18} />
+                        <span className="text-sm font-bold">Filters</span>
+                        {(selectedBatch !== 'All' || selectedType !== 'All' || selectedInterviewer !== 'All' || selectedStatus !== 'All') && (
+                            <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                        )}
+                    </button>
+
+                    <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm shadow-slate-100">
+                        <Search className="text-slate-400 ml-2" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search student or interviewer..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="bg-transparent border-none outline-none text-sm font-medium text-slate-700 w-64 px-2 py-1 placeholder:text-slate-400"
+                        />
+                    </div>
                 </div>
             </div>
+
+            {/* Filter Panel */}
+            {showFilters && (
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm animate-in slide-in-from-top-2 duration-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch</label>
+                            <select 
+                                value={selectedBatch}
+                                onChange={(e) => setSelectedBatch(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            >
+                                <option value="All">All Batches</option>
+                                {batches.map(b => (
+                                    <option key={b._id} value={b._id}>{b.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Interview Type</label>
+                            <select 
+                                value={selectedType}
+                                onChange={(e) => setSelectedType(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            >
+                                <option value="All">All Types</option>
+                                {uniqueTypes.map(t => (
+                                    <option key={t} value={t}>{t}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Interviewer</label>
+                            <select 
+                                value={selectedInterviewer}
+                                onChange={(e) => setSelectedInterviewer(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            >
+                                <option value="All">All Interviewers</option>
+                                {uniqueInterviewers.map(interviewer => (
+                                    <option key={interviewer} value={interviewer}>{interviewer}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
+                            <select 
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            >
+                                <option value="All">All Statuses</option>
+                                {statuses.map(s => (
+                                    <option key={s} value={s}>{s}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-slate-50 flex items-center justify-between">
+                        <p className="text-xs font-medium text-slate-400">
+                            Showing <span className="font-bold text-slate-900">{filteredHistory.length}</span> results
+                        </p>
+                        <button 
+                            onClick={() => {
+                                setSelectedBatch('All');
+                                setSelectedType('All');
+                                setSelectedInterviewer('All');
+                                setSelectedStatus('All');
+                                setSearchTerm('');
+                            }}
+                            className="text-xs font-bold text-rose-500 hover:text-rose-600 flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-all"
+                        >
+                            <X size={14} /> Reset All Filters
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center p-20 gap-4">

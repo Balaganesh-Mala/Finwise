@@ -2,7 +2,9 @@ const MockInterviewSchedule = require('../models/MockInterviewSchedule');
 const Student = require('../models/Student');
 const BatchStudent = require('../models/BatchStudent');
 const Notification = require('../models/Notification');
+const Setting = require('../models/Setting');
 const { sendEmail } = require('../utils/emailService');
+const { interviewScheduleTemplate } = require('../templates/emailTemplates');
 const { sendPushToStudent } = require('../services/pushService');
 const mongoose = require('mongoose');
 
@@ -38,6 +40,9 @@ exports.createSchedules = async (req, res) => {
             return res.status(400).json({ success: false, message: 'No students selected' });
         }
 
+        // Fetch site settings for branding
+        const settings = await Setting.findOne();
+
         const schedules = [];
         let currentStartTime = new Date(`${startDate} ${startTime}`);
 
@@ -68,23 +73,15 @@ exports.createSchedules = async (req, res) => {
 
             // 1. Send Immediate Email
             const emailSubject = `Scheduled: Your Mock Interview for ${new Date(startDate).toLocaleDateString()}`;
-            const emailBody = `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                    <h2 style="color: #4f46e5;">Interview Scheduled</h2>
-                    <p>Hello ${student.name},</p>
-                    <p>Your mock interview has been scheduled as follows:</p>
-                    <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        <p><strong>Date:</strong> ${new Date(startDate).toLocaleDateString('en-GB')}</p>
-                        <p><strong>Time:</strong> ${schedule.startTime} - ${schedule.endTime}</p>
-                        <p><strong>Platform:</strong> ${meetingPlatform}</p>
-                        <p><strong>Join Link:</strong> <a href="${meetingLink}" style="color: #4f46e5; font-weight: bold;">Click Here to Join</a></p>
-                    </div>
-                    <p><strong>Instructions:</strong></p>
-                    <p style="white-space: pre-wrap;">${instructions || 'N/A'}</p>
-                    ${requiredDocs && requiredDocs.length > 0 ? `<p><strong>Required Docs:</strong> ${requiredDocs.join(', ')}</p>` : ''}
-                    <p style="margin-top: 30px; font-size: 12px; color: #64748b;">Best of luck!</p>
-                </div>
-            `;
+            const emailBody = interviewScheduleTemplate(student.name, {
+                date: new Date(startDate).toLocaleDateString('en-GB'),
+                time: `${schedule.startTime} - ${schedule.endTime}`,
+                platform: meetingPlatform,
+                link: meetingLink,
+                passcode: meetingPasscode,
+                instructions,
+                requiredDocs
+            }, settings);
 
             try {
                 await sendEmail(student.email, emailSubject, emailBody);

@@ -33,6 +33,7 @@ import {
 
 import axios from 'axios';
 import logoImg from '../assets/logo.jpeg';
+import { subscribeToPush } from '../utils/pushNotifications';
 
 const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -126,6 +127,9 @@ const Layout = () => {
 
                         setUser(updatedUser);
                         localStorage.setItem('studentUser', JSON.stringify(updatedUser));
+                        
+                        // Subscribe to push notifications globally
+                        subscribeToPush(updatedUser._id);
                     }
                 } catch (error) {
                     console.error("Failed to refresh user data:", error);

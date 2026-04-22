@@ -20,10 +20,7 @@ const sendPushToStudent = async (studentId, payload) => {
     try {
         const subscriptions = await PushSubscription.find({ studentId });
         
-        if (!subscriptions || subscriptions.length === 0) {
-            // console.log(`No push subscriptions found for student: ${studentId}`);
-            return;
-        }
+        if (!subscriptions || subscriptions.length === 0) return;
 
         const notificationPayload = JSON.stringify({
             notification: {
@@ -40,22 +37,95 @@ const sendPushToStudent = async (studentId, payload) => {
             try {
                 await webpush.sendNotification(sub.subscription, notificationPayload);
             } catch (error) {
-                // If subscription has expired or is invalid, remove it
                 if (error.statusCode === 404 || error.statusCode === 410) {
-                    // console.log(`Subscription expired for student ${studentId}. Removing...`);
                     await PushSubscription.deleteOne({ _id: sub._id });
-                } else {
-                    console.error(`Error sending push to student ${studentId}:`, error);
                 }
             }
         });
 
-        await Promise.all(pushPromises);
+        await Promise.allSettled(pushPromises);
     } catch (error) {
         console.error('Error in sendPushToStudent service:', error);
     }
 };
 
+/**
+ * Send a push notification to multiple students
+ * @param {Array} studentIds - Array of student IDs
+ * @param {Object} payload - Notification data
+ */
+const sendPushToMultipleStudents = async (studentIds, payload) => {
+    try {
+        const subscriptions = await PushSubscription.find({ studentId: { $in: studentIds } });
+        
+        if (!subscriptions || subscriptions.length === 0) return;
+
+        const notificationPayload = JSON.stringify({
+            notification: {
+                title: payload.title || 'Notification from Finwise',
+                body: payload.body || '',
+                icon: payload.icon || '/logo192.png',
+                data: {
+                    url: payload.url || '/'
+                }
+            }
+        });
+
+        const pushPromises = subscriptions.map(async (sub) => {
+            try {
+                await webpush.sendNotification(sub.subscription, notificationPayload);
+            } catch (error) {
+                if (error.statusCode === 404 || error.statusCode === 410) {
+                    await PushSubscription.deleteOne({ _id: sub._id });
+                }
+            }
+        });
+
+        await Promise.allSettled(pushPromises);
+    } catch (error) {
+        console.error('Error in sendPushToMultipleStudents service:', error);
+    }
+};
+
+/**
+ * Broadcast a push notification to all unique subscribed students
+ * @param {Object} payload - Notification data
+ */
+const broadcastPushToAllStudents = async (payload) => {
+    try {
+        const subscriptions = await PushSubscription.find({});
+        
+        if (!subscriptions || subscriptions.length === 0) return;
+
+        const notificationPayload = JSON.stringify({
+            notification: {
+                title: payload.title || 'Notification from Finwise',
+                body: payload.body || '',
+                icon: payload.icon || '/logo192.png',
+                data: {
+                    url: payload.url || '/'
+                }
+            }
+        });
+
+        const pushPromises = subscriptions.map(async (sub) => {
+            try {
+                await webpush.sendNotification(sub.subscription, notificationPayload);
+            } catch (error) {
+                if (error.statusCode === 404 || error.statusCode === 410) {
+                    await PushSubscription.deleteOne({ _id: sub._id });
+                }
+            }
+        });
+
+        await Promise.allSettled(pushPromises);
+    } catch (error) {
+        console.error('Error in broadcastPushToAllStudents service:', error);
+    }
+};
+
 module.exports = {
-    sendPushToStudent
+    sendPushToStudent,
+    sendPushToMultipleStudents,
+    broadcastPushToAllStudents
 };

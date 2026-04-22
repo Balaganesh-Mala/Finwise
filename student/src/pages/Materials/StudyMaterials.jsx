@@ -73,33 +73,33 @@ const StudyMaterials = () => {
                 className="fixed inset-0 z-[999] w-screen h-screen flex flex-col bg-slate-50 overflow-hidden"
             >
                 {/* Premium Glassmorphic Viewer Header */}
-                <div className="w-full h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 flex items-center justify-between z-[100]">
-                    <div className="flex items-center gap-6">
+                <div className="w-full h-auto min-h-[4rem] py-3 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-4 md:px-6 flex items-center justify-between gap-4 z-[100]">
+                    <div className="flex items-center gap-3 md:gap-6 min-w-0">
                         <button
                             onClick={() => setSelectedMaterial(null)}
-                            className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 transition-all hover:scale-105 active:scale-95 group"
+                            className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 transition-all shrink-0"
                         >
-                            <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                            <ArrowLeft size={18} />
                         </button>
-                        
-                        <div className="flex flex-col">
-                            <h2 className="text-sm font-black text-slate-900 tracking-tight leading-none">{selectedMaterial.title}</h2>
-                            <div className="flex items-center gap-2 mt-1.5">
-                                <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">Secured Instance · Finwise Shield v2</p>
+
+                        <div className="flex flex-col min-w-0">
+                            <h2 className="text-xs md:text-sm font-black text-slate-900 tracking-tight leading-tight truncate">{selectedMaterial.title}</h2>
+                            <div className="flex items-center gap-1.5 mt-1">
+                                <span className="flex h-1 w-1 rounded-full bg-emerald-500"></span>
+                                <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Secured Instance · Finwise Shield</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="hidden sm:flex items-center gap-2 bg-indigo-50/50 border border-indigo-100 px-3 py-1.5 rounded-full">
-                            <Shield size={12} className="text-indigo-600" />
-                            <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Secure Source</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <div className="hidden sm:flex items-center gap-2 bg-indigo-50/50 border border-indigo-100 px-2.5 py-1 rounded-full">
+                            <Shield size={10} className="text-indigo-600" />
+                            <span className="text-[9px] font-black text-indigo-700 uppercase tracking-widest">Secure</span>
                         </div>
                         {selectedMaterial.isProtected && (
-                            <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-full text-white">
-                                <Lock size={12} className="text-amber-400" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Protective Deterrent Active</span>
+                            <div className="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-full text-white">
+                                <Lock size={10} className="text-amber-400" />
+                                <span className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">Protected</span>
                             </div>
                         )}
                     </div>
@@ -130,8 +130,8 @@ const StudyMaterials = () => {
                             key={type}
                             onClick={() => setFilterType(type)}
                             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all capitalize ${filterType === type
-                                    ? 'bg-white text-indigo-600 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                                ? 'bg-white text-indigo-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                                 }`}
                         >
                             {type === 'all' ? 'All Resources' : type + 's'}
@@ -164,43 +164,59 @@ const StudyMaterials = () => {
                                 key={item._id}
                                 layout
                                 onClick={() => setSelectedMaterial(item)}
-                                className="group relative bg-white border border-slate-100 rounded-[2rem] p-6 transition-all hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer flex flex-col h-full"
+                                className="group relative bg-white border border-slate-100 rounded-[10px] overflow-hidden transition-all hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer flex flex-col h-full"
                             >
-                                {/* Type Badge */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className={`p-3 rounded-2xl ${item.contentType === 'video' ? 'bg-rose-50 text-rose-500' :
-                                            item.contentType === 'link' ? 'bg-blue-50 text-blue-500' :
-                                                'bg-emerald-50 text-emerald-500'
-                                        }`}>
-                                        {item.contentType === 'video' ? <Video size={20} /> :
-                                            item.contentType === 'link' ? <LinkIcon size={20} /> :
-                                                <FileText size={20} />}
-                                    </div>
-                                    {item.isProtected && (
-                                        <div className="p-2 bg-slate-50 text-slate-400 rounded-xl">
-                                            <Lock size={14} />
+                                {/* Thumbnail */}
+                                <div className="h-40 bg-slate-50 relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                                    {item.thumbnailUrl ? (
+                                        <img src={item.thumbnailUrl} alt={item.title} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-200">
+                                            {item.contentType === 'video' ? <Video size={48} strokeWidth={1} /> :
+                                                item.contentType === 'link' ? <LinkIcon size={48} strokeWidth={1} /> :
+                                                    <FileText size={48} strokeWidth={1} />}
                                         </div>
                                     )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                                 </div>
 
-                                {/* Content */}
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors mb-2">{item.title}</h3>
-                                    <p className="text-slate-500 text-xs font-medium leading-relaxed line-clamp-2">
-                                        {item.description || 'Premium resource provided for your course advancement.'}
-                                    </p>
-                                </div>
-
-                                {/* Footer Metadata */}
-                                <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
-                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                        <Calendar size={12} /> {new Date(item.createdAt).toLocaleDateString()}
+                                <div className="p-6 flex flex-col flex-1">
+                                    {/* Type Badge */}
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className={`p-3 rounded-2xl ${item.contentType === 'video' ? 'bg-rose-50 text-rose-500' :
+                                            item.contentType === 'link' ? 'bg-blue-50 text-blue-500' :
+                                                'bg-emerald-50 text-emerald-500'
+                                            }`}>
+                                            {item.contentType === 'video' ? <Video size={20} /> :
+                                                item.contentType === 'link' ? <LinkIcon size={20} /> :
+                                                    <FileText size={20} />}
+                                        </div>
+                                        {item.isProtected && (
+                                            <div className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-amber-100">
+                                                <Shield size={10} /> Protected
+                                            </div>
+                                        )}
                                     </div>
-                                    {item.targetType === 'individual' && (
-                                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full uppercase tracking-tighter">
-                                            Personal
-                                        </span>
-                                    )}
+
+                                    {/* Content */}
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors mb-2">{item.title}</h3>
+                                        <p className="text-slate-500 text-xs font-medium leading-relaxed line-clamp-2">
+                                            {item.description || 'Premium resource provided for your course advancement.'}
+                                        </p>
+                                    </div>
+
+                                    {/* Footer Metadata */}
+                                    <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                            <Calendar size={12} /> {new Date(item.createdAt).toLocaleDateString()}
+                                        </div>
+                                        {item.targetType === 'individual' && (
+                                            <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full uppercase tracking-tighter">
+                                                Personal
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}

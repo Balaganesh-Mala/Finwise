@@ -47,10 +47,8 @@ const MockInterviewDashboard = () => {
         fetchPerformance();
         fetchDbSettings();
 
-        // Handle Push Notifications Subscription
         const user = JSON.parse(localStorage.getItem('studentUser'));
         if (user) {
-            subscribeToPush(user._id);
             fetchUpcomingInterviews(user._id);
         }
     }, []);

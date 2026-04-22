@@ -401,4 +401,19 @@ router.delete('/:id/students/:studentId', async (req, res) => {
     }
 });
 
+// @route   GET /api/batches/enrollments/all
+// @desc    Get all batch-student assignments
+// @access  Admin
+router.get('/enrollments/all', async (req, res) => {
+    try {
+        const enrollments = await BatchStudent.find({})
+            .populate('batchId', 'name')
+            .select('studentId batchId');
+        res.json({ success: true, count: enrollments.length, data: enrollments });
+    } catch (err) {
+        console.error('List All Enrollments Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 module.exports = router;

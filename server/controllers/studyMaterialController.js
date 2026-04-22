@@ -1,19 +1,207 @@
 const StudyMaterial = require('../models/StudyMaterial');
-const Attendance = require('../models/Attendance'); // If we need to verify active status
+const BatchStudent = require('../models/BatchStudent');
 const Student = require('../models/Student');
+const Notification = require('../models/Notification');
+const { broadcastPushToAllStudents, sendPushToMultipleStudents } = require('../services/pushService');
 const axios = require('axios');
+const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+
+// Helper: Upload to Cloudinary
+const uploadToCloudinary = async (filePath, folder) => {
+    try {
+        const result = await cloudinary.uploader.upload(filePath, {
+            folder: folder,
+            resource_type: 'auto',
+            use_filename: true,
+            unique_filename: true
+        });
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        return result;
+    } catch (err) {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        throw err;
+    }
+};
+
+// Helper: Delete from Cloudinary
+const deleteFromCloudinary = async (publicId) => {
+    if (!publicId) return;
+    try {
+        await cloudinary.uploader.destroy(publicId);
+    } catch (err) {
+        console.error('Cloudinary Delete Error:', err);
+    }
+};
 
 // @desc    Create new study material
 // @route   POST /api/study-materials
 // @access  Private (Admin)
 exports.createMaterial = async (req, res) => {
     try {
+        const { targetBatches, targetStudents, ...otherData } = req.body;
+
+        // Handle File Uploads (Cloudinary)
+        let fileUrl = otherData.fileUrl;
+        let filePublicId = "";
+        let thumbnailUrl = "";
+        let thumbnailPublicId = "";
+
+        if (req.files) {
+            if (req.files.file && req.files.file[0]) {
+                const result = await uploadToCloudinary(req.files.file[0].path, 'study_materials/files');
+                fileUrl = result.secure_url;
+                filePublicId = result.public_id;
+            }
+            if (req.files.thumbnail && req.files.thumbnail[0]) {
+                const result = await uploadToCloudinary(req.files.thumbnail[0].path, 'study_materials/thumbnails');
+                thumbnailUrl = result.secure_url;
+                thumbnailPublicId = result.public_id;
+            }
+        }
+
+        // Ensure target arrays are actual arrays
+        const formattedBatches = Array.isArray(targetBatches) ? targetBatches : (targetBatches ? [targetBatches] : []);
+        const formattedStudents = Array.isArray(targetStudents) ? targetStudents : (targetStudents ? [targetStudents] : []);
+
         const material = await StudyMaterial.create({
-            ...req.body,
+            ...otherData,
+            fileUrl,
+            filePublicId,
+            thumbnailUrl,
+            thumbnailPublicId,
+            targetBatches: formattedBatches,
+            targetStudents: formattedStudents,
             uploadedBy: req.user ? req.user._id : null
         });
+
+        // --- Handle Notifications ---
+        try {
+            const notifTitle = `New Study Material: ${material.title}`;
+            const notifMessage = `New ${material.type} material has been added. Check it out!`;
+            const notifLink = '/materials';
+
+            if (material.targetType === 'global') {
+                // 1. Database Notifications
+                const students = await Student.find({ status: 'Active' }).select('_id');
+                if (students.length > 0) {
+                    const dbNotifs = students.map(s => ({
+                        recipient: s._id,
+                        recipientModel: 'Student',
+                        title: notifTitle,
+                        message: notifMessage,
+                        type: 'info',
+                        link: notifLink
+                    }));
+                    await Notification.insertMany(dbNotifs, { ordered: false });
+                }
+                // 2. Push Notifications
+                await broadcastPushToAllStudents({
+                    title: notifTitle,
+                    body: notifMessage,
+                    url: notifLink
+                });
+            } else if (material.targetType === 'batch' && formattedBatches.length > 0) {
+                // 1. Database Notifications
+                const batchStudents = await BatchStudent.find({ 
+                    batchId: { $in: formattedBatches },
+                    status: 'active'
+                }).select('studentId');
+                
+                const studentIds = [...new Set(batchStudents.map(bs => bs.studentId.toString()))];
+                
+                if (studentIds.length > 0) {
+                    const dbNotifs = studentIds.map(sid => ({
+                        recipient: sid,
+                        recipientModel: 'Student',
+                        title: notifTitle,
+                        message: notifMessage,
+                        type: 'info',
+                        link: notifLink
+                    }));
+                    await Notification.insertMany(dbNotifs, { ordered: false });
+                    
+                    // 2. Push Notifications
+                    await sendPushToMultipleStudents(studentIds, {
+                        title: notifTitle,
+                        body: notifMessage,
+                        url: notifLink
+                    });
+                }
+            } else if (material.targetType === 'individual' && formattedStudents.length > 0) {
+                // 1. Database Notifications
+                const dbNotifs = formattedStudents.map(sid => ({
+                    recipient: sid,
+                    recipientModel: 'Student',
+                    title: notifTitle,
+                    message: notifMessage,
+                    type: 'info',
+                    link: notifLink
+                }));
+                await Notification.insertMany(dbNotifs, { ordered: false });
+                
+                // 2. Push Notifications
+                await sendPushToMultipleStudents(formattedStudents, {
+                    title: notifTitle,
+                    body: notifMessage,
+                    url: notifLink
+                });
+            }
+        } catch (notifErr) {
+            console.error("Failed to send study material notifications:", notifErr);
+        }
+
         res.status(201).json({ success: true, data: material });
     } catch (error) {
+        console.error("Create Material Error:", error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// @desc    Update study material
+// @route   PUT /api/study-materials/:id
+// @access  Private (Admin)
+exports.updateMaterial = async (req, res) => {
+    try {
+        let material = await StudyMaterial.findById(req.params.id);
+        if (!material) {
+            return res.status(404).json({ success: false, message: 'Material not found' });
+        }
+
+        const { targetBatches, targetStudents, ...otherData } = req.body;
+
+        // Handle File Updates
+        if (req.files) {
+            if (req.files.file && req.files.file[0]) {
+                if (material.filePublicId) await deleteFromCloudinary(material.filePublicId);
+                const result = await uploadToCloudinary(req.files.file[0].path, 'study_materials/files');
+                otherData.fileUrl = result.secure_url;
+                otherData.filePublicId = result.public_id;
+            }
+            if (req.files.thumbnail && req.files.thumbnail[0]) {
+                if (material.thumbnailPublicId) await deleteFromCloudinary(material.thumbnailPublicId);
+                const result = await uploadToCloudinary(req.files.thumbnail[0].path, 'study_materials/thumbnails');
+                otherData.thumbnailUrl = result.secure_url;
+                otherData.thumbnailPublicId = result.public_id;
+            }
+        }
+
+        // Ensure target arrays are actual arrays
+        if (targetBatches !== undefined) {
+             otherData.targetBatches = Array.isArray(targetBatches) ? targetBatches : (targetBatches ? [targetBatches] : []);
+        }
+        if (targetStudents !== undefined) {
+             otherData.targetStudents = Array.isArray(targetStudents) ? targetStudents : (targetStudents ? [targetStudents] : []);
+        }
+
+        material = await StudyMaterial.findByIdAndUpdate(req.params.id, otherData, {
+            new: true,
+            runValidators: true
+        });
+
+        res.status(200).json({ success: true, data: material });
+    } catch (error) {
+        console.error("Update Material Error:", error);
         res.status(400).json({ success: false, message: error.message });
     }
 };
@@ -42,6 +230,11 @@ exports.deleteMaterial = async (req, res) => {
         if (!material) {
             return res.status(404).json({ success: false, message: 'Material not found' });
         }
+
+        // Cleanup Cloudinary assets
+        if (material.filePublicId) await deleteFromCloudinary(material.filePublicId);
+        if (material.thumbnailPublicId) await deleteFromCloudinary(material.thumbnailPublicId);
+
         await material.deleteOne();
         res.status(200).json({ success: true, message: 'Material removed' });
     } catch (error) {
@@ -56,23 +249,20 @@ exports.getStudentMaterials = async (req, res) => {
     try {
         const { studentId } = req.params;
         
-        // Find the student to get their batch ID
-        const student = await Student.findById(studentId);
-        if (!student) {
-            return res.status(404).json({ success: false, message: 'Student not found' });
-        }
+        // Find the student's batch assignments
+        const batchAssignments = await BatchStudent.find({ 
+            studentId: studentId,
+            status: 'active'
+        }).select('batchId');
 
-        // Logic: Find materials that are:
-        // 1. targetType: global
-        // 2. targetType: batch AND student's batch is in targetBatches
-        // 3. targetType: individual AND student's ID is in targetStudents
+        const studentBatchIds = batchAssignments.map(ba => ba.batchId);
         
         const query = {
             $or: [
                 { targetType: 'global' },
                 { 
                     targetType: 'batch', 
-                    targetBatches: student.batchId 
+                    targetBatches: { $in: studentBatchIds } 
                 },
                 { 
                     targetType: 'individual', 

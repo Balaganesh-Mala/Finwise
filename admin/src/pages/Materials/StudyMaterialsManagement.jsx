@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { 
-    FileText, Video, Link as LinkIcon, Plus, Trash2, 
-    Users, LayoutGrid, Search, Filter, Globe, PlusCircle,
-    Copy, ExternalLink, Shield, Upload, X, Check, SearchIcon
+import {
+    Copy, ExternalLink, Shield, Upload, X, Check, Search, 
+    Edit2, Image as ImageIcon, PlusCircle, Plus, Trash2, FileText, Video, 
+    Link as LinkIcon, Globe, LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -16,6 +16,8 @@ const StudyMaterialsManagement = () => {
     const [students, setStudents] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -26,6 +28,7 @@ const StudyMaterialsManagement = () => {
         targetBatches: [],
         targetStudents: [],
         file: null,
+        thumbnail: null,
         linkUrl: '',
         videoUrl: '',
         isProtected: true
@@ -66,73 +69,110 @@ const StudyMaterialsManagement = () => {
         setFormData({ ...formData, file: e.target.files[0] });
     };
 
-    const handleAddMaterial = async (e) => {
+    const handleThumbnailChange = (e) => {
+        setFormData({ ...formData, thumbnail: e.target.files[0] });
+    };
+
+    const handleEdit = (item) => {
+        setEditMode(true);
+        setEditingId(item._id);
+        setFormData({
+            title: item.title,
+            description: item.description || '',
+            contentType: item.contentType,
+            targetType: item.targetType,
+            targetBatches: item.targetBatches?.map(b => b._id || b) || [],
+            targetStudents: item.targetStudents?.map(s => s._id || s) || [],
+            file: null,
+            thumbnail: null,
+            linkUrl: item.linkUrl || '',
+            videoUrl: item.videoUrl || '',
+            isProtected: item.isProtected
+        });
+        setShowModal(true);
+    };
+
+    const resetForm = () => {
+        setFormData({
+            title: '',
+            description: '',
+            contentType: 'document',
+            targetType: 'global',
+            targetBatches: [],
+            targetStudents: [],
+            file: null,
+            thumbnail: null,
+            linkUrl: '',
+            videoUrl: '',
+            isProtected: true
+        });
+        setEditMode(false);
+        setEditingId(null);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!formData.title) return toast.error("Title is required");
-        if (formData.contentType === 'document' && !formData.file && !formData.linkUrl) {
+        if (!editMode && formData.contentType === 'document' && !formData.file && !formData.linkUrl) {
             return toast.error("Please upload a file or provide a Drive link");
         }
 
         setSubmitting(true);
-        const loadingToast = toast.loading("Creating study material...");
+        const loadingToast = toast.loading(editMode ? "Updating study material..." : "Creating study material...");
 
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             const adminToken = localStorage.getItem('adminToken');
-            
-            // If it's a file, we need FormData
-            let payload;
-            let headers = { 
-                'Content-Type': 'application/json',
+
+            // We use FormData for both create and update since we have potential file uploads
+            const payload = new FormData();
+            payload.append('title', formData.title);
+            payload.append('description', formData.description);
+            payload.append('contentType', formData.contentType);
+            payload.append('targetType', formData.targetType);
+            payload.append('isProtected', formData.isProtected);
+
+            if (formData.file) payload.append('file', formData.file);
+            if (formData.thumbnail) payload.append('thumbnail', formData.thumbnail);
+
+            if (formData.contentType === 'video') payload.append('videoUrl', formData.videoUrl);
+            if (formData.contentType === 'link' || (formData.contentType === 'document' && formData.linkUrl)) {
+                payload.append('linkUrl', formData.linkUrl);
+            }
+
+            if (formData.targetType === 'batch') {
+                formData.targetBatches.forEach(id => payload.append('targetBatches[]', id));
+            }
+            if (formData.targetType === 'individual') {
+                formData.targetStudents.forEach(id => payload.append('targetStudents[]', id));
+            }
+
+            const headers = {
+                'Content-Type': 'multipart/form-data',
                 'Authorization': `Bearer ${adminToken}`
             };
 
-            if (formData.contentType === 'document' && formData.file) {
-                payload = new FormData();
-                payload.append('title', formData.title);
-                payload.append('description', formData.description);
-                payload.append('contentType', formData.contentType);
-                payload.append('targetType', formData.targetType);
-                payload.append('isProtected', formData.isProtected);
-                payload.append('file', formData.file);
-                
-                if (formData.targetType === 'batch') {
-                    formData.targetBatches.forEach(id => payload.append('targetBatches[]', id));
-                }
-                if (formData.targetType === 'individual') {
-                    formData.targetStudents.forEach(id => payload.append('targetStudents[]', id));
-                }
-                headers['Content-Type'] = 'multipart/form-data';
-            } else {
-                payload = { ...formData };
-                // Ensure target IDs are sent correctly
-                if (formData.targetType === 'batch') payload.targetBatches = formData.targetBatches;
-                if (formData.targetType === 'individual') payload.targetStudents = formData.targetStudents;
-            }
+            const url = editMode
+                ? `${API_URL}/api/study-materials/${editingId}`
+                : `${API_URL}/api/study-materials`;
 
-            const res = await axios.post(`${API_URL}/api/study-materials`, payload, { headers });
+            const res = await axios({
+                method: editMode ? 'put' : 'post',
+                url,
+                data: payload,
+                headers
+            });
 
             if (res.data.success) {
-                toast.success("Material created successfully", { id: loadingToast });
+                toast.success(editMode ? "Material updated successfully" : "Material created successfully", { id: loadingToast });
                 setShowModal(false);
-                setFormData({
-                    title: '',
-                    description: '',
-                    contentType: 'document',
-                    targetType: 'global',
-                    targetBatches: [],
-                    targetStudents: [],
-                    file: null,
-                    linkUrl: '',
-                    videoUrl: '',
-                    isProtected: true
-                });
+                resetForm();
                 fetchData();
             }
         } catch (error) {
-            console.error("Error creating material:", error);
-            toast.error(error.response?.data?.message || "Failed to create material", { id: loadingToast });
+            console.error("Error submitting material:", error);
+            toast.error(error.response?.data?.message || `Failed to ${editMode ? 'update' : 'create'} material`, { id: loadingToast });
         } finally {
             setSubmitting(false);
         }
@@ -165,8 +205,8 @@ const StudyMaterialsManagement = () => {
     const toggleBatchSelection = (id) => {
         setFormData(prev => ({
             ...prev,
-            targetBatches: prev.targetBatches.includes(id) 
-                ? prev.targetBatches.filter(bid => bid !== id) 
+            targetBatches: prev.targetBatches.includes(id)
+                ? prev.targetBatches.filter(bid => bid !== id)
                 : [...prev.targetBatches, id]
         }));
     };
@@ -174,8 +214,8 @@ const StudyMaterialsManagement = () => {
     const toggleStudentSelection = (id) => {
         setFormData(prev => ({
             ...prev,
-            targetStudents: prev.targetStudents.includes(id) 
-                ? prev.targetStudents.filter(sid => sid !== id) 
+            targetStudents: prev.targetStudents.includes(id)
+                ? prev.targetStudents.filter(sid => sid !== id)
                 : [...prev.targetStudents, id]
         }));
     };
@@ -186,9 +226,9 @@ const StudyMaterialsManagement = () => {
         return matchesSearch && matchesType;
     });
 
-    const searchedStudents = students.filter(s => 
-        (s.name.toLowerCase().includes(studentSearch.toLowerCase()) || 
-         s.email.toLowerCase().includes(studentSearch.toLowerCase())) &&
+    const searchedStudents = students.filter(s =>
+        (s.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+            s.email.toLowerCase().includes(studentSearch.toLowerCase())) &&
         !formData.targetStudents.includes(s._id)
     ).slice(0, 5);
 
@@ -197,15 +237,15 @@ const StudyMaterialsManagement = () => {
     return (
         <div className="min-h-screen bg-slate-50/50 p-4 md:p-8">
             <div className="max-w-7xl mx-auto space-y-8">
-                
+
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Study Materials</h1>
                         <p className="text-slate-500 font-medium">Manage and assign protected documents and videos</p>
                     </div>
-                    <button 
-                        onClick={() => setShowModal(true)}
+                    <button
+                        onClick={() => { resetForm(); setShowModal(true); }}
                         className="flex items-center gap-2 bg-indigo-600 hover:bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-xl shadow-indigo-100"
                     >
                         <PlusCircle size={20} />
@@ -217,8 +257,8 @@ const StudyMaterialsManagement = () => {
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
                     <div className="relative w-full md:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             placeholder="Search materials..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -227,7 +267,7 @@ const StudyMaterialsManagement = () => {
                     </div>
                     <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
                         {['All', 'Document', 'Video', 'Link'].map(type => (
-                            <button 
+                            <button
                                 key={type}
                                 onClick={() => setTypeFilter(type)}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${typeFilter === type ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
@@ -242,55 +282,75 @@ const StudyMaterialsManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <AnimatePresence>
                         {filteredMaterials.map((item) => (
-                            <motion.div 
+                            <motion.div
                                 key={item._id}
                                 layout
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
-                                className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 group hover:border-indigo-200 transition-all flex flex-col h-full"
+                                className="bg-white overflow-hidden rounded-[2.5rem] shadow-sm border border-slate-100 group hover:border-indigo-200 transition-all flex flex-col h-full"
                             >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={`p-4 rounded-2xl ${
-                                        item.contentType === 'video' ? 'bg-red-50 text-red-500' :
-                                        item.contentType === 'document' ? 'bg-blue-50 text-blue-500' :
-                                        'bg-emerald-50 text-emerald-500'
-                                    }`}>
-                                        {item.contentType === 'video' ? <Video size={24} /> : 
-                                         item.contentType === 'document' ? <FileText size={24} /> : 
-                                         <LinkIcon size={24} />}
+                                {/* Thumbnail Header */}
+                                <div className="h-40 bg-slate-100 relative overflow-hidden group">
+                                    {item.thumbnailUrl ? (
+                                        <img src={item.thumbnailUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                            <ImageIcon size={48} strokeWidth={1} />
+                                        </div>
+                                    )}
+                                    <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                                        <div className={`p-3 rounded-2xl shadow-lg backdrop-blur-md ${item.contentType === 'video' ? 'bg-red-500/90 text-white' :
+                                                item.contentType === 'document' ? 'bg-blue-500/90 text-white' :
+                                                    'bg-emerald-500/90 text-white'
+                                            }`}>
+                                            {item.contentType === 'video' ? <Video size={18} /> :
+                                                item.contentType === 'document' ? <FileText size={18} /> :
+                                                    <LinkIcon size={18} />}
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => handleEdit(item)}
+                                                className="p-2.5 bg-white/90 backdrop-blur-md text-slate-600 hover:text-indigo-600 rounded-xl shadow-lg transition-all"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteMaterial(item._id)}
+                                                className="p-2.5 bg-white/90 backdrop-blur-md text-slate-400 hover:text-red-500 rounded-xl shadow-lg transition-all"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        {item.isProtected && <div className="p-2 bg-amber-50 text-amber-500 rounded-lg" title="Protected Content"><Shield size={14} /></div>}
-                                        <button 
-                                            onClick={() => handleDeleteMaterial(item._id)}
-                                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
+                                    {item.isProtected && (
+                                        <div className="absolute bottom-4 left-4 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                                            <Shield size={10} /> Protected
+                                        </div>
+                                    )}
                                 </div>
 
-                                <h3 className="text-lg font-bold text-slate-800 line-clamp-1">{item.title}</h3>
-                                <p className="text-xs text-slate-500 mt-1 line-clamp-2 h-8 font-medium">{item.description || 'No description provided.'}</p>
+                                <div className="p-6 flex flex-col flex-1">
+                                    <h3 className="text-lg font-bold text-slate-800 line-clamp-1">{item.title}</h3>
+                                    <p className="text-xs text-slate-500 mt-1 line-clamp-2 h-8 font-medium">{item.description || 'No description provided.'}</p>
 
-                                <div className="mt-6 flex flex-wrap gap-2">
-                                    <span className={`text-[10px] px-2 py-1 rounded-lg font-bold uppercase tracking-widest ${
-                                        item.targetType === 'global' ? 'bg-indigo-50 text-indigo-600' :
-                                        item.targetType === 'batch' ? 'bg-emerald-50 text-emerald-600' :
-                                        'bg-purple-50 text-purple-600'
-                                    }`}>
-                                        {item.targetType}
-                                    </span>
-                                    {item.targetType === 'batch' && <span className="text-[10px] px-2 py-1 bg-slate-100 text-slate-500 rounded-lg font-bold">{item.targetBatches?.length} Batches</span>}
-                                    {item.targetType === 'individual' && <span className="text-[10px] px-2 py-1 bg-slate-100 text-slate-500 rounded-lg font-bold">{item.targetStudents?.length} Students</span>}
-                                </div>
+                                    <div className="mt-6 flex flex-wrap gap-2">
+                                        <span className={`text-[10px] px-2 py-1 rounded-lg font-bold uppercase tracking-widest ${item.targetType === 'global' ? 'bg-indigo-50 text-indigo-600' :
+                                                item.targetType === 'batch' ? 'bg-emerald-50 text-emerald-600' :
+                                                    'bg-purple-50 text-purple-600'
+                                            }`}>
+                                            {item.targetType}
+                                        </span>
+                                        {item.targetType === 'batch' && <span className="text-[10px] px-2 py-1 bg-slate-100 text-slate-500 rounded-lg font-bold">{item.targetBatches?.length} Batches</span>}
+                                        {item.targetType === 'individual' && <span className="text-[10px] px-2 py-1 bg-slate-100 text-slate-500 rounded-lg font-bold">{item.targetStudents?.length} Students</span>}
+                                    </div>
 
-                                <div className="mt-auto pt-6 flex items-center justify-between border-t border-slate-50">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Uploaded {new Date(item.createdAt).toLocaleDateString()}</span>
-                                    <div className="flex items-center gap-2">
-                                        <button className="text-indigo-600 p-2 hover:bg-indigo-50 rounded-xl transition-all"><Copy size={16} /></button>
-                                        <a href={item.contentType === 'file' ? item.fileUrl : (item.linkUrl || item.videoUrl)} target="_blank" rel="noreferrer" className="text-slate-400 p-2 hover:bg-slate-100 rounded-xl transition-all"><ExternalLink size={16} /></a>
+                                    <div className="mt-auto pt-6 flex items-center justify-between border-t border-slate-50">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Uploaded {new Date(item.createdAt).toLocaleDateString()}</span>
+                                        <div className="flex items-center gap-2">
+                                            <button className="text-indigo-600 p-2 hover:bg-indigo-50 rounded-xl transition-all"><Copy size={16} /></button>
+                                            <a href={item.contentType === 'file' ? item.fileUrl : (item.linkUrl || item.videoUrl)} target="_blank" rel="noreferrer" className="text-slate-400 p-2 hover:bg-slate-100 rounded-xl transition-all"><ExternalLink size={16} /></a>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -301,7 +361,7 @@ const StudyMaterialsManagement = () => {
                 {/* Clean & Minimalist Add/Edit Modal */}
                 {showModal && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-200"
@@ -309,18 +369,18 @@ const StudyMaterialsManagement = () => {
                             {/* Simple Header */}
                             <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
                                 <div>
-                                    <h2 className="text-lg font-bold text-slate-800">Add Study Material</h2>
-                                    <p className="text-slate-500 text-xs font-medium">Upload or link protected educational content</p>
+                                    <h2 className="text-lg font-bold text-slate-800">{editMode ? 'Update Study Material' : 'Add Study Material'}</h2>
+                                    <p className="text-slate-500 text-xs font-medium">{editMode ? 'Modify existing educational resource' : 'Upload or link protected educational content'}</p>
                                 </div>
-                                <button 
-                                    onClick={() => setShowModal(false)} 
+                                <button
+                                    onClick={() => setShowModal(false)}
                                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
                                 >
                                     <X size={20} />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleAddMaterial} className="p-6 overflow-y-auto space-y-6 custom-scrollbar">
+                            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6 custom-scrollbar">
                                 {/* Material Content Selection */}
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Material Content</label>
@@ -330,15 +390,14 @@ const StudyMaterialsManagement = () => {
                                             { id: 'video', icon: Video, label: 'Video' },
                                             { id: 'link', icon: LinkIcon, label: 'Link' }
                                         ].map(type => (
-                                            <button 
+                                            <button
                                                 key={type.id}
                                                 type="button"
-                                                onClick={() => setFormData({...formData, contentType: type.id})}
-                                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
-                                                    formData.contentType === type.id 
-                                                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200' 
-                                                    : 'text-slate-500 hover:text-slate-700'
-                                                }`}
+                                                onClick={() => setFormData({ ...formData, contentType: type.id })}
+                                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${formData.contentType === type.id
+                                                        ? 'bg-white text-orange-600 shadow-sm border border-slate-200'
+                                                        : 'text-slate-500 hover:text-slate-700'
+                                                    }`}
                                             >
                                                 <type.icon size={14} />
                                                 {type.label}
@@ -351,10 +410,10 @@ const StudyMaterialsManagement = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Title</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             value={formData.title}
-                                            onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             placeholder="e.g. Advanced Financial Reporting"
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 outline-none transition-all"
                                             required
@@ -362,10 +421,10 @@ const StudyMaterialsManagement = () => {
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Description</label>
-                                        <textarea 
+                                        <textarea
                                             rows="2"
                                             value={formData.description}
-                                            onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             placeholder="Brief overview..."
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 outline-none transition-all"
                                         />
@@ -383,7 +442,7 @@ const StudyMaterialsManagement = () => {
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => setFormData({...formData, isProtected: !formData.isProtected})}
+                                        onClick={() => setFormData({ ...formData, isProtected: !formData.isProtected })}
                                         className={`w-10 h-5.5 rounded-full transition-all flex items-center px-1 ${formData.isProtected ? 'bg-orange-600' : 'bg-slate-300'}`}
                                     >
                                         <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transition-all transform ${formData.isProtected ? 'translate-x-4.5' : 'translate-x-0'}`} />
@@ -392,41 +451,66 @@ const StudyMaterialsManagement = () => {
 
                                 {/* Dynamic Input Area */}
                                 <div className="pt-2">
+                                    {/* Thumbnail Upload */}
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-1">Resource Thumbnail</label>
+                                        <div className="relative group p-4 border-2 border-dashed border-slate-100 rounded-2xl hover:border-orange-200 hover:bg-orange-50/30 transition-all flex flex-col items-center justify-center cursor-pointer min-h-[100px]">
+                                            <input type="file" onChange={handleThumbnailChange} accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                            {formData.thumbnail ? (
+                                                <div className="flex items-center gap-3 w-full">
+                                                    <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
+                                                        <ImageIcon size={20} />
+                                                    </div>
+                                                    <div className="flex-1 text-left">
+                                                        <p className="text-[10px] font-bold text-slate-700 line-clamp-1">{formData.thumbnail.name}</p>
+                                                        <p className="text-[9px] text-slate-400">Ready to upload</p>
+                                                    </div>
+                                                    <X onClick={(e) => { e.stopPropagation(); setFormData({ ...formData, thumbnail: null }); }} size={16} className="text-slate-300 hover:text-red-500" />
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <Upload size={18} className="text-slate-300 mb-1 group-hover:text-orange-500 transition-colors" />
+                                                    <p className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600">Cover Image (Optional)</p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
                                     {formData.contentType === 'document' && (
                                         <div className="space-y-4">
                                             <div className="relative group p-6 border-2 border-dashed border-slate-100 rounded-xl hover:border-orange-200 hover:bg-orange-50/30 transition-all text-center cursor-pointer">
                                                 <input type="file" onChange={handleFileChange} accept=".pdf,.doc,.docx,.jpg,.png" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                                                 <Upload size={20} className="mx-auto text-slate-300 mb-2 group-hover:text-orange-600 transition-colors" />
-                                                <p className="text-xs font-bold text-slate-700">{formData.file ? formData.file.name : 'Click to Upload Document'}</p>
+                                                <p className="text-xs font-bold text-slate-700">{formData.file ? formData.file.name : (editMode ? 'Upload new file (optional)' : 'Click to Upload Document')}</p>
                                             </div>
                                             <div className="relative text-center">
                                                 <div className="absolute top-1/2 left-0 right-0 h-px bg-slate-100"></div>
                                                 <span className="relative bg-white px-3 text-[9px] font-bold text-slate-300 uppercase tracking-widest">OR PRIVATE LINK</span>
                                             </div>
-                                            <input 
-                                                type="url" 
+                                            <input
+                                                type="url"
                                                 value={formData.linkUrl}
-                                                onChange={(e) => setFormData({...formData, linkUrl: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
                                                 placeholder="Paste private preview link..."
                                                 className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 outline-none transition-all"
                                             />
                                         </div>
                                     )}
                                     {formData.contentType === 'video' && (
-                                        <input 
-                                            type="url" 
+                                        <input
+                                            type="url"
                                             value={formData.videoUrl}
-                                            onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                                             placeholder="https://www.youtube.com/watch?v=..."
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 outline-none transition-all"
                                             required
                                         />
                                     )}
                                     {formData.contentType === 'link' && (
-                                        <input 
-                                            type="url" 
+                                        <input
+                                            type="url"
                                             value={formData.linkUrl}
-                                            onChange={(e) => setFormData({...formData, linkUrl: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
                                             placeholder="https://example.com/article"
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 outline-none transition-all"
                                             required
@@ -444,17 +528,16 @@ const StudyMaterialsManagement = () => {
                                         {[
                                             { id: 'global', icon: Globe, label: 'Global' },
                                             { id: 'batch', icon: LayoutGrid, label: 'Batch' },
-                                            { id: 'individual', icon: SearchIcon, label: 'Individual' }
+                                            { id: 'individual', icon: Search, label: 'Individual' }
                                         ].map(t => (
-                                            <button 
+                                            <button
                                                 key={t.id}
                                                 type="button"
-                                                onClick={() => setFormData({...formData, targetType: t.id})}
-                                                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                                                    formData.targetType === t.id 
-                                                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200' 
-                                                    : 'text-slate-400 hover:text-slate-600'
-                                                }`}
+                                                onClick={() => setFormData({ ...formData, targetType: t.id })}
+                                                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${formData.targetType === t.id
+                                                        ? 'bg-white text-orange-600 shadow-sm border border-slate-200'
+                                                        : 'text-slate-400 hover:text-slate-600'
+                                                    }`}
                                             >
                                                 <t.icon size={12} />
                                                 {t.label}
@@ -467,14 +550,13 @@ const StudyMaterialsManagement = () => {
                                         {formData.targetType === 'batch' && (
                                             <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
                                                 {batches.map(batch => (
-                                                    <div 
-                                                        key={batch._id} 
+                                                    <div
+                                                        key={batch._id}
                                                         onClick={() => toggleBatchSelection(batch._id)}
-                                                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border ${
-                                                            formData.targetBatches.includes(batch._id) 
-                                                            ? 'bg-orange-50 border-orange-200' 
-                                                            : 'bg-white border-slate-100'
-                                                        }`}
+                                                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border ${formData.targetBatches.includes(batch._id)
+                                                                ? 'bg-orange-50 border-orange-200'
+                                                                : 'bg-white border-slate-100'
+                                                            }`}
                                                     >
                                                         <span className={`text-[11px] font-bold ${formData.targetBatches.includes(batch._id) ? 'text-orange-700' : 'text-slate-600'}`}>{batch.name}</span>
                                                         {formData.targetBatches.includes(batch._id) ? <Check size={14} className="text-orange-600" /> : <Plus size={14} className="text-slate-300" />}
@@ -485,8 +567,8 @@ const StudyMaterialsManagement = () => {
                                         {formData.targetType === 'individual' && (
                                             <div className="space-y-3">
                                                 <div className="relative">
-                                                    <input 
-                                                        type="text" 
+                                                    <input
+                                                        type="text"
                                                         placeholder="Search students..."
                                                         value={studentSearch}
                                                         onChange={(e) => setStudentSearch(e.target.value)}
@@ -495,9 +577,9 @@ const StudyMaterialsManagement = () => {
                                                     {studentSearch && searchedStudents.length > 0 && (
                                                         <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-slate-200 shadow-xl z-[100] max-h-[160px] overflow-y-auto overflow-x-hidden">
                                                             {searchedStudents.map(s => (
-                                                                <div 
-                                                                    key={s._id} 
-                                                                    onClick={() => { toggleStudentSelection(s._id); setStudentSearch(''); }} 
+                                                                <div
+                                                                    key={s._id}
+                                                                    onClick={() => { toggleStudentSelection(s._id); setStudentSearch(''); }}
                                                                     className="p-3 hover:bg-orange-50 cursor-pointer flex items-center justify-between text-xs border-b border-slate-50 last:border-0 group"
                                                                 >
                                                                     <div className="flex flex-col">
@@ -530,12 +612,12 @@ const StudyMaterialsManagement = () => {
                             {/* Simple Footer */}
                             <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex gap-3">
                                 <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition-all">Cancel</button>
-                                <button 
-                                    onClick={handleAddMaterial}
+                                <button
+                                    onClick={handleSubmit}
                                     disabled={submitting}
                                     className="flex-[2] py-2.5 bg-orange-600 text-white rounded-xl text-xs font-bold hover:bg-orange-700 transition-all shadow-md shadow-orange-100 disabled:opacity-50"
                                 >
-                                    {submitting ? 'Adding...' : 'Publish Material'}
+                                    {submitting ? (editMode ? 'Updating...' : 'Adding...') : (editMode ? 'Update Material' : 'Publish Material')}
                                 </button>
                             </div>
                         </motion.div>
@@ -550,7 +632,7 @@ const StudyMaterialsManagement = () => {
 // Helper components
 const ArrowRight = ({ size = 20 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 

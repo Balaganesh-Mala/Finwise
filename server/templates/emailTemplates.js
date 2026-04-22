@@ -291,6 +291,62 @@ const feeAndCurriculumTemplate = (name, courseName, courseFee, curriculumUrl, se
   `;
   return baseLayout(content, settings);
 };
+// Interview Schedule Template
+const interviewScheduleTemplate = (name, details, settings = {}) => {
+  const brandName = settings?.siteTitle || 'Finwise Career Solutions';
+  const { date, time, platform, link, passcode, instructions, requiredDocs } = details;
+  
+  const content = `
+    <h1 style="margin: 0 0 20px; color: #0f172a; font-size: 24px; font-weight: 800;">Interview Scheduled</h1>
+    <p style="margin: 0 0 20px; color: #475569; line-height: 1.6; font-size: 16px;">
+      Dear ${name},<br><br>
+      Your upcoming mock interview with ${brandName} has been successfully scheduled. Please review the following appointment details:
+    </p>
+    
+    <div class="info-box" style="margin-bottom: 30px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 15px; color: #334155;">
+        <tr>
+          <td style="padding-bottom: 10px; font-weight: 700; width: 100px;">Date:</td>
+          <td style="padding-bottom: 10px;">${date}</td>
+        </tr>
+        <tr>
+          <td style="padding-bottom: 10px; font-weight: 700;">Time:</td>
+          <td style="padding-bottom: 10px;">${time}</td>
+        </tr>
+        <tr>
+          <td style="padding-bottom: 10px; font-weight: 700;">Platform:</td>
+          <td style="padding-bottom: 10px;">${platform}</td>
+        </tr>
+        ${passcode ? `
+        <tr>
+          <td style="padding-bottom: 10px; font-weight: 700;">Passcode:</td>
+          <td style="padding-bottom: 10px;"><code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${passcode}</code></td>
+        </tr>` : ''}
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 30px;">
+      <a href="${link}" class="btn">Join Interview Meeting</a>
+    </div>
+
+    ${instructions ? `
+    <div style="margin-top: 30px;">
+      <h4 style="margin: 0 0 10px; color: #0f172a; font-size: 16px;">Important Instructions:</h4>
+      <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${instructions}</p>
+    </div>` : ''}
+
+    ${requiredDocs && requiredDocs.length > 0 ? `
+    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+      <h4 style="margin: 0 0 10px; color: #0f172a; font-size: 16px;">Please keep these ready:</h4>
+      <p style="margin: 0; color: #475569; font-size: 14px;">${requiredDocs.join(', ')}</p>
+    </div>` : ''}
+
+    <p style="margin-top: 35px; color: #64748b; font-size: 14px; font-style: italic; text-align: center;">
+      Please ensure you join at least 5 minutes before the scheduled time for a technical check.
+    </p>
+  `;
+  return baseLayout(content, settings);
+};
 
 module.exports = {
   studentRegistrationTemplate,
@@ -299,5 +355,6 @@ module.exports = {
   courseEnrolledTemplate,
   brochureDownloadTemplate,
   syllabusDownloadTemplate,
-  feeAndCurriculumTemplate
+  feeAndCurriculumTemplate,
+  interviewScheduleTemplate
 };

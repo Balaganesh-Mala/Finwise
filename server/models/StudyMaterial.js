@@ -30,6 +30,12 @@ const studyMaterialSchema = new mongoose.Schema({
     videoUrl: {
         type: String
     },
+    thumbnailUrl: {
+        type: String
+    },
+    thumbnailPublicId: {
+        type: String
+    },
     targetType: {
         type: String,
         enum: ['global', 'batch', 'individual'],
