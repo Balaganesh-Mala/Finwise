@@ -10,7 +10,10 @@ const initSocket = (server) => {
                 'http://localhost:5175',
                 'http://localhost:5176',
                 'https://finwise-student.vercel.app',
-                'https://finwisecareers.com'
+                'https://finwisecareers.com',
+                'https://learning.finwisecareers.com',
+                'https://admin.finwisecareers.com',
+                'https://trainer.finwisecareers.com'
             ],
             methods: ["GET", "POST"],
             credentials: true

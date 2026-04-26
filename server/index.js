@@ -39,6 +39,7 @@ app.use(cors({
         'http://187.127.138.157:5000/',
         'https://finwise-64g1.onrender.com',
         'https://finwise-student.vercel.app', // Student Portal Deployed
+        'https://learning.finwisecareers.com', // Student Portal Production
         'http://finwisecareers.com',
         'https://finwisecareers.com',
         process.env.CLIENT_URL,

@@ -189,7 +189,7 @@ function OverviewTab() {
     );
 }
 
-// ─── FINANCE TAB (existing, unchanged logic) ─────────────────────────────────
+// ─── FINANCE TAB ─────────────────────────────────────────────────────────────
 
 function FinanceTab() {
     const [loading, setLoading] = useState(true);
@@ -294,7 +294,7 @@ function FinanceTab() {
                     </div>
                     <div className="h-[300px]">
                         {charts.incomeVsExpenseData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <BarChart data={charts.incomeVsExpenseData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} dy={10} />
@@ -311,7 +311,7 @@ function FinanceTab() {
                     <h3 className="text-lg font-bold text-slate-900 mb-6">Expense Breakdown</h3>
                     <div className="h-[240px] relative">
                         {charts.expenseCategoryData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <PieChart>
                                     <Pie data={charts.expenseCategoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
                                         {charts.expenseCategoryData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -412,7 +412,7 @@ function StudentsTab() {
                     <h3 className="text-base font-bold text-slate-900 mb-5 flex items-center gap-2"><BookOpen size={16} className="text-indigo-500" /> Course-wise Enrollment</h3>
                     <div className="h-[260px]">
                         {data.courseData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <BarChart data={data.courseData} layout="vertical">
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
                                     <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} allowDecimals={false} />
@@ -542,7 +542,7 @@ function InquiriesTab() {
                     <h3 className="text-base font-bold text-slate-900 mb-5">Inquiry Pipeline</h3>
                     <div className="h-[240px]">
                         {data.funnelData.some(f => f.count > 0) ? (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <BarChart data={data.funnelData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} />
@@ -563,7 +563,7 @@ function InquiriesTab() {
                     <div className="flex gap-4 items-center">
                         <div className="h-[200px] w-[200px] shrink-0">
                             {data.courseData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                     <PieChart>
                                         <Pie data={data.courseData} cx="50%" cy="50%" outerRadius={80} dataKey="value" stroke="none">
                                             {data.courseData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
