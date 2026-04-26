@@ -30,6 +30,7 @@ const MockInterviewForm = () => {
     const [formData, setFormData] = useState({
         studentId: '',
         interviewerName: '',
+        durationTaken: '15',
         interviewType: 'Technical',
         overallScore: 0,
         communicationScore: 0,
@@ -60,6 +61,15 @@ const MockInterviewForm = () => {
     useEffect(() => {
         fetchBatches();
         fetchDbSettings();
+        
+        try {
+            const trainerData = JSON.parse(localStorage.getItem('trainerData') || '{}');
+            if (trainerData && trainerData.name) {
+                setFormData(prev => ({ ...prev, interviewerName: trainerData.name }));
+            }
+        } catch(e) {
+            console.error("Error parsing trainer data");
+        }
     }, []);
 
     const fetchBatches = async () => {
@@ -343,6 +353,7 @@ My Interview Notes:
                     problemSolvingScore: 0,
                     bodyLanguageScore: 0,
                     practicalScore: 0,
+                    durationTaken: '15',
                     skillRemarks: {
                         communication: '',
                         technical: '',
@@ -465,6 +476,18 @@ My Interview Notes:
                                 name="interviewDate"
                                 value={formData.interviewDate}
                                 onChange={handleInputChange}
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-sm font-semibold text-slate-700">Duration Taken (Mins)</label>
+                            <input
+                                type="number"
+                                name="durationTaken"
+                                value={formData.durationTaken}
+                                onChange={handleInputChange}
+                                placeholder="e.g., 45"
                                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                                 required
                             />
@@ -732,41 +755,6 @@ My Interview Notes:
                         ></textarea>
                     </div>
 
-                    {/* Add Custom Action Line */}
-                    <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2 w-full md:w-2/3 lg:w-1/2">
-                        <input
-                            type="text"
-                            value={newCustomPlan}
-                            onChange={(e) => setNewCustomPlan(e.target.value)}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    if(newCustomPlan.trim()) {
-                                        setFormData(prev => ({
-                                            ...prev, improvementPlan: [...prev.improvementPlan, { task: newCustomPlan.trim(), completed: true }]
-                                        }));
-                                        setNewCustomPlan('');
-                                    }
-                                }
-                            }}
-                            placeholder="Add individual custom action item..."
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => {
-                                if(newCustomPlan.trim()) {
-                                    setFormData(prev => ({
-                                        ...prev, improvementPlan: [...prev.improvementPlan, { task: newCustomPlan.trim(), completed: true }]
-                                    }));
-                                    setNewCustomPlan('');
-                                }
-                            }}
-                            className="bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors whitespace-nowrap"
-                        >
-                            + Quick Add
-                        </button>
-                    </div>
                 </div>
 
                 {/* Submit Section */}

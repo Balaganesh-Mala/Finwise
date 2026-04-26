@@ -428,6 +428,11 @@ const TypingPractice = () => {
                     } else {
                         setLessonIndex(nextIndex);
                     }
+
+                    // Optimistic UI update for completed lessons
+                    const lessonKey = `${category}-${typingLessons[category][lessonIndex]?.title || 'Unknown'}`;
+                    setCompletedLessons(prev => new Set(prev).add(lessonKey));
+
                 } else {
                     toast.error('Accuracy below 95%. No points awarded.', { icon: '⚠️' });
                 }

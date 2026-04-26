@@ -499,7 +499,10 @@ router.put('/update/:id', upload.single('profilePicture'), async (req, res) => {
         student.batchTiming = batchTiming || student.batchTiming;
         student.startDate = startDate || student.startDate;
         
-        if (parsedAccess) student.access = parsedAccess;
+        if (parsedAccess) {
+            student.access = parsedAccess;
+            student.markModified('access');
+        }
         if (status) student.status = status;
 
         // Password Update Logic
@@ -519,6 +522,26 @@ router.put('/update/:id', upload.single('profilePicture'), async (req, res) => {
 
     } catch (err) {
         console.error('Error updating student:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// @route   PUT /api/students/bulk-status
+// @desc    Update status for multiple students
+// @access  Admin
+router.put('/bulk-status', async (req, res) => {
+    try {
+        const { studentIds, status } = req.body;
+        if (!studentIds || !Array.isArray(studentIds) || !status) {
+            return res.status(400).json({ message: 'Invalid payload' });
+        }
+        await Student.updateMany(
+            { _id: { $in: studentIds } },
+            { $set: { status, updatedAt: Date.now() } }
+        );
+        res.json({ success: true, message: `Status updated to ${status} for ${studentIds.length} students` });
+    } catch (err) {
+        console.error('Bulk Status Update Error:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 });

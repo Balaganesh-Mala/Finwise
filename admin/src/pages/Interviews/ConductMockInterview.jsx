@@ -11,6 +11,8 @@ const MockInterviewForm = () => {
     const location = useLocation();
     const [students, setStudents] = useState([]);
     const [batches, setBatches] = useState([]);
+    const [trainers, setTrainers] = useState([]);
+    const [isCustomInterviewer, setIsCustomInterviewer] = useState(false);
     const [selectedBatch, setSelectedBatch] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -24,6 +26,7 @@ const MockInterviewForm = () => {
     const [formData, setFormData] = useState({
         studentId: '',
         interviewerName: '',
+        durationTaken: '15',
         interviewType: 'Technical',
         overallScore: 0,
         communicationScore: 0,
@@ -56,6 +59,7 @@ const MockInterviewForm = () => {
     useEffect(() => {
         fetchBatches();
         fetchDbSettings();
+        fetchTrainers();
 
         // Pre-fill from navigation state (Interview Queue Shortcut)
         if (location.state) {
@@ -63,6 +67,11 @@ const MockInterviewForm = () => {
             if (batchId) {
                 setSelectedBatch(batchId);
                 fetchStudents(batchId);
+            }
+            if (interviewerName) {
+                // We'll set it as a custom interviewer since we don't know if it matches a trainer exact string yet,
+                // but if it does match later, it will just show up in the dropdown anyway if we do it right. 
+                // Better approach: just set the value. We can determine if it's custom in the UI.
             }
             setFormData(prev => ({
                 ...prev,
@@ -72,6 +81,16 @@ const MockInterviewForm = () => {
             }));
         }
     }, [location.state]);
+
+    const fetchTrainers = async () => {
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const { data } = await axios.get(`${API_URL}/api/admin/trainers/list`);
+            setTrainers(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Error fetching trainers:", error);
+        }
+    };
 
     const fetchBatches = async () => {
         try {
@@ -356,6 +375,7 @@ My Interview Notes:
                     problemSolvingScore: 0,
                     bodyLanguageScore: 0,
                     practicalScore: 0,
+                    durationTaken: '15',
                     skillRemarks: {
                         communication: '',
                         technical: '',
@@ -466,15 +486,44 @@ My Interview Notes:
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-semibold text-slate-700">Interviewer Name</label>
-                            <input
-                                type="text"
-                                name="interviewerName"
-                                value={formData.interviewerName}
-                                onChange={handleInputChange}
-                                placeholder="Enter trainer name"
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                                required
-                            />
+                            <div className="flex flex-col gap-2">
+                                <select
+                                    value={isCustomInterviewer ? 'Custom' : formData.interviewerName}
+                                    onChange={(e) => {
+                                        if (e.target.value === 'Custom') {
+                                            setIsCustomInterviewer(true);
+                                            setFormData(prev => ({ ...prev, interviewerName: '' }));
+                                        } else {
+                                            setIsCustomInterviewer(false);
+                                            setFormData(prev => ({ ...prev, interviewerName: e.target.value }));
+                                        }
+                                    }}
+                                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    required={!isCustomInterviewer}
+                                >
+                                    <option value="">-- Select Trainer --</option>
+                                    {trainers.map(t => (
+                                        <option key={t._id} value={t.name}>{t.name} ({t.role})</option>
+                                    ))}
+                                    {/* Fallback for pre-filled name from schedule if it doesn't match a trainer exactly */}
+                                    {formData.interviewerName && !isCustomInterviewer && !trainers.some(t => t.name === formData.interviewerName) && (
+                                        <option value={formData.interviewerName}>{formData.interviewerName}</option>
+                                    )}
+                                    <option value="Custom">+ Custom Name</option>
+                                </select>
+                                {isCustomInterviewer && (
+                                    <input
+                                        type="text"
+                                        name="interviewerName"
+                                        value={formData.interviewerName}
+                                        onChange={handleInputChange}
+                                        placeholder="Type custom name..."
+                                        className="w-full px-4 py-2 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        required
+                                        autoFocus
+                                    />
+                                )}
+                            </div>
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-semibold text-slate-700">Interview Date</label>
@@ -483,6 +532,18 @@ My Interview Notes:
                                 name="interviewDate"
                                 value={formData.interviewDate}
                                 onChange={handleInputChange}
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-sm font-semibold text-slate-700">Duration Taken (Mins)</label>
+                            <input
+                                type="number"
+                                name="durationTaken"
+                                value={formData.durationTaken}
+                                onChange={handleInputChange}
+                                placeholder="e.g., 45"
                                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                                 required
                             />
@@ -749,41 +810,6 @@ My Interview Notes:
                         ></textarea>
                     </div>
 
-                    {/* Add Custom Action Line */}
-                    <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2 w-full md:w-2/3 lg:w-1/2">
-                        <input
-                            type="text"
-                            value={newCustomPlan}
-                            onChange={(e) => setNewCustomPlan(e.target.value)}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    if(newCustomPlan.trim()) {
-                                        setFormData(prev => ({
-                                            ...prev, improvementPlan: [...prev.improvementPlan, { task: newCustomPlan.trim(), completed: true }]
-                                        }));
-                                        setNewCustomPlan('');
-                                    }
-                                }
-                            }}
-                            placeholder="Add individual custom action item..."
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => {
-                                if(newCustomPlan.trim()) {
-                                    setFormData(prev => ({
-                                        ...prev, improvementPlan: [...prev.improvementPlan, { task: newCustomPlan.trim(), completed: true }]
-                                    }));
-                                    setNewCustomPlan('');
-                                }
-                            }}
-                            className="bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors whitespace-nowrap"
-                        >
-                            + Quick Add
-                        </button>
-                    </div>
                 </div>
 
                 {/* Submit Section */}

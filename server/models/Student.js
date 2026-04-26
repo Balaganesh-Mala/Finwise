@@ -32,7 +32,8 @@ const StudentSchema = new mongoose.Schema({
     aiMockInterview: { type: Boolean, default: false },
     profile: { type: Boolean, default: true },
     settings: { type: Boolean, default: true },
-    payments: { type: Boolean, default: true }
+    payments: { type: Boolean, default: true },
+    jobs: { type: Boolean, default: true }
   },
 
   // Account Status

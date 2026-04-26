@@ -97,6 +97,8 @@ app.use('/api/mock-interview-settings', require('./routes/mockInterviewSettingsR
 app.use('/api/interview-schedules', require('./routes/interviewScheduleRoutes'));
 app.use('/api/rewards', require('./routes/rewardRoutes'));
 app.use('/api/study-materials', require('./routes/studyMaterialRoutes'));
+app.use('/api/announcements', require('./routes/announcementRoutes'));
+app.use('/api/support', require('./routes/supportRoutes'));
 
 // Course Module Routes
 app.use('/api', require('./routes/moduleRoutes'));
@@ -132,6 +134,12 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, '0.0.0.0', () => {
+// Socket.io integration
+const http = require('http');
+const server = http.createServer(app);
+const { initSocket } = require('./services/socketService');
+initSocket(server);
+
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT} (Bound to 0.0.0.0)`);
 });

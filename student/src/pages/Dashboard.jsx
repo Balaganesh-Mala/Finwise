@@ -707,11 +707,22 @@ const Dashboard = () => {
     }, [activityRange]);
 
 
+    // Helper to find mock rank safely
+    const getMockRank = () => {
+        if (!user || !interviewLeaderboard || interviewLeaderboard.length === 0) return null;
+        const index = interviewLeaderboard.findIndex(s => s.id === user._id);
+        if (index !== -1) {
+            return index + 1;
+        }
+        return null;
+    };
+    const mockRank = getMockRank();
+
     const statCards = [
         { label: 'Enrolled Courses', value: stats.enrolledCourses, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', trend: 'Active' },
         { label: 'Classes Attended', value: stats.attendance, icon: UserCheck, color: 'text-green-600', bg: 'bg-green-50', trend: 'Keep it up!' },
         { label: 'Points Earned', value: stats.points || 0, icon: Trophy, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Rewards' },
-        { label: 'Batch Progress', value: `${stats.batchProgress}%`, icon: TrendingUp, color: 'text-orange-600', bg: 'bg-orange-50', trend: 'On Track' },
+        { label: 'Mock Rank', value: mockRank ? `#${mockRank}` : 'N/A', icon: Award, color: 'text-purple-600', bg: 'bg-purple-50', trend: 'Readiness' },
     ];
 
     // Helper to find user rank safely
@@ -794,20 +805,20 @@ const Dashboard = () => {
                     {/* Period Summary Row */}
                     <div className="flex items-center gap-4 mb-4 px-1">
                         <div className="flex items-center gap-1.5">
-                            <Clock size={13} className="text-indigo-400" />
-                            <span className="text-sm font-semibold text-gray-700">{activitySummary.totalHours}h</span>
-                            <span className="text-xs text-gray-400">learned</span>
+                            <Trophy size={13} className="text-amber-400" />
+                            <span className="text-sm font-semibold text-gray-700">{activitySummary.totalPoints || 0}</span>
+                            <span className="text-xs text-gray-400">points</span>
                         </div>
                         <span className="text-gray-200">|</span>
                         <div className="flex items-center gap-1.5">
-                            <CheckCircle size={13} className="text-green-400" />
-                            <span className="text-sm font-semibold text-gray-700">{activitySummary.topicCount}</span>
-                            <span className="text-xs text-gray-400">topics</span>
+                            <Zap size={13} className="text-yellow-400" />
+                            <span className="text-sm font-semibold text-gray-700">{activitySummary.totalCoins || 0}</span>
+                            <span className="text-xs text-gray-400">coins</span>
                         </div>
                         <span className="text-gray-200">|</span>
                         <div className="flex items-center gap-1.5">
                             <Flame size={13} className="text-orange-400" />
-                            <span className="text-sm font-semibold text-gray-700">{activitySummary.activeDays}</span>
+                            <span className="text-sm font-semibold text-gray-700">{activitySummary.activeDays || 0}</span>
                             <span className="text-xs text-gray-400">active days</span>
                         </div>
                     </div>
@@ -833,14 +844,22 @@ const Dashboard = () => {
                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} />
                                 <Tooltip
                                     cursor={{ fill: '#F9FAFB' }}
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                                    formatter={(val) => [`${val}h`, 'Hours']}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', padding: '12px' }}
+                                    itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
                                 />
                                 <Bar
-                                    dataKey="hours"
+                                    dataKey="points"
+                                    name="Points"
                                     fill="#6366F1"
                                     radius={[4, 4, 0, 0]}
-                                    barSize={activityRange === 'month' ? 8 : activityRange === 'year' ? 24 : 36}
+                                    barSize={activityRange === 'month' ? 4 : activityRange === 'year' ? 12 : 20}
+                                />
+                                <Bar
+                                    dataKey="coins"
+                                    name="Coins"
+                                    fill="#F59E0B"
+                                    radius={[4, 4, 0, 0]}
+                                    barSize={activityRange === 'month' ? 4 : activityRange === 'year' ? 12 : 20}
                                 />
                             </BarChart>
                         </ResponsiveContainer>

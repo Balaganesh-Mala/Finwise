@@ -22,6 +22,10 @@ const MockInterviewFeedbackSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  durationTaken: {
+    type: Number,
+    default: 0
+  },
   
   // Ratings (out of 10)
   overallScore: { type: Number, required: true },

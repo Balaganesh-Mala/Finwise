@@ -240,6 +240,63 @@ const BatchStudents = () => {
         }
     };
 
+    const toggleStudentStatus = async (studentId, currentStatus) => {
+        const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+        try {
+            await axios.put(`${import.meta.env.VITE_API_URL}/api/students/bulk-status`, {
+                studentIds: [studentId],
+                status: newStatus
+            });
+            setEnrollments(prev => prev.map(e => {
+                if (e.studentId?._id === studentId) {
+                    return { ...e, studentId: { ...e.studentId, status: newStatus } };
+                }
+                return e;
+            }));
+            toast.success(`Student status changed to ${newStatus}`);
+        } catch (err) {
+            toast.error('Failed to update student status');
+        }
+    };
+
+    const toggleBatchStatus = async () => {
+        if (enrollments.length === 0) return toast.error('No students in this batch');
+        
+        const result = await Swal.fire({
+            title: 'Change Batch Status',
+            text: 'Set status for ALL students in this batch to:',
+            icon: 'question',
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: 'Active',
+            denyButtonText: 'Inactive',
+            confirmButtonColor: '#10b981',
+            denyButtonColor: '#6b7280'
+        });
+
+        if (!result.isConfirmed && !result.isDenied) return;
+        
+        const newStatus = result.isConfirmed ? 'Active' : 'Inactive';
+        const studentIds = enrollments.map(e => e.studentId?._id).filter(Boolean);
+        
+        setSaving(true);
+        try {
+            await axios.put(`${import.meta.env.VITE_API_URL}/api/students/bulk-status`, {
+                studentIds,
+                status: newStatus
+            });
+            setEnrollments(prev => prev.map(e => ({
+                ...e,
+                studentId: e.studentId ? { ...e.studentId, status: newStatus } : e.studentId
+            })));
+            toast.success(`All students set to ${newStatus}`);
+        } catch (err) {
+            toast.error('Failed to update batch status');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const openChangeBatch = (enrollment) => {
         setSelectedStudent(enrollment);
         setNewBatchId('');
@@ -304,6 +361,13 @@ const BatchStudents = () => {
                     </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                    <button
+                        onClick={toggleBatchStatus}
+                        disabled={saving}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 font-medium transition-colors text-sm disabled:opacity-50"
+                    >
+                        <RefreshCw size={18} /> Toggle Batch Status
+                    </button>
                     <button
                         onClick={openBonusModal}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 font-medium transition-colors text-sm"
@@ -450,9 +514,12 @@ const BatchStudents = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                            <button
+                                                onClick={() => toggleStudentStatus(s._id, s.status)}
+                                                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors cursor-pointer hover:shadow-sm ${s.status === 'Active' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                            >
                                                 {s.status}
-                                            </span>
+                                            </button>
                                         </td>
                                         <td className="px-6 py-4">
                                             <FeeSummaryCell feeSummary={enrollment.feeSummary} />

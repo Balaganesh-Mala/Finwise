@@ -60,7 +60,7 @@ router.post('/', upload.single('file'), async (req, res) => {
             publicId: result.public_id,
             resourceType: result.resource_type, // 'image' or 'video'
             order: order || 50, // Default to end if not specified
-            isActive: isActive === 'true',
+            isActive: isActive === 'true' || isActive === true,
             description,
             buttonText,
             buttonLink

@@ -40,6 +40,8 @@ import QuestionBank from './pages/Interviews/QuestionBank';
 import PerformanceAnalytics from './pages/Interviews/PerformanceAnalytics';
 import InterviewScheduler from './pages/Interviews/InterviewScheduler';
 import StudyMaterialsManagement from './pages/Materials/StudyMaterialsManagement';
+import Announcements from './pages/Announcements';
+import SupportInbox from './pages/SupportInbox';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -64,6 +66,8 @@ function App() {
           <Route path="students/add" element={<AddStudent />} />
           <Route path="students/edit/:id" element={<AddStudent />} />
           <Route path="banners" element={<Banners />} />
+          <Route path="announcements" element={<Announcements />} />
+          <Route path="support-inbox" element={<SupportInbox />} />
           <Route path="courses" element={<Courses />} />
           <Route path="courses/:courseId/modules" element={<ManageCourseModules />} />
           <Route path="jobs" element={<Jobs />} />

@@ -15,7 +15,7 @@ const Progress = require('../models/Progress');
 // @access  Admin
 router.post('/', async (req, res) => {
     try {
-        const { name, courseId, startDate, endDate, maxStudents, description } = req.body;
+        const { name, courseId, startDate, endDate, maxStudents, description, status } = req.body;
 
         if (!name || !courseId || !startDate || !endDate) {
             return res.status(400).json({ message: 'Name, courseId, startDate, and endDate are required' });
@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
         const course = await Course.findById(courseId);
         if (!course) return res.status(404).json({ message: 'Course not found' });
 
-        const batch = new Batch({ name, courseId, startDate, endDate, maxStudents, description });
+        const batch = new Batch({ name, courseId, startDate, endDate, maxStudents, description, status });
         await batch.save();
 
         res.status(201).json({ success: true, batch });

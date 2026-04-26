@@ -1,0 +1,22 @@
+{
+  "short_name": "Finwise Admin",
+  "name": "Finwise Admin Portal",
+  "icons": [
+    {
+      "src": "https://res.cloudinary.com/drzs556ss/image/upload/v1775401479/settings/e3e62e3e83aca5e6b0167a71755916f5_p7b27f.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://res.cloudinary.com/drzs556ss/image/upload/v1775401479/settings/e3e62e3e83aca5e6b0167a71755916f5_p7b27f.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1B2538",
+  "background_color": "#ffffff"
+}

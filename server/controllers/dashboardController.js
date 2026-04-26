@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Student = require('../models/Student');
 const Course = require('../models/Course');
 const Progress = require('../models/Progress');
@@ -6,6 +7,9 @@ const Module = require('../models/Module');
 const Topic = require('../models/Topic');
 const BatchStudent = require('../models/BatchStudent');
 const MockInterviewFeedback = require('../models/MockInterviewFeedback');
+const TypingHistory = require('../models/TypingHistory');
+const TypingProgress = require('../models/TypingProgress');
+const Transaction = require('../models/Transaction');
 
 // @desc    Get Student Dashboard Statistics
 // @route   GET /api/students/dashboard/:studentId
@@ -101,70 +105,120 @@ exports.getStudentDashboardStats = async (req, res) => {
             console.error('Batch progress calculation error:', batchErr);
         }
 
-        // ─── 7. Weekly Activity Chart (Mon–Sun) ──────────────────────────────────
-        // Use Mongoose updatedAt (always set) instead of completedAt (often null).
-        // Accumulate topic.duration (minutes → hours) per day.
+        // ─── 7. Weekly Activity Chart (Points & Coins) ───────────────────────────
         const now = new Date();
-        const dayOfWeek = now.getDay(); // 0 = Sunday
-        const diffToMon = (dayOfWeek + 6) % 7;
         const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - diffToMon);
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+        startOfWeek.setDate(diff);
         startOfWeek.setHours(0, 0, 0, 0);
 
-        // Fetch completed progress this week, with topic durations
-        const weeklyProgressDocs = await Progress.find({
-            studentId,
-            completed: true,
-            updatedAt: { $gte: startOfWeek }
-        }).populate({ path: 'topicId', select: 'duration' });
+        const sId = new mongoose.Types.ObjectId(studentId);
 
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const activityMap = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+        const [weeklyProgressDocs, weeklyTypingHistoryDocs, weeklyTypingProgressDocs, weeklyAttendanceDocs, weeklyMockDocs] = await Promise.all([
+            Progress.find({
+                studentId: sId,
+                completed: true,
+                updatedAt: { $gte: startOfWeek }
+            }).lean(),
+            TypingHistory.find({
+                studentId: sId,
+                createdAt: { $gte: startOfWeek }
+            }).lean(),
+            TypingProgress.find({
+                studentId: sId,
+                createdAt: { $gte: startOfWeek }
+            }).lean(),
+            Attendance.find({
+                studentId: sId,
+                method: 'qr',
+                status: 'present',
+                date: { $gte: startOfWeek }
+            }).lean(),
+            MockInterviewFeedback.find({
+                studentId: sId,
+                isSubmitted: true,
+                $or: [
+                    { interviewDate: { $gte: startOfWeek } },
+                    { createdAt: { $gte: startOfWeek } }
+                ]
+            }).lean()
+        ]);
 
-        weeklyProgressDocs.forEach(p => {
-            // Use completedAt if set, otherwise fall back to updatedAt
-            const recordDate = p.completedAt || p.updatedAt;
-            if (recordDate) {
-                const dayName = dayNames[new Date(recordDate).getDay()];
-                const mins = p.topicId?.duration || 0;
-                activityMap[dayName] = (activityMap[dayName] || 0) + (mins / 60);
+        const dayNamesMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const activityMap = {
+            Mon: { points: 0, coins: 0 },
+            Tue: { points: 0, coins: 0 },
+            Wed: { points: 0, coins: 0 },
+            Thu: { points: 0, coins: 0 },
+            Fri: { points: 0, coins: 0 },
+            Sat: { points: 0, coins: 0 },
+            Sun: { points: 0, coins: 0 }
+        };
+
+        const processWeeklyDoc = (doc, pVal, cVal) => {
+            const dateVal = doc.interviewDate || doc.date || doc.createdAt || doc.updatedAt || doc.completedAt;
+            if (!dateVal) return;
+            const d = new Date(dateVal);
+            const name = dayNamesMap[d.getDay()];
+            if (activityMap[name]) {
+                if (pVal !== undefined) activityMap[name].points += (typeof pVal === 'function' ? pVal(doc) : (doc[pVal] || 0));
+                if (cVal !== undefined) activityMap[name].coins += (typeof cVal === 'function' ? cVal(doc) : (doc[cVal] || 0));
             }
-        });
+        };
 
-        const weeklyActivity = [
-            { name: 'Mon', hours: parseFloat(activityMap['Mon'].toFixed(2)) },
-            { name: 'Tue', hours: parseFloat(activityMap['Tue'].toFixed(2)) },
-            { name: 'Wed', hours: parseFloat(activityMap['Wed'].toFixed(2)) },
-            { name: 'Thu', hours: parseFloat(activityMap['Thu'].toFixed(2)) },
-            { name: 'Fri', hours: parseFloat(activityMap['Fri'].toFixed(2)) },
-            { name: 'Sat', hours: parseFloat(activityMap['Sat'].toFixed(2)) },
-            { name: 'Sun', hours: parseFloat(activityMap['Sun'].toFixed(2)) },
-        ];
+        weeklyProgressDocs.forEach(doc => processWeeklyDoc(doc, (d) => 100));
+        weeklyTypingHistoryDocs.forEach(doc => processWeeklyDoc(doc, 'pointsAwarded'));
+        weeklyTypingProgressDocs.forEach(doc => processWeeklyDoc(doc, 'pointsAwarded'));
+        weeklyAttendanceDocs.forEach(doc => processWeeklyDoc(doc, (d) => 50, (d) => 10));
+        weeklyMockDocs.forEach(doc => processWeeklyDoc(doc, 
+            (d) => (d.pointsAwarded || d.pointsEarned || 0) + (d.bonusPoints || 0) + (d.firstInterviewBonus || 0),
+            (d) => (d.coinsEarned || 0) + (d.bonusCoins || 0) + (d.firstInterviewCoinsBonus || 0)
+        ));
+
+        const weeklyActivity = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(name => ({
+            name,
+            points: activityMap[name].points,
+            coins: activityMap[name].coins
+        }));
 
         // ─── 8. Daily Points (Topics + Typing + Attendance) ──────────────────────
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
 
-        const [topicsToday, typingHistoryToday, attendanceToday] = await Promise.all([
+        const [topicsToday, typingHistoryToday, typingProgressToday, attendanceToday, mockToday] = await Promise.all([
             Progress.countDocuments({
                 studentId,
                 completed: true,
                 updatedAt: { $gte: startOfToday }
             }),
-            require('../models/TypingHistory').find({
+            TypingHistory.find({
                 studentId,
                 createdAt: { $gte: startOfToday }
             }),
-            require('../models/Attendance').countDocuments({
+            TypingProgress.find({
+                studentId,
+                createdAt: { $gte: startOfToday }
+            }),
+            Attendance.countDocuments({
                 studentId,
                 method: 'qr',
                 status: 'present',
                 date: { $gte: startOfToday }
+            }),
+            MockInterviewFeedback.find({
+                studentId,
+                isSubmitted: true,
+                $or: [
+                    { interviewDate: { $gte: startOfToday } },
+                    { createdAt: { $gte: startOfToday } }
+                ]
             })
         ]);
 
-        const typingPointsToday = typingHistoryToday.reduce((acc, h) => acc + (h.pointsAwarded || 0), 0);
-        const dailyPoints = (topicsToday * 100) + typingPointsToday + (attendanceToday * 50);
+        const typingPointsToday = [...typingHistoryToday, ...typingProgressToday].reduce((acc, h) => acc + (h.pointsAwarded || 0), 0);
+        const mockPointsToday = mockToday.reduce((acc, m) => acc + (m.pointsAwarded || m.pointsEarned || 0) + (m.bonusPoints || 0) + (m.firstInterviewBonus || 0), 0);
+        const dailyPoints = (topicsToday * 100) + typingPointsToday + (attendanceToday * 50) + mockPointsToday;
 
         res.json({
             success: true,
@@ -362,90 +416,120 @@ exports.getStudentActivity = async (req, res) => {
 
         // ── Determine date range boundaries ──────────────────────────────────────
         if (range === 'week') {
-            // Monday of current week
             const diffToMon = (now.getDay() + 6) % 7;
             startDate = new Date(now);
             startDate.setDate(now.getDate() - diffToMon);
             startDate.setHours(0, 0, 0, 0);
         } else if (range === 'month') {
-            // 1st of current month
             startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
         } else if (range === 'year') {
-            // Jan 1st of current year
             startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
         } else {
             return res.status(400).json({ message: 'Invalid range. Use week, month, or year.' });
         }
 
-        // ── Fetch completed progress records in the period ────────────────────────
-        const progressDocs = await Progress.find({
-            studentId,
-            completed: true,
-            updatedAt: { $gte: startDate }
-        }).populate({ path: 'topicId', select: 'duration' });
+        // ── Fetch Activity Data ──────────────────────────────────────────────────
+        const sId = new mongoose.Types.ObjectId(studentId);
+
+        // ── Fetch Activity Data ──────────────────────────────────────────────────
+        const [progressDocs, typingHistoryDocs, typingProgressDocs, attendanceDocs, mockDocs] = await Promise.all([
+            Progress.find({
+                studentId: sId,
+                completed: true,
+                updatedAt: { $gte: startDate }
+            }).lean(),
+            TypingHistory.find({
+                studentId: sId,
+                createdAt: { $gte: startDate }
+            }).lean(),
+            TypingProgress.find({
+                studentId: sId,
+                createdAt: { $gte: startDate }
+            }).lean(),
+            Attendance.find({
+                studentId: sId,
+                method: 'qr',
+                status: 'present',
+                date: { $gte: startDate }
+            }).lean(),
+            MockInterviewFeedback.find({
+                studentId: sId,
+                isSubmitted: true,
+                $or: [
+                    { interviewDate: { $gte: startDate } },
+                    { createdAt: { $gte: startDate } }
+                ]
+            }).lean()
+        ]);
 
         // ── Build chart buckets ───────────────────────────────────────────────────
+        const createBucketMap = (keys) => {
+            const map = {};
+            keys.forEach(k => { map[k] = { points: 0, coins: 0 }; });
+            return map;
+        };
+
+        let bucketKeys = [];
+        let map = {};
+
+        const processGenericDoc = (doc, currentMap, pVal, cVal) => {
+            const dateVal = doc.interviewDate || doc.date || doc.createdAt || doc.updatedAt || doc.completedAt;
+            if (!dateVal) return;
+            const d = new Date(dateVal);
+            
+            let key;
+            if (range === 'week') {
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                key = dayNames[d.getDay()];
+            } else if (range === 'month') {
+                key = String(d.getDate());
+            } else if (range === 'year') {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                key = monthNames[d.getMonth()];
+            }
+
+            if (currentMap[key]) {
+                if (pVal !== undefined) currentMap[key].points += (typeof pVal === 'function' ? pVal(doc) : (doc[pVal] || 0));
+                if (cVal !== undefined) currentMap[key].coins += (typeof cVal === 'function' ? cVal(doc) : (doc[cVal] || 0));
+            }
+        };
+
         if (range === 'week') {
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const map = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
-
-            progressDocs.forEach(p => {
-                const d = new Date(p.completedAt || p.updatedAt);
-                const dayName = dayNames[d.getDay()];
-                map[dayName] = (map[dayName] || 0) + ((p.topicId?.duration || 0) / 60);
-            });
-
-            chartData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(name => ({
-                name,
-                hours: parseFloat((map[name] || 0).toFixed(2))
-            }));
-
+            bucketKeys = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         } else if (range === 'month') {
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            const map = new Array(daysInMonth).fill(0);
-
-            progressDocs.forEach(p => {
-                const d = new Date(p.completedAt || p.updatedAt);
-                const dayIndex = d.getDate() - 1; // 0-indexed
-                if (dayIndex >= 0 && dayIndex < daysInMonth) {
-                    map[dayIndex] += (p.topicId?.duration || 0) / 60;
-                }
-            });
-
-            chartData = map.map((hours, i) => ({
-                name: String(i + 1),
-                hours: parseFloat(hours.toFixed(2))
-            }));
-
+            bucketKeys = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
         } else if (range === 'year') {
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const map = new Array(12).fill(0);
-
-            progressDocs.forEach(p => {
-                const d = new Date(p.completedAt || p.updatedAt);
-                const monthIndex = d.getMonth(); // 0–11
-                map[monthIndex] += (p.topicId?.duration || 0) / 60;
-            });
-
-            chartData = map.map((hours, i) => ({
-                name: monthNames[i],
-                hours: parseFloat(hours.toFixed(2))
-            }));
+            bucketKeys = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         }
+        
+        map = createBucketMap(bucketKeys);
+
+        progressDocs.forEach(doc => processGenericDoc(doc, map, (d) => 100));
+        typingHistoryDocs.forEach(doc => processGenericDoc(doc, map, 'pointsAwarded'));
+        typingProgressDocs.forEach(doc => processGenericDoc(doc, map, 'pointsAwarded'));
+        attendanceDocs.forEach(doc => processGenericDoc(doc, map, (d) => 50, (d) => 10));
+        mockDocs.forEach(doc => processGenericDoc(doc, map, 
+            (d) => (d.pointsAwarded || d.pointsEarned || 0) + (d.bonusPoints || 0) + (d.firstInterviewBonus || 0),
+            (d) => (d.coinsEarned || 0) + (d.bonusCoins || 0) + (d.firstInterviewCoinsBonus || 0)
+        ));
+
+        chartData = bucketKeys.map(name => ({ name, ...map[name] }));
 
         // ── Period summary stats ──────────────────────────────────────────────────
-        const totalMinutes = progressDocs.reduce((acc, p) => acc + (p.topicId?.duration || 0), 0);
-        const totalHours = parseFloat((totalMinutes / 60).toFixed(1));
+        const totalPoints = chartData.reduce((acc, d) => acc + d.points, 0);
+        const totalCoins = chartData.reduce((acc, d) => acc + d.coins, 0);
         const topicCount = progressDocs.length;
 
         // Count unique active days
-        const activeDaySet = new Set(
-            progressDocs.map(p => {
-                const d = new Date(p.completedAt || p.updatedAt);
-                return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-            })
-        );
+        const activeDaySet = new Set();
+        [...progressDocs, ...typingHistoryDocs, ...typingProgressDocs, ...attendanceDocs, ...mockDocs].forEach(p => {
+            const dateVal = p.interviewDate || p.date || p.createdAt || p.updatedAt || p.completedAt;
+            if (dateVal) {
+                const d = new Date(dateVal);
+                activeDaySet.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+            }
+        });
         const activeDays = activeDaySet.size;
 
         res.json({
@@ -453,12 +537,12 @@ exports.getStudentActivity = async (req, res) => {
             range,
             chartData,
             summary: {
-                totalHours,
+                totalPoints,
+                totalCoins,
                 topicCount,
                 activeDays
             }
         });
-
     } catch (err) {
         console.error('Error fetching student activity:', err);
         res.status(500).json({ message: 'Server Error', error: err.message });

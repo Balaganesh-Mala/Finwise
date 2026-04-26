@@ -34,6 +34,8 @@ import {
 import axios from 'axios';
 import logoImg from '../assets/logo.jpeg';
 import { subscribeToPush } from '../utils/pushNotifications';
+import SpotlightModal from './SpotlightModal';
+import LiveSupport from './LiveSupport';
 
 const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -370,6 +372,8 @@ const Layout = () => {
 
     return (
         <div className="h-screen w-full bg-gray-50 flex overflow-hidden">
+            <SpotlightModal />
+            <LiveSupport />
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
                 <div
@@ -557,6 +561,7 @@ const Layout = () => {
                 {/* Navbar (Top Header) */}
                 <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30">
 
+
                     {/* Left Side: Mobile Menu Toggle & Title/Date */}
                     <div className="flex items-center gap-6">
                         <button
@@ -614,7 +619,7 @@ const Layout = () => {
                             {showNotifications && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)}></div>
-                                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                                    <div className="fixed left-1/2 -translate-x-1/2 top-16 w-[calc(100vw-32px)] sm:w-80 md:absolute md:left-auto md:translate-x-0 md:right-0 md:top-full md:mt-2 md:w-80 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
                                         <div className="p-2 border-b border-gray-50 flex justify-between items-center">
                                             <h3 className="font-semibold text-sm text-gray-700">Notifications</h3>
                                             <span className="text-xs text-indigo-600 font-medium">{unreadCount} New</span>

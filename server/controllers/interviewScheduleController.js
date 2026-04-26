@@ -25,7 +25,8 @@ exports.createSchedules = async (req, res) => {
             meetingLink, 
             meetingPasscode, 
             instructions, 
-            requiredDocs 
+            requiredDocs,
+            breaks = []
         } = req.body;
 
         let selectedStudentIds = studentIds || [];
@@ -46,7 +47,17 @@ exports.createSchedules = async (req, res) => {
         const schedules = [];
         let currentStartTime = new Date(`${startDate} ${startTime}`);
 
+        // Process breaks
+        let activeBreaks = breaks.map(b => {
+            const dateObj = new Date(`${startDate} ${b.time}`);
+            return { ...b, dateObj };
+        }).sort((a, b) => a.dateObj - b.dateObj);
+
         for (const studentId of selectedStudentIds) {
+            if (activeBreaks.length > 0 && currentStartTime >= activeBreaks[0].dateObj) {
+                const b = activeBreaks.shift();
+                currentStartTime = new Date(currentStartTime.getTime() + b.duration * 60000);
+            }
             const student = await Student.findById(studentId);
             if (!student) continue;
 

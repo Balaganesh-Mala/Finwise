@@ -17,6 +17,9 @@ const MockInterviewHistory = () => {
     const [selectedType, setSelectedType] = useState('All');
     const [selectedInterviewer, setSelectedInterviewer] = useState('All');
     const [selectedStatus, setSelectedStatus] = useState('All');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [sortOrder, setSortOrder] = useState('Newest');
     const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
@@ -128,7 +131,30 @@ const MockInterviewHistory = () => {
             matchesBatch = !!studentEnrollment;
         }
 
-        return matchesSearch && matchesType && matchesInterviewer && matchesStatus && matchesBatch;
+        let matchesDate = true;
+        if (startDate || endDate) {
+            const interviewDate = new Date(h.interviewDate || h.createdAt);
+            interviewDate.setHours(0, 0, 0, 0);
+            
+            if (startDate) {
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                if (interviewDate < start) matchesDate = false;
+            }
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(0, 0, 0, 0);
+                if (interviewDate > end) matchesDate = false;
+            }
+        }
+
+        return matchesSearch && matchesType && matchesInterviewer && matchesStatus && matchesBatch && matchesDate;
+    }).sort((a, b) => {
+        if (sortOrder === 'Score: High to Low') return b.overallScore - a.overallScore;
+        if (sortOrder === 'Score: Low to High') return a.overallScore - b.overallScore;
+        if (sortOrder === 'Oldest') return new Date(a.interviewDate || a.createdAt) - new Date(b.interviewDate || b.createdAt);
+        // Default: Newest
+        return new Date(b.interviewDate || b.createdAt) - new Date(a.interviewDate || a.createdAt);
     });
 
     // Derive unique filter options
@@ -604,14 +630,14 @@ const MockInterviewHistory = () => {
                     <button 
                         onClick={() => setShowFilters(!showFilters)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all ${
-                            showFilters || selectedBatch !== 'All' || selectedType !== 'All' || selectedInterviewer !== 'All' || selectedStatus !== 'All'
+                            showFilters || selectedBatch !== 'All' || selectedType !== 'All' || selectedInterviewer !== 'All' || selectedStatus !== 'All' || startDate || endDate || sortOrder !== 'Newest'
                             ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
                             : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}
                     >
                         <Filter size={18} />
                         <span className="text-sm font-bold">Filters</span>
-                        {(selectedBatch !== 'All' || selectedType !== 'All' || selectedInterviewer !== 'All' || selectedStatus !== 'All') && (
+                        {(selectedBatch !== 'All' || selectedType !== 'All' || selectedInterviewer !== 'All' || selectedStatus !== 'All' || startDate || endDate || sortOrder !== 'Newest') && (
                             <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
                         )}
                     </button>
@@ -633,6 +659,40 @@ const MockInterviewHistory = () => {
             {showFilters && (
                 <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm animate-in slide-in-from-top-2 duration-200">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Start Date</label>
+                            <input 
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">End Date</label>
+                            <input 
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sort Order</label>
+                            <select 
+                                value={sortOrder}
+                                onChange={(e) => setSortOrder(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            >
+                                <option value="Newest">Newest First</option>
+                                <option value="Oldest">Oldest First</option>
+                                <option value="Score: High to Low">Score: High to Low</option>
+                                <option value="Score: Low to High">Score: Low to High</option>
+                            </select>
+                        </div>
+
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch</label>
                             <select 
@@ -700,6 +760,9 @@ const MockInterviewHistory = () => {
                                 setSelectedType('All');
                                 setSelectedInterviewer('All');
                                 setSelectedStatus('All');
+                                setStartDate('');
+                                setEndDate('');
+                                setSortOrder('Newest');
                                 setSearchTerm('');
                             }}
                             className="text-xs font-bold text-rose-500 hover:text-rose-600 flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-all"
@@ -777,7 +840,7 @@ const MockInterviewHistory = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center justify-end gap-1">
                                                 <button 
                                                     onClick={() => setSelectedFeedback(h)}
                                                     className="p-2 text-indigo-600/70 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"

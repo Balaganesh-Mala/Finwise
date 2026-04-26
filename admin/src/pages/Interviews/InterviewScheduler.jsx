@@ -32,7 +32,10 @@ const InterviewScheduler = () => {
     const [qStatus, setQStatus] = useState('upcoming'); // upcoming, history
     const [qBatch, setQBatch] = useState('All');
     const [qSearch, setQSearch] = useState('');
+    const [qDate, setQDate] = useState('');
+    const [qStatusFilter, setQStatusFilter] = useState('All');
 
+    const [breaks, setBreaks] = useState([]);
     const [interviewData, setInterviewData] = useState({
         startDate: new Date().toISOString().split('T')[0],
         startTime: '10:00', // Still stored in 24h internally
@@ -105,6 +108,7 @@ const InterviewScheduler = () => {
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             const payload = {
                 ...interviewData,
+                breaks: breaks,
                 studentIds: schedulingMode === 'Individual' ? selectedStudents : null,
                 batchId: schedulingMode === 'Batch' ? selectedBatchId : null,
                 interviewerId: selectedTrainerId
@@ -117,6 +121,7 @@ const InterviewScheduler = () => {
                 setSchedulingMode('Individual');
                 setSelectedStudents([]);
                 setSelectedBatchId('');
+                setBreaks([]);
                 fetchData(); // Refresh list
             }
         } catch (error) {
@@ -138,6 +143,21 @@ const InterviewScheduler = () => {
             fetchData();
         } catch (error) {
             toast.error("Failed to cancel schedule");
+        }
+    };
+
+    const handleDeleteSchedule = async (id) => {
+        if (!window.confirm("Are you sure you want to completely delete this schedule? This action cannot be undone.")) return;
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const token = localStorage.getItem('adminToken');
+            await axios.delete(`${API_URL}/api/interview-schedules/schedules/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success("Schedule deleted successfully");
+            setSchedules(prev => prev.filter(s => s._id !== id));
+        } catch (error) {
+            toast.error("Failed to delete schedule");
         }
     };
 
@@ -201,11 +221,25 @@ const InterviewScheduler = () => {
     };
 
     const filteredQueue = schedules.filter(item => {
-        // Status Filtering
+        // Tab Filtering
         const isUpcoming = (item.status === 'Scheduled' || item.status === 'Rescheduled') && !isSessionExpired(item.date, item.endTime || '');
         const isPast = item.status === 'Completed' || item.status === 'Missed' || item.status === 'Cancelled' || item.attendance === 'Absent' || isSessionExpired(item.date, item.endTime || '');
 
         const statusMatch = qStatus === 'upcoming' ? isUpcoming : isPast;
+
+        // Detailed Status Filter
+        let detailedStatusMatch = true;
+        if (qStatusFilter !== 'All') {
+            if (qStatusFilter === 'Absent') detailedStatusMatch = item.attendance === 'Absent';
+            else detailedStatusMatch = item.status === qStatusFilter && item.attendance !== 'Absent';
+        }
+
+        // Date Filter
+        let dateMatch = true;
+        if (qDate) {
+            const itemDate = new Date(item.date).toISOString().split('T')[0];
+            dateMatch = itemDate === qDate;
+        }
 
         // Batch Filtering
         const batchName = item.studentId?.batchName || 'Unassigned';
@@ -215,7 +249,7 @@ const InterviewScheduler = () => {
         const studentName = item.studentId?.name || '';
         const searchMatch = studentName.toLowerCase().includes((qSearch || '').toLowerCase());
 
-        return statusMatch && batchMatch && searchMatch;
+        return statusMatch && detailedStatusMatch && dateMatch && batchMatch && searchMatch;
     });
 
     if (loading) return (
@@ -332,7 +366,14 @@ const InterviewScheduler = () => {
                                                                     )}
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-sm font-bold text-slate-800">{student.name}</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className="text-sm font-bold text-slate-800">{student.name}</p>
+                                                                        {selectedStudents.includes(student._id) && (
+                                                                            <span className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold">
+                                                                                {selectedStudents.indexOf(student._id) + 1}{['st','nd','rd'][((selectedStudents.indexOf(student._id) + 1)%10)-1] || 'th'}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                     <p className="text-[10px] text-slate-500 font-medium">{student.email}</p>
                                                                 </div>
                                                             </div>
@@ -481,6 +522,42 @@ const InterviewScheduler = () => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Breaks UI */}
+                                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Schedule Breaks</label>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setBreaks([...breaks, { title: 'Lunch Break', time: '13:00', duration: 45 }])}
+                                                className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg hover:bg-indigo-100"
+                                            >
+                                                + Add Break
+                                            </button>
+                                        </div>
+                                        {breaks.map((b, idx) => (
+                                            <div key={idx} className="flex items-center gap-2">
+                                                <input 
+                                                    type="text" value={b.title} 
+                                                    onChange={(e) => { const nb = [...breaks]; nb[idx].title = e.target.value; setBreaks(nb); }} 
+                                                    className="w-1/3 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs outline-none" placeholder="Break Title" 
+                                                />
+                                                <input 
+                                                    type="time" value={b.time} 
+                                                    onChange={(e) => { const nb = [...breaks]; nb[idx].time = e.target.value; setBreaks(nb); }} 
+                                                    className="w-1/3 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs outline-none" 
+                                                />
+                                                <input 
+                                                    type="number" value={b.duration} 
+                                                    onChange={(e) => { const nb = [...breaks]; nb[idx].duration = parseInt(e.target.value)||0; setBreaks(nb); }} 
+                                                    className="w-1/4 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs outline-none" placeholder="Mins" 
+                                                />
+                                                <button type="button" onClick={() => setBreaks(breaks.filter((_, i) => i !== idx))} className="text-rose-500 hover:bg-rose-50 p-1.5 rounded-lg">
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
@@ -552,8 +629,8 @@ const InterviewScheduler = () => {
 
                 {/* Queue Header with Filters */}
                 <div className="pt-8 border-t border-slate-200">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-                        <div>
+                    <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8">
+                        <div className="flex-shrink-0">
                             <h2 className="text-2xl font-bold text-slate-900 mb-2">Live Interview Queue</h2>
                             <div className="flex p-1 bg-white border border-slate-200 rounded-2xl w-fit">
                                 <button
@@ -571,8 +648,8 @@ const InterviewScheduler = () => {
                             </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-                            <div className="relative flex-1 sm:w-64">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full xl:w-auto flex-1">
+                            <div className="relative w-full">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                 <input
                                     type="text"
@@ -582,10 +659,28 @@ const InterviewScheduler = () => {
                                     className="pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"
                                 />
                             </div>
+                            <input 
+                                type="date"
+                                value={qDate}
+                                onChange={(e) => setQDate(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 outline-none"
+                            />
+                            <select
+                                value={qStatusFilter}
+                                onChange={(e) => setQStatusFilter(e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 outline-none"
+                            >
+                                <option value="All">All Statuses</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Scheduled">Scheduled</option>
+                                <option value="Missed">Missed</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="Absent">Absent</option>
+                            </select>
                             <select
                                 value={qBatch}
                                 onChange={(e) => setQBatch(e.target.value)}
-                                className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 outline-none"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 outline-none"
                             >
                                 <option value="All">All Batches</option>
                                 {batches.map(b => <option key={b._id} value={b.name}>{b.name}</option>)}
@@ -661,27 +756,34 @@ const InterviewScheduler = () => {
                                                 <>
                                                     <button
                                                         onClick={() => handleConductInterview(item)}
-                                                        className="p-2.5 rounded-xl bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm shadow-green-100"
+                                                        className="p-2.5 rounded-xl bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm shadow-green-100"
                                                         title="Conduct & Submit Feedback"
                                                     >
                                                         <CheckCircle2 size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleMarkAbsent(item._id)}
-                                                        className="p-2.5 rounded-xl bg-orange-50 text-orange-500 hover:bg-orange-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm shadow-orange-100"
+                                                        className="p-2.5 rounded-xl bg-orange-50 text-orange-500 hover:bg-orange-500 hover:text-white transition-all shadow-sm shadow-orange-100"
                                                         title="Mark Absent"
                                                     >
                                                         <UserX size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleCancelSchedule(item._id)}
-                                                        className="p-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm shadow-slate-200"
+                                                        className="p-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-500 hover:text-white transition-all shadow-sm shadow-slate-200"
                                                         title="Cancel Interview"
                                                     >
-                                                        <Trash2 size={16} />
+                                                        <AlertCircle size={16} />
                                                     </button>
                                                 </>
                                             )}
+                                            <button
+                                                onClick={() => handleDeleteSchedule(item._id)}
+                                                className="p-2.5 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm shadow-rose-100"
+                                                title="Delete Record"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
                                     </div>
                                 </motion.div>

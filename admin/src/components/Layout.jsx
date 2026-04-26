@@ -28,7 +28,9 @@ import {
   Video,
   TrendingUp,
   HelpCircle,
-  Mic
+  Mic,
+  Megaphone,
+  Headset
 } from 'lucide-react';
 
 
@@ -95,6 +97,7 @@ const navCategories = [
     icon: Globe,
     links: [
       { name: 'Banners', path: '/banners', icon: Image },
+      { name: 'Spotlights', path: '/announcements', icon: Megaphone },
       { name: 'Blogs', path: '/blogs', icon: FileText },
       { name: 'Reviews', path: '/reviews', icon: Users }
     ]
@@ -103,6 +106,7 @@ const navCategories = [
     title: 'Communication',
     icon: MessageSquare,
     links: [
+      { name: 'Support Inbox', path: '/support-inbox', icon: Headset },
       { name: 'Inquiries', path: '/inquiries', icon: MessageSquare },
       { name: 'Manage Demos', path: '/demos', icon: MessageSquare }
     ]

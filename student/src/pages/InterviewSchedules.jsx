@@ -78,7 +78,8 @@ const InterviewSchedules = () => {
     const stats = {
         total: schedules.length,
         completed: schedules.filter(s => s.status === 'Completed').length,
-        absent: schedules.filter(s => s.attendance === 'Absent').length
+        absent: schedules.filter(s => s.attendance === 'Absent').length,
+        cancelled: schedules.filter(s => s.status === 'Cancelled').length
     };
 
     const upcoming = schedules.filter(s => 
@@ -134,6 +135,8 @@ const InterviewSchedules = () => {
                         <span>{stats.completed} Completed</span>
                         <span className="w-1 h-1 bg-slate-300 rounded-full" />
                         <span className="text-red-500">{stats.absent} Absents</span>
+                        <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                        <span className="text-orange-500">{stats.cancelled} Cancelled</span>
                     </div>
                 </div>
 
