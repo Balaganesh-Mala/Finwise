@@ -458,3 +458,33 @@ exports.downloadInterviewPDF = async (req, res) => {
         }
     }
 };
+
+// @desc    Download Mock Interview Trainer Report PDF (List of Students)
+// @route   POST /api/mock-interviews/trainer-report
+// @access  Private (Admin/Trainer)
+exports.downloadTrainerReportPDF = async (req, res) => {
+    try {
+        const { generateTrainerReportPDF } = require('../utils/pdfGenerator');
+        const { feedbackIds } = req.body;
+
+        if (!feedbackIds || !Array.isArray(feedbackIds) || feedbackIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'No feedback IDs provided for the report.' });
+        }
+
+        // Fetch all the requested feedbacks
+        const feedbacks = await MockInterviewFeedback.find({ _id: { $in: feedbackIds } })
+            .populate('studentId', 'name email');
+
+        // Sort them high to low by overallScore
+        feedbacks.sort((a, b) => (b.overallScore || 0) - (a.overallScore || 0));
+
+        // Generate PDF and Pipe to Response
+        await generateTrainerReportPDF(feedbacks, res);
+
+    } catch (err) {
+        console.error('Trainer Report PDF Download Controller Error:', err);
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: 'Server Error generating Trainer Report PDF' });
+        }
+    }
+};

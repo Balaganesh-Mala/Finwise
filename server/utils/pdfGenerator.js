@@ -414,3 +414,194 @@ for (let i = 0; i < range.count; i++) {
     }
   });
 };
+
+exports.generateTrainerReportPDF = (studentsData, res) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({
+        size: "A4",
+        layout: "landscape",
+        margin: 30,
+        bufferPages: true,
+      });
+
+      const fileName = `Trainer_Mock_Interview_Report.pdf`;
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileName}"`
+      );
+
+      doc.pipe(res);
+
+      /* ---------------- COLORS ---------------- */
+      const primary = "#4f46e5";
+      const dark = "#0f172a";
+      const text = "#334155";
+      const gray = "#64748b";
+      const border = "#e2e8f0";
+      const green = "#16a34a";
+      const red = "#dc2626";
+
+      const pageWidth = doc.page.width;
+      const contentWidth = pageWidth - 60;
+
+      /* ---------------- HEADER ---------------- */
+      doc
+        .fillColor(primary)
+        .font("Helvetica-Bold")
+        .fontSize(20)
+        .text("FINWISE CAREER SOLUTIONS", 30, 30);
+
+      doc
+        .fillColor(gray)
+        .font("Helvetica")
+        .fontSize(9)
+        .text(
+          `Trainer Mock Interview Report | Generated on: ${new Date().toLocaleDateString("en-GB")}`,
+          30,
+          54
+        );
+
+      doc.moveDown(2);
+
+      /* ---------------- TABLE ---------------- */
+      // Landscape columns width distribution
+      const colLines = [30, 160, 230, 280, 380, 580, 30 + contentWidth];
+
+      const drawHeader = (yPos) => {
+        doc.rect(30, yPos, contentWidth, 24).fillAndStroke("#eef2ff", border);
+
+        doc
+          .fillColor(dark)
+          .font("Helvetica-Bold")
+          .fontSize(8)
+          .text("STUDENT", 35, yPos + 8)
+          .text("DATE", 165, yPos + 8)
+          .text("SCORE", 235, yPos + 8)
+          .text("STATUS", 285, yPos + 8)
+          .text("WEAKNESSES", 385, yPos + 8)
+          .text("OVERALL REMARK", 585, yPos + 8);
+
+        // Draw vertical lines for header
+        colLines.forEach(x => {
+            doc.moveTo(x, yPos).lineTo(x, yPos + 24).stroke(border);
+        });
+
+        return yPos + 24;
+      };
+
+      let y = drawHeader(doc.y);
+
+      if (!studentsData || studentsData.length === 0) {
+        doc
+          .fillColor(text)
+          .font("Helvetica")
+          .fontSize(10)
+          .text("No data available for the selected filters.", 35, y + 15);
+      } else {
+        studentsData.forEach((item) => {
+          const name = item.studentId ? item.studentId.name : "N/A";
+          const dateStr = item.interviewDate ? new Date(item.interviewDate).toLocaleDateString("en-GB") : new Date(item.createdAt).toLocaleDateString("en-GB");
+          const score = `${item.overallScore || 0}/10`;
+          const status = item.status || item.performanceStatus || "N/A";
+          const weaknesses = item.weaknesses || "None recorded";
+          const remark = item.overallRemark || "No remark";
+
+          // Calculate max height for this row
+          const h1 = doc.heightOfString(name, { width: 120, fontSize: 8 });
+          const h2 = doc.heightOfString(weaknesses, { width: 190, fontSize: 8 });
+          const h3 = doc.heightOfString(remark, { width: 190, fontSize: 8 });
+
+          const rowHeight = Math.max(24, h1 + 10, h2 + 10, h3 + 10);
+
+          // Landscape height is shorter (approx 595 - margin = ~555)
+          if (y + rowHeight > doc.page.height - 40) {
+            doc.addPage();
+            y = 30;
+            y = drawHeader(y);
+          }
+
+          // Background Highlight for Critical Risk / Needs Improvement
+          const isPoor = status === "Needs Improvement" || status === "Critical Risk";
+          const bgColor = isPoor ? "#fef2f2" : "#ffffff";
+          
+          doc.rect(30, y, contentWidth, rowHeight).fillAndStroke(bgColor, border);
+
+          doc
+            .fillColor(dark)
+            .font("Helvetica-Bold")
+            .fontSize(8)
+            .text(name, 35, y + 8, { width: 120 });
+
+          doc
+            .fillColor(gray)
+            .font("Helvetica")
+            .fontSize(8)
+            .text(dateStr, 165, y + 8, { width: 60 });
+
+          doc
+            .fillColor(primary)
+            .font("Helvetica-Bold")
+            .text(score, 235, y + 8, { width: 40 });
+
+          // Status Color
+          let statusColor = dark;
+          if (status === "Job Ready" || status === "Highly Capable") statusColor = green;
+          if (isPoor) statusColor = red;
+
+          doc
+            .fillColor(statusColor)
+            .font("Helvetica-Bold")
+            .text(status, 285, y + 8, { width: 90 });
+
+          doc
+            .fillColor(text)
+            .font("Helvetica")
+            .text(weaknesses, 385, y + 8, { width: 190 });
+
+          doc
+            .fillColor(gray)
+            .text(remark, 585, y + 8, { width: 190 });
+
+          // Draw vertical lines for row
+          colLines.forEach(x => {
+              doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke(border);
+          });
+
+          y += rowHeight;
+        });
+      }
+
+      /* ---------------- FOOTER ON ALL PAGES ---------------- */
+      const range = doc.bufferedPageRange();
+      for (let i = 0; i < range.count; i++) {
+        doc.switchToPage(i);
+        const oldY = doc.y;
+        doc
+          .fillColor(gray)
+          .font("Helvetica")
+          .fontSize(7)
+          .text(
+            "Finwise Career Solutions - Trainer Report",
+            30,
+            doc.page.height - 20,
+            {
+              width: contentWidth,
+              align: "center",
+              lineBreak: false
+            }
+          );
+        doc.y = oldY;
+      }
+
+      doc.on("end", resolve);
+      doc.on("error", reject);
+
+      doc.end();
+    } catch (error) {
+      reject(error);
+    }
+  });
+};

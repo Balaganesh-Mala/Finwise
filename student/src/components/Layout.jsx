@@ -129,7 +129,7 @@ const Layout = () => {
 
                         setUser(updatedUser);
                         localStorage.setItem('studentUser', JSON.stringify(updatedUser));
-                        
+
                         // Subscribe to push notifications globally
                         subscribeToPush(updatedUser._id);
                     }
@@ -294,12 +294,12 @@ const Layout = () => {
             ]
         },
 
-        { 
-            icon: BotIcon, 
-            label: 'Interview Prep', 
+        {
+            icon: BotIcon,
+            label: 'Interview Prep',
             children: [
-                { label: 'Mock Performance', path: '/mock-interview', accessKey: 'aiMockInterview' },
-                { label: 'My Interviews', path: '/my-interviews', accessKey: 'aiMockInterview' }
+                { label: 'My Interviews', path: '/my-interviews', accessKey: 'aiMockInterview' },
+                { label: 'Mock Performance', path: '/mock-interview', accessKey: 'aiMockInterview' }
             ]
         },
 

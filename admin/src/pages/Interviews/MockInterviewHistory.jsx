@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { Search, Loader2, Filter, Eye, X, User, Star, CheckSquare, Award, Trash2, Edit2, Save, Sparkles, Youtube } from 'lucide-react';
+import { Search, Loader2, Filter, Eye, X, User, Star, CheckSquare, Award, Trash2, Edit2, Save, Sparkles, Youtube, Download } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const MockInterviewHistory = () => {
@@ -9,6 +9,7 @@ const MockInterviewHistory = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFeedback, setSelectedFeedback] = useState(null);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
     // Filter States
     const [batches, setBatches] = useState([]);
@@ -161,6 +162,45 @@ const MockInterviewHistory = () => {
     const uniqueTypes = [...new Set(history.map(h => h.interviewType))].filter(Boolean).sort();
     const uniqueInterviewers = [...new Set(history.map(h => h.interviewerName))].filter(Boolean).sort();
     const statuses = ['Job Ready', 'Highly Capable', 'Capable', 'Needs Improvement', 'Critical Risk'];
+
+    const handleDownloadTrainerReport = async () => {
+        if (filteredHistory.length === 0) {
+            toast.error("No records to download based on current filters.");
+            return;
+        }
+
+        setIsGeneratingPDF(true);
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const token = localStorage.getItem('adminToken');
+            const feedbackIds = filteredHistory.map(h => h._id);
+
+            const response = await axios.post(`${API_URL}/api/mock-interviews/trainer-report`, {
+                feedbackIds
+            }, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob' // Important for receiving binary data
+            });
+
+            // Create a blob URL and trigger download
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'Trainer_Mock_Interview_Report.pdf');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            
+            toast.success("Trainer report downloaded successfully!");
+        } catch (error) {
+            console.error("Error downloading trainer report:", error);
+            toast.error("Failed to generate trainer report.");
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
 
     const FeedbackModal = ({ feedback, onClose }) => {
         const [isEditing, setIsEditing] = useState(false);
@@ -640,6 +680,15 @@ const MockInterviewHistory = () => {
                         {(selectedBatch !== 'All' || selectedType !== 'All' || selectedInterviewer !== 'All' || selectedStatus !== 'All' || startDate || endDate || sortOrder !== 'Newest') && (
                             <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
                         )}
+                    </button>
+
+                    <button
+                        onClick={handleDownloadTrainerReport}
+                        disabled={isGeneratingPDF || filteredHistory.length === 0}
+                        className="flex items-center gap-2 px-4 py-2 rounded-2xl border bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-50"
+                    >
+                        {isGeneratingPDF ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                        <span className="text-sm font-bold">Trainer Report</span>
                     </button>
 
                     <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm shadow-slate-100">
